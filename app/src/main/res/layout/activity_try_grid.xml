@@ -5,72 +5,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".try_grid.TryGridActivity"
-        android:id="@+id/try_rl">
+        android:id="@+id/try_rl"
+        android:animateLayoutChanges="true">
 
     <GridLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:columnCount="4"
                 android:rowCount="7"
                 android:id="@+id/try_grid">
-
-        <com.example.launchertest.try_grid.ImgType
-                android:background="@drawable/ic_launcher_background"
-                android:layout_width="144px"
-                android:layout_height="144px"
-                android:layout_gravity="center"
-                android:layout_margin="20px"
-        />
-        <com.example.launchertest.try_grid.ImgType
-                android:background="@mipmap/ic_launcher"
-                android:layout_width="144px"
-                android:layout_height="144px"
-                android:layout_gravity="center"
-                android:layout_margin="20px"
-        />
-        <View
-        android:id="@+id/try_grid_space"/>
-        <com.example.launchertest.try_grid.ImgType
-                android:background="@mipmap/ic_launcher"
-                android:layout_width="144px"
-                android:layout_height="144px"
-                android:layout_gravity="center"
-                android:layout_margin="20px"
-        />
-        <com.example.launchertest.try_grid.ImgType
-                android:background="@mipmap/ic_launcher"
-                android:layout_width="144px"
-                android:layout_height="144px"
-                android:layout_gravity="center"
-                android:layout_margin="20px"
-        />
-        <com.example.launchertest.try_grid.ImgType
-                android:background="@mipmap/ic_launcher"
-                android:layout_width="144px"
-                android:layout_height="144px"
-                android:layout_gravity="center"
-                android:layout_margin="20px"
-        />
-        <com.example.launchertest.try_grid.ImgType
-                android:background="@mipmap/ic_launcher"
-                android:layout_width="144px"
-                android:layout_height="144px"
-                android:layout_gravity="center"
-                android:layout_margin="20px"
-        />
-        <com.example.launchertest.try_grid.ImgType
-                android:background="@mipmap/ic_launcher"
-                android:layout_width="144px"
-                android:layout_height="144px"
-                android:layout_gravity="center"
-                android:layout_margin="20px"
-        />
-        <com.example.launchertest.try_grid.ImgType
-                android:background="@mipmap/ic_launcher"
-                android:layout_width="144px"
-                android:layout_height="144px"
-                android:layout_gravity="center"
-                android:layout_margin="20px"
-        />
 
     </GridLayout>
 

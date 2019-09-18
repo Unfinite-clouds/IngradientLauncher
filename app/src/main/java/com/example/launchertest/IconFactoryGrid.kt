@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.provider.Settings
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MenuInflater
 import android.view.View
@@ -43,7 +44,7 @@ object IconFactoryGrid {
         layoutParams.width = iconSize
         layoutParams.height = iconSize + textSize //label.textSize.toInt()*2
         layoutParams.setMargins((iconViewWidth-iconSize)/2, (iconViewHeight-iconSize-textSize)/2, (iconViewWidth-iconSize)/2, (iconViewHeight-iconSize-textSize)/2)
-        layoutParams.setGravity(11)
+        layoutParams.setGravity(Gravity.CENTER)
         label.text = appInfo.label
 
 //        println("$iconSize, ${label.textSize}") // 108, 28.0
