@@ -7,12 +7,10 @@ import android.net.Uri
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.MenuInflater
-import android.view.MenuItem
 import android.view.View
 import android.widget.GridLayout
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.view.menu.MenuPopupHelper
 import androidx.core.view.iterator
@@ -27,18 +25,25 @@ object IconFactoryGrid {
         val iconViewHeight = gridHeight/nrows
         // max icon visible size = 75% from view size. Hence minimum margin will be 25%
         val iconSize = min(min(0.75f*iconViewWidth, 0.75f*iconViewHeight).toInt(), iconSizeDesired)
+        val textSize = 42 // TODO - replace magic value
 
         val view = LayoutInflater.from(context).inflate(R.layout.shortcut_icon, null)
-        view.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom -> println("$left, $right, $top, $bottom") }
+        view.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom -> println("Layout: ${right-left}, ${bottom-top}") }
+
         val image = view.findViewById<ImageView>(R.id.shortcut_icon_image)
+        image.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom -> println("image: ${right-left}, ${bottom-top}") }
+        image.setImageDrawable(appInfo.icon)
+        image.layoutParams.height = iconSize
+        image.layoutParams.width = iconSize
+
         val label = view.findViewById<TextView>(R.id.shortcut_icon_label)
+        label.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom -> println("label: ${right-left}, ${bottom-top}") }
 
         val layoutParams = GridLayout.LayoutParams()
         layoutParams.width = iconSize
-        layoutParams.height = iconSize + label.textSize.toInt()*2
-        layoutParams.setMargins((iconViewWidth-iconSize)/2, (iconViewHeight-iconSize)/2, (iconViewWidth-iconSize)/2, (iconViewHeight-iconSize)/2)
+        layoutParams.height = iconSize + textSize //label.textSize.toInt()*2
+        layoutParams.setMargins((iconViewWidth-iconSize)/2, (iconViewHeight-iconSize-textSize)/2, (iconViewWidth-iconSize)/2, (iconViewHeight-iconSize-textSize)/2)
         layoutParams.setGravity(11)
-
         label.text = appInfo.label
 
 //        println("$iconSize, ${label.textSize}") // 108, 28.0
@@ -58,10 +63,11 @@ object IconFactoryGrid {
 
         // set items
         for (item in builder.iterator()) {
-            item.setOnMenuItemClickListener {
-                menuItemClick(it, context)
+            when (item.itemId) {
+                R.id.popup_menu_info -> item.intent = intentAppSettings(appInfo.packageName)
+                R.id.popup_menu_uninstall -> item.intent = intentAppDelete(appInfo.packageName)
             }
-            item.intent = intentToAppSettings(appInfo.packageName)
+            item.setOnMenuItemClickListener { context.startActivity( it.intent ); return@setOnMenuItemClickListener true }
         }
 
         val menuHelper = MenuPopupHelper(view.context, builder, view)
@@ -70,19 +76,17 @@ object IconFactoryGrid {
         return true
     }
 
-    private fun menuItemClick(menuItem: MenuItem, context: Context) : Boolean {
-        when (menuItem.itemId) {
-            R.id.popup_menu_info -> context.startActivity( menuItem.intent )
-            R.id.popup_menu_uninstall -> Toast.makeText(context, "[redirect to uninstall]", Toast.LENGTH_LONG).show()
-        }
-        return true
+    private fun intentAppSettings(packageName: String): Intent {
+        val uri = Uri.fromParts("package", packageName, null)
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, uri)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        return intent
     }
 
-    private fun intentToAppSettings(packageName: String): Intent {
-        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    private fun intentAppDelete(packageName: String): Intent {
         val uri = Uri.fromParts("package", packageName, null)
-        intent.data = uri
+        val intent = Intent(Intent.ACTION_DELETE, uri)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         return intent
     }
 }
