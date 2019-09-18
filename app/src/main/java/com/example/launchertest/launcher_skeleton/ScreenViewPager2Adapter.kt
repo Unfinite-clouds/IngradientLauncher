@@ -57,6 +57,7 @@ class ScreenHolder(private val context: Context, view: View) : RecyclerView.View
         if (bindedPos != position) {
             grid.removeAllViews()
 
+            // all apps
             var app: Int
             for (i in 0 until width*height) {
                 app = i+width*height*position
@@ -64,6 +65,15 @@ class ScreenHolder(private val context: Context, view: View) : RecyclerView.View
                     break
                 grid.addView(IconFactoryGrid.createIcon(context, getAllAppsList(context)[app], 720, 1520, width, height))
             }
+
+            // custom screen
+            for (i in 0 until width*height) {
+                app = i+width*height*position
+                if (app > getAllAppsList(context).size - 1)
+                    break
+                grid.addView(IconFactoryGrid.createIcon(context, getAllAppsList(context)[app], 720, 1520, width, height))
+            }
+
             (grid.parent as ViewGroup).setBackgroundResource(ScreenViewPager2Adapter.colors[position])
             bindedPos = position
         }

@@ -9,7 +9,7 @@
 
     <GridLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:columnCount="5"
+                android:columnCount="4"
                 android:rowCount="7"
                 android:id="@+id/try_grid">
 
@@ -27,6 +27,8 @@
                 android:layout_gravity="center"
                 android:layout_margin="20px"
         />
+        <View
+        android:id="@+id/try_grid_space"/>
         <com.example.launchertest.try_grid.ImgType
                 android:background="@mipmap/ic_launcher"
                 android:layout_width="144px"
