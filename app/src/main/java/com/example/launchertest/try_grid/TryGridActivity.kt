@@ -1,6 +1,7 @@
 package com.example.launchertest.try_grid
 
 import android.content.ClipData
+import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.*
@@ -16,15 +17,19 @@ import com.example.launchertest.AppInfo
 import com.example.launchertest.R
 import com.example.launchertest.getAllAppsList
 import kotlinx.android.synthetic.main.activity_try_grid.*
+import kotlin.random.Random
 
 
 class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, View.OnDragListener, View.OnLongClickListener {
     lateinit var enterShape: Drawable
     lateinit var normalShape: Drawable
 
-    override fun onDrag(view: View?, event: DragEvent?): Boolean {
+    override fun onDrag(iconView: View?, event: DragEvent?): Boolean {
+
+
         when (event?.action) {
             DragEvent.ACTION_DRAG_STARTED -> {
+                (event.localState as ImageView).setColorFilter(Color.LTGRAY)
             }
             DragEvent.ACTION_DRAG_ENTERED -> {
                 swap()
@@ -38,7 +43,7 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
                 container.addView(view2)
                 view2.visibility = View.VISIBLE
             }
-            DragEvent.ACTION_DRAG_ENDED -> view?.setBackgroundDrawable(normalShape)
+//            DragEvent.ACTION_DRAG_ENDED -> icon.setBackgroundDrawable(normalShape)
             else -> {
                 // do nothing
             }
@@ -47,12 +52,15 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
     }
 
     override fun onLongClick(view: View?): Boolean {
-        createPopupMenu(view!!)
-        val data = ClipData.newPlainText("asdsad", "testtsetcse")
+//        createPopupMenu(view!!)
+        startDrag(view!!)
+        return true
+    }
+
+    private fun startDrag(view: View) {
+        val data = ClipData.newPlainText("", "")
         val shadowBuilder = View.DragShadowBuilder(view)
         view.startDrag(data, shadowBuilder, view, 0)
-        view.visibility = View.INVISIBLE
-        return true
     }
 
 
@@ -71,9 +79,6 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_try_grid)
 
-        enterShape = resources.getDrawable(R.drawable.ic_info)
-        normalShape = resources.getDrawable(R.drawable.ic_delete)
-
         try_grid.setOnDragListener(this)
 
         try_grid.columnCount = 5
@@ -82,27 +87,6 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
         allApps = getAllAppsList(this)
 
         fillGrid(try_grid)
-
-
-        for (item in try_grid.iterator()) {
-            item.setOnLongClickListener(this)
-        }
-
-
-        for (i in 8..20) {
-//            val lpars = GridLayout.LayoutParams()
-//            lpars.width = 144
-//            lpars.height = 144
-//            lpars.setMargins(20)
-//            lpars.setGravity(11)
-
-            val img = ImageView(this)
-            img.setOnLongClickListener(this)
-//            img.layoutParams = lpars
-            img.setBackgroundDrawable(allApps[i].icon)
-//            img.setBackgroundResource(android.R.color.holo_green_dark)
-        }
-
     }
 
     fun createPopupMenu(view: View) {
@@ -128,15 +112,16 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
                 lp.setGravity(Gravity.CENTER)
                 lp.setMargins(20)
                 dummyCell.layoutParams = lp
-                dummyCell.setBackgroundResource(android.R.color.holo_green_dark)
+                dummyCell.setBackgroundColor(Color.argb(40,0,0,0))
                 dummyCell.setOnDragListener(this)
 
-                val img = ImageView(this)
-                img.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                img.setOnLongClickListener(this)
-                img.setBackgroundDrawable(allApps[i*grid.columnCount+j].icon)
-
-                dummyCell.addView(img)
+                if (Random.nextInt(100) > 70) {
+                    val img = ImageView(this)
+                    img.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                    img.setOnLongClickListener(this)
+                    img.setImageDrawable(getAllAppsList(this)[Random.nextInt(getAllAppsList(this).size)].icon)
+                    dummyCell.addView(img)
+                }
 
                 grid.addView(dummyCell)
             }
