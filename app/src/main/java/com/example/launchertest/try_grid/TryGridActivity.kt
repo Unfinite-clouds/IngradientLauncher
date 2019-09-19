@@ -4,7 +4,10 @@ import android.content.ClipData
 import android.graphics.Color
 import android.graphics.PorterDuff
 import android.os.Bundle
-import android.view.*
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.menu.MenuBuilder
@@ -17,7 +20,7 @@ import kotlinx.android.synthetic.main.activity_try_grid.*
 import kotlin.random.Random
 
 
-class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, View.OnDragListener, View.OnLongClickListener {
+class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, View.OnLongClickListener {
     lateinit var allApps: ArrayList<AppInfo>
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,7 +42,7 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
         }
     }
 
-    override fun onDrag(view: View?, event: DragEvent?): Boolean {
+/*    fun onDrag(view: View?, event: DragEvent?): Boolean {
         if (view !is DummyCell || event == null)
             return false
 
@@ -70,7 +73,7 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
             }
         }
         return true
-    }
+    }*/
 
     override fun onLongClick(view: View?): Boolean {
 //        createPopupMenu(view!!)
@@ -85,20 +88,6 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
         val data = ClipData.newPlainText("", "")
         val shadowBuilder = View.DragShadowBuilder(shortcut)
         shortcut.startDrag(data, shadowBuilder, shortcut, 0)
-    }
-
-    private fun endDrag(shortcut: ImageView) {
-        shortcut.clearColorFilter()
-        shortcut.visibility = View.VISIBLE
-    }
-
-    private fun moveShortcut(shortcut: ImageView, newDummy: ViewGroup) {
-        (shortcut.parent as ViewGroup).removeView(shortcut)
-        newDummy.addView(shortcut)
-    }
-
-    private fun swapShortcuts() {
-
     }
 
     fun createPopupMenu(view: View) {
