@@ -82,24 +82,28 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
         return true
     }
 
-    override fun onDrag(dummyCell: View?, event: DragEvent?): Boolean {
-        val shortcut = event?.localState as ImageView
+    override fun onDrag(view: View?, event: DragEvent?): Boolean {
+        if (view !is DummyCell || event == null)
+            return false
+
+        val dummyCell = view
+        val shortcut = event.localState as ImageView
 //        println("view=${dummyCell?.javaClass?.simpleName} ${dummyCell.hashCode()}, event.action=${event.action} event.loacalState=${event.localState.javaClass.simpleName} ${event.localState.hashCode()}")
 
         val side: Int
 
         when (event.action) {
             DragEvent.ACTION_DRAG_STARTED -> {
-                // change listeners
+                dummyCell.onDragStarted()
             }
             DragEvent.ACTION_DRAG_LOCATION -> {
-                (dummyCell as DummyCell).onOver(event.x, event.y)
+                dummyCell.onLocationChanged(event.x, event.y)
             }
             DragEvent.ACTION_DRAG_ENTERED -> {
-                dummyCell?.setBackgroundResource(R.drawable.bot_gradient)
+                dummyCell.onEntered()
             }
             DragEvent.ACTION_DRAG_EXITED -> {
-                dummyCell?.setBackgroundColor(Color.argb(40,0,0,0))
+                dummyCell.onExited()
             }
             DragEvent.ACTION_DROP -> {
                 println(dummyCell)
