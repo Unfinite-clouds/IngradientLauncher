@@ -12,7 +12,8 @@
                 android:orientation="horizontal"
                 android:columnCount="4"
                 android:rowCount="7"
-                android:id="@+id/try_grid">
+                android:id="@+id/try_grid"
+    android:clipChildren="false">
 
     </GridLayout>
 

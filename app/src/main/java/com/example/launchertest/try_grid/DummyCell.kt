@@ -2,10 +2,12 @@ package com.example.launchertest.try_grid
 
 import android.content.Context
 import android.graphics.Color
+import android.graphics.Point
 import android.os.Build
 import android.os.Handler
 import android.util.AttributeSet
 import android.view.View
+import android.view.animation.Animation
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.TranslateAnimation
 import android.widget.LinearLayout
@@ -23,6 +25,14 @@ class DummyCell : LinearLayout, Draggable {
     constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) : super(context, attrs, defStyleAttr, defStyleRes)
+
+    private val bgcolor = Color.argb(40,0,0,0)
+    private var side = Point(0,0)
+
+    init {
+        clipChildren = false
+        setBackgroundColor(bgcolor)
+    }
 
     var state: Int = 0
     val slideAnimation = object : Runnable {
@@ -46,16 +56,22 @@ class DummyCell : LinearLayout, Draggable {
     }
 
     override fun onDragEntered() {
+        setBackgroundResource(R.drawable.bot_gradient)
+
         if (state == STATE_FILLED) {
             println("a_start")
             Handler().postDelayed(slideAnimation, 1500)
-            setBackgroundResource(R.drawable.bot_gradient)
 
-            val anim = TranslateAnimation()
-            anim.duration = 300f
+            val anim = TranslateAnimation(
+                Animation.RELATIVE_TO_SELF, 0f,
+                Animation.RELATIVE_TO_PARENT, 1f*side.x,
+                Animation.RELATIVE_TO_SELF, 0f,
+                Animation.RELATIVE_TO_PARENT, 1f*side.y)
+
+            anim.duration = 500
             anim.interpolator = DecelerateInterpolator()
             anim.fillAfter = true
-            this.startAnimation(anim)
+            this.getChildAt(0).startAnimation(anim)
 //            val anim = ObjectAnimator.ofFloat(this.getChildAt(0), View.TRANSLATION_Y, toPx(-30))
 //            anim.duration = 300
 //            anim.start()
@@ -63,18 +79,18 @@ class DummyCell : LinearLayout, Draggable {
     }
 
     override fun onDragLocationChanged(x: Float, y: Float){
-        val side: String
-
         // remember that origin of coordinate system is [left, top]
-        if (y>x) side = if (y>height-x) "bottom" else "left"
-        else side = if (y>height-x) "right" else "top"
+        if (y>x) side = if (y>height-x) Point(0,1) else Point(-1,0)
+        else side = if (y>height-x) Point(1,0) else Point(0,-1)
+        println(side)
+
     }
 
     override fun onDragExited() {
-        setBackgroundColor(Color.argb(40,0,0,0))
+        setBackgroundColor(bgcolor)
     }
 
     override fun onDragEnded() {
-        setBackgroundColor(Color.argb(40,0,0,0))
+        setBackgroundColor(bgcolor)
     }
 }

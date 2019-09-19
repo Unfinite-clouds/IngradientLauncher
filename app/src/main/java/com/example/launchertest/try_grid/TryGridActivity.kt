@@ -49,7 +49,6 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
                 lp.setGravity(Gravity.CENTER)
                 lp.setMargins(20)
                 dummyCell.layoutParams = lp
-                dummyCell.setBackgroundColor(Color.argb(40,0,0,0))
                 dummyCell.setOnDragListener(this)
 
                 if (Random.nextInt(100) > 70) {
