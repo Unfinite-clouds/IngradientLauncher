@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.view.*
 import android.widget.GridLayout
 import android.widget.ImageView
-import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.view.menu.MenuPopupHelper
@@ -39,23 +38,11 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
         fillGrid(try_grid)
     }
 
-    fun createPopupMenu(view: View) {
-        val builder = MenuBuilder(view.context)
-        val inflater = MenuInflater(view.context)
-        inflater.inflate(R.menu.shortcut_popup_menu, builder)
-        for (item in builder.iterator()) {
-            item.setOnMenuItemClickListener(this)
-        }
-        val menuHelper = MenuPopupHelper(view.context, builder, view)
-        menuHelper.setForceShowIcon(true)
-        menuHelper.show()
-    }
-
     fun fillGrid(grid: GridLayout) {
         for (i in 0 until grid.rowCount) {
             for (j in 0 until grid.columnCount)
             {
-                val dummyCell = LinearLayout(this)
+                val dummyCell = DummyCell(this)
                 val lp = GridLayout.LayoutParams()
                 lp.width = 144
                 lp.height = 144
@@ -78,14 +65,35 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
         }
     }
 
+    fun createPopupMenu(view: View) {
+        val builder = MenuBuilder(view.context)
+        val inflater = MenuInflater(view.context)
+        inflater.inflate(R.menu.shortcut_popup_menu, builder)
+        for (item in builder.iterator()) {
+            item.setOnMenuItemClickListener(this)
+        }
+        val menuHelper = MenuPopupHelper(view.context, builder, view)
+        menuHelper.setForceShowIcon(true)
+        menuHelper.show()
+    }
+
+    override fun onMenuItemClick(item: MenuItem?): Boolean {
+        println(item?.intent)
+        return true
+    }
+
     override fun onDrag(dummyCell: View?, event: DragEvent?): Boolean {
         val shortcut = event?.localState as ImageView
-        shortcut.visibility = View.INVISIBLE
 //        println("view=${dummyCell?.javaClass?.simpleName} ${dummyCell.hashCode()}, event.action=${event.action} event.loacalState=${event.localState.javaClass.simpleName} ${event.localState.hashCode()}")
+
+        val side: Int
 
         when (event.action) {
             DragEvent.ACTION_DRAG_STARTED -> {
                 // change listeners
+            }
+            DragEvent.ACTION_DRAG_LOCATION -> {
+                (dummyCell as DummyCell).onOver(event.x, event.y)
             }
             DragEvent.ACTION_DRAG_ENTERED -> {
                 dummyCell?.setBackgroundResource(R.drawable.bot_gradient)
@@ -95,7 +103,7 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
             }
             DragEvent.ACTION_DROP -> {
                 println(dummyCell)
-                moveShortuct(shortcut, dummyCell as ViewGroup)
+                moveShortcut(shortcut, dummyCell as ViewGroup)
             }
             DragEvent.ACTION_DRAG_ENDED -> {
                 // back to default state
@@ -126,17 +134,12 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
         dummyCell.setBackgroundColor(Color.argb(40,0,0,0))
     }
 
-
-    override fun onMenuItemClick(item: MenuItem?): Boolean {
-        println(item?.intent)
-        return true
+    private fun moveShortcut(shortcut: ImageView, newDummy: ViewGroup) {
+        (shortcut.parent as ViewGroup).removeView(shortcut)
+        newDummy.addView(shortcut)
     }
 
-    private fun moveShortuct(shortcut: ImageView, toDummy: ViewGroup) {
-        //remove shortcut from parent
-        toDummy.addView(shortcut)
-    }
-    private fun swap() {
+    private fun swapShortcuts() {
 
     }
 
