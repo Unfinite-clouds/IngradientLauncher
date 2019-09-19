@@ -2,6 +2,7 @@ package com.example.launchertest.try_grid
 
 import android.content.ClipData
 import android.graphics.Color
+import android.graphics.PorterDuff
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.*
@@ -24,62 +25,11 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
     lateinit var enterShape: Drawable
     lateinit var normalShape: Drawable
 
-    override fun onDrag(iconView: View?, event: DragEvent?): Boolean {
-
-
-        when (event?.action) {
-            DragEvent.ACTION_DRAG_STARTED -> {
-                (event.localState as ImageView).setColorFilter(Color.LTGRAY)
-            }
-            DragEvent.ACTION_DRAG_ENTERED -> {
-                swap()
-            }
-            DragEvent.ACTION_DRAG_EXITED -> {}
-            DragEvent.ACTION_DROP -> {
-                val view2 = event.localState as View
-                val owner = view2.parent as ViewGroup
-                owner.removeView(view2)
-                val container = try_grid
-                container.addView(view2)
-                view2.visibility = View.VISIBLE
-            }
-//            DragEvent.ACTION_DRAG_ENDED -> icon.setBackgroundDrawable(normalShape)
-            else -> {
-                // do nothing
-            }
-        }
-        return true
-    }
-
-    override fun onLongClick(view: View?): Boolean {
-//        createPopupMenu(view!!)
-        startDrag(view!!)
-        return true
-    }
-
-    private fun startDrag(view: View) {
-        val data = ClipData.newPlainText("", "")
-        val shadowBuilder = View.DragShadowBuilder(view)
-        view.startDrag(data, shadowBuilder, view, 0)
-    }
-
-
-    override fun onMenuItemClick(item: MenuItem?): Boolean {
-        println(item?.intent)
-        return true
-    }
-
-    private fun swap() {
-
-    }
-
     lateinit var allApps: ArrayList<AppInfo>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_try_grid)
-
-        try_grid.setOnDragListener(this)
 
         try_grid.columnCount = 5
         try_grid.rowCount = 7
@@ -126,6 +76,68 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
                 grid.addView(dummyCell)
             }
         }
+    }
+
+    override fun onDrag(dummyCell: View?, event: DragEvent?): Boolean {
+        val shortcut = event?.localState as ImageView
+        shortcut.visibility = View.INVISIBLE
+//        println("view=${dummyCell?.javaClass?.simpleName} ${dummyCell.hashCode()}, event.action=${event.action} event.loacalState=${event.localState.javaClass.simpleName} ${event.localState.hashCode()}")
+
+        when (event.action) {
+            DragEvent.ACTION_DRAG_STARTED -> {
+                // change listeners
+            }
+            DragEvent.ACTION_DRAG_ENTERED -> {
+                dummyCell?.setBackgroundResource(R.drawable.bot_gradient)
+            }
+            DragEvent.ACTION_DRAG_EXITED -> {
+                dummyCell?.setBackgroundColor(Color.argb(40,0,0,0))
+            }
+            DragEvent.ACTION_DROP -> {
+                println(dummyCell)
+                moveShortuct(shortcut, dummyCell as ViewGroup)
+            }
+            DragEvent.ACTION_DRAG_ENDED -> {
+                // back to default state
+                endDrag(shortcut, dummyCell!!)
+            }
+        }
+        return true
+    }
+
+    override fun onLongClick(view: View?): Boolean {
+//        createPopupMenu(view!!)
+        startDrag(view!! as ImageView)
+        return true
+    }
+
+    private fun startDrag(shortcut: ImageView) {
+        println("${shortcut.javaClass.simpleName} ${shortcut.hashCode()}")
+        shortcut.visibility = View.INVISIBLE
+        shortcut.setColorFilter(Color.rgb(181, 232, 255), PorterDuff.Mode.MULTIPLY)
+        val data = ClipData.newPlainText("", "")
+        val shadowBuilder = View.DragShadowBuilder(shortcut)
+        shortcut.startDrag(data, shadowBuilder, shortcut, 0)
+    }
+
+    private fun endDrag(shortcut: ImageView, dummyCell: View) {
+        shortcut.clearColorFilter()
+        shortcut.visibility = View.VISIBLE
+        dummyCell.setBackgroundColor(Color.argb(40,0,0,0))
+    }
+
+
+    override fun onMenuItemClick(item: MenuItem?): Boolean {
+        println(item?.intent)
+        return true
+    }
+
+    private fun moveShortuct(shortcut: ImageView, toDummy: ViewGroup) {
+        //remove shortcut from parent
+        toDummy.addView(shortcut)
+    }
+    private fun swap() {
+
     }
 
 /*
