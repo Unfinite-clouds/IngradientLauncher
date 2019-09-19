@@ -7,15 +7,13 @@ import android.os.Build
 import android.os.Handler
 import android.util.AttributeSet
 import android.view.View
-import android.view.animation.Animation
-import android.view.animation.DecelerateInterpolator
-import android.view.animation.TranslateAnimation
+import android.widget.GridLayout
 import android.widget.LinearLayout
 import androidx.annotation.RequiresApi
 import com.example.launchertest.R
 
 
-class DummyCell : LinearLayout, Draggable {
+class DummyCell : LinearLayout, DragListener {
     companion object {
         const val STATE_EMPTY = 0
         const val STATE_FILLED = 1
@@ -29,7 +27,13 @@ class DummyCell : LinearLayout, Draggable {
     private val bgcolor = Color.argb(40,0,0,0)
     private var side = Point(0,0)
 
+    var position = Point(-1,-1)
+
     init {
+        val lp = GridLayout.LayoutParams(GridLayout.spec(position.x), GridLayout.spec(position.y))
+
+        layoutParams = lp
+
         clipChildren = false
         setBackgroundColor(bgcolor)
     }
@@ -59,19 +63,9 @@ class DummyCell : LinearLayout, Draggable {
         setBackgroundResource(R.drawable.bot_gradient)
 
         if (state == STATE_FILLED) {
-            println("a_start")
+            println("anim1_start")
             Handler().postDelayed(slideAnimation, 1500)
 
-            val anim = TranslateAnimation(
-                Animation.RELATIVE_TO_SELF, 0f,
-                Animation.RELATIVE_TO_PARENT, 1f*side.x,
-                Animation.RELATIVE_TO_SELF, 0f,
-                Animation.RELATIVE_TO_PARENT, 1f*side.y)
-
-            anim.duration = 500
-            anim.interpolator = DecelerateInterpolator()
-            anim.fillAfter = true
-            this.getChildAt(0).startAnimation(anim)
 //            val anim = ObjectAnimator.ofFloat(this.getChildAt(0), View.TRANSLATION_Y, toPx(-30))
 //            anim.duration = 300
 //            anim.start()
@@ -92,5 +86,8 @@ class DummyCell : LinearLayout, Draggable {
 
     override fun onDragEnded() {
         setBackgroundColor(bgcolor)
+    }
+
+    fun a() {
     }
 }

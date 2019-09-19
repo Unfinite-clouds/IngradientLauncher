@@ -1,6 +1,6 @@
 package com.example.launchertest.try_grid
 
-interface Draggable {
+interface DragListener {
     fun onDragStarted()
     fun onDragEntered()
     fun onDragExited()

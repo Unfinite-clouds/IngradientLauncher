@@ -12,7 +12,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.view.menu.MenuPopupHelper
 import androidx.core.view.iterator
-import androidx.core.view.setMargins
 import com.example.launchertest.AppInfo
 import com.example.launchertest.R
 import com.example.launchertest.getAllAppsList
@@ -39,28 +38,12 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
     }
 
     private fun fillGrid(grid: GridLayout) {
-        for (i in 0 until grid.rowCount) {
-            for (j in 0 until grid.columnCount)
-            {
-                val dummyCell = DummyCell(this)
-                val lp = GridLayout.LayoutParams()
-                lp.width = 144
-                lp.height = 144
-                lp.setGravity(Gravity.CENTER)
-                lp.setMargins(20)
-                dummyCell.layoutParams = lp
-                dummyCell.setOnDragListener(this)
-
-                if (Random.nextInt(100) > 70) {
-                    val img = ImageView(this)
-                    img.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                    img.setOnLongClickListener(this)
-                    img.setImageDrawable(getAllAppsList(this)[Random.nextInt(getAllAppsList(this).size)].icon)
-                    dummyCell.addView(img)
-                }
-
-                grid.addView(dummyCell)
-            }
+        if (Random.nextInt(100) > 70) {
+            val img = ImageView(this)
+            img.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            img.setOnLongClickListener(this)
+            img.setImageDrawable(getAllAppsList(this)[Random.nextInt(getAllAppsList(this).size)].icon)
+            grid.addView(img)
         }
     }
 

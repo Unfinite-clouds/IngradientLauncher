@@ -8,13 +8,13 @@
         android:id="@+id/try_rl"
         android:animateLayoutChanges="true">
 
-    <GridLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+    <com.example.launchertest.try_grid.LauncherScreenGrid android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:columnCount="4"
                 android:rowCount="7"
                 android:id="@+id/try_grid"
-    android:clipChildren="false">
+                android:clipChildren="false">
 
-    </GridLayout>
+    </com.example.launchertest.try_grid.LauncherScreenGrid>
 
 </RelativeLayout>
