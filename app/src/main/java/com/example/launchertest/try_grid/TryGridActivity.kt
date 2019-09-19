@@ -38,7 +38,7 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
         fillGrid(try_grid)
     }
 
-    fun fillGrid(grid: GridLayout) {
+    private fun fillGrid(grid: GridLayout) {
         for (i in 0 until grid.rowCount) {
             for (j in 0 until grid.columnCount)
             {
@@ -90,28 +90,26 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
         val shortcut = event.localState as ImageView
 //        println("view=${dummyCell?.javaClass?.simpleName} ${dummyCell.hashCode()}, event.action=${event.action} event.loacalState=${event.localState.javaClass.simpleName} ${event.localState.hashCode()}")
 
-        val side: Int
-
         when (event.action) {
             DragEvent.ACTION_DRAG_STARTED -> {
                 dummyCell.onDragStarted()
             }
             DragEvent.ACTION_DRAG_LOCATION -> {
-                dummyCell.onLocationChanged(event.x, event.y)
+                dummyCell.onDragLocationChanged(event.x, event.y)
             }
             DragEvent.ACTION_DRAG_ENTERED -> {
-                dummyCell.onEntered()
+                dummyCell.onDragEntered()
             }
             DragEvent.ACTION_DRAG_EXITED -> {
-                dummyCell.onExited()
+                dummyCell.onDragExited()
             }
             DragEvent.ACTION_DROP -> {
-                println(dummyCell)
                 moveShortcut(shortcut, dummyCell as ViewGroup)
             }
             DragEvent.ACTION_DRAG_ENDED -> {
                 // back to default state
-                endDrag(shortcut, dummyCell!!)
+                dummyCell.onDragEnded()
+                endDrag(shortcut)
             }
         }
         return true
@@ -132,10 +130,9 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
         shortcut.startDrag(data, shadowBuilder, shortcut, 0)
     }
 
-    private fun endDrag(shortcut: ImageView, dummyCell: View) {
+    private fun endDrag(shortcut: ImageView) {
         shortcut.clearColorFilter()
         shortcut.visibility = View.VISIBLE
-        dummyCell.setBackgroundColor(Color.argb(40,0,0,0))
     }
 
     private fun moveShortcut(shortcut: ImageView, newDummy: ViewGroup) {
