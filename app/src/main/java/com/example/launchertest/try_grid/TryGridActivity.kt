@@ -3,10 +3,8 @@ package com.example.launchertest.try_grid
 import android.content.ClipData
 import android.graphics.Color
 import android.graphics.PorterDuff
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.*
-import android.widget.GridLayout
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.menu.MenuBuilder
@@ -20,48 +18,25 @@ import kotlin.random.Random
 
 
 class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, View.OnDragListener, View.OnLongClickListener {
-    lateinit var enterShape: Drawable
-    lateinit var normalShape: Drawable
-
     lateinit var allApps: ArrayList<AppInfo>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_try_grid)
 
-        try_grid.columnCount = 5
-        try_grid.rowCount = 7
-
         allApps = getAllAppsList(this)
 
         fillGrid(try_grid)
     }
 
-    private fun fillGrid(grid: GridLayout) {
-        if (Random.nextInt(100) > 70) {
+    private fun fillGrid(grid: LauncherScreenGrid) {
+        for (i in 0 until (0.5*grid.childCount).toInt()) {
             val img = ImageView(this)
             img.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             img.setOnLongClickListener(this)
             img.setImageDrawable(getAllAppsList(this)[Random.nextInt(getAllAppsList(this).size)].icon)
-            grid.addView(img)
+            grid.addViewTo(img, i/grid.columnCount, i%grid.columnCount)
         }
-    }
-
-    fun createPopupMenu(view: View) {
-        val builder = MenuBuilder(view.context)
-        val inflater = MenuInflater(view.context)
-        inflater.inflate(R.menu.shortcut_popup_menu, builder)
-        for (item in builder.iterator()) {
-            item.setOnMenuItemClickListener(this)
-        }
-        val menuHelper = MenuPopupHelper(view.context, builder, view)
-        menuHelper.setForceShowIcon(true)
-        menuHelper.show()
-    }
-
-    override fun onMenuItemClick(item: MenuItem?): Boolean {
-        println(item?.intent)
-        return true
     }
 
     override fun onDrag(view: View?, event: DragEvent?): Boolean {
@@ -124,6 +99,23 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
 
     private fun swapShortcuts() {
 
+    }
+
+    fun createPopupMenu(view: View) {
+        val builder = MenuBuilder(view.context)
+        val inflater = MenuInflater(view.context)
+        inflater.inflate(R.menu.shortcut_popup_menu, builder)
+        for (item in builder.iterator()) {
+            item.setOnMenuItemClickListener(this)
+        }
+        val menuHelper = MenuPopupHelper(view.context, builder, view)
+        menuHelper.setForceShowIcon(true)
+        menuHelper.show()
+    }
+
+    override fun onMenuItemClick(item: MenuItem?): Boolean {
+        println(item?.title)
+        return true
     }
 
 /*

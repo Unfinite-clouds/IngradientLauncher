@@ -7,7 +7,6 @@ import android.os.Build
 import android.os.Handler
 import android.util.AttributeSet
 import android.view.View
-import android.widget.GridLayout
 import android.widget.LinearLayout
 import androidx.annotation.RequiresApi
 import com.example.launchertest.R
@@ -27,13 +26,9 @@ class DummyCell : LinearLayout, DragListener {
     private val bgcolor = Color.argb(40,0,0,0)
     private var side = Point(0,0)
 
-    var position = Point(-1,-1)
+    lateinit var position: Point
 
     init {
-        val lp = GridLayout.LayoutParams(GridLayout.spec(position.x), GridLayout.spec(position.y))
-
-        layoutParams = lp
-
         clipChildren = false
         setBackgroundColor(bgcolor)
     }
