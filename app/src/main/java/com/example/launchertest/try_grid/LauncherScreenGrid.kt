@@ -71,42 +71,54 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener{
         return false
     }
 
-    override fun onDrag(view: View?, event: DragEvent?): Boolean {
-        if (view !is DummyCell || event == null)
+    override fun onDrag(cell: View?, event: DragEvent?): Boolean {
+        if (cell !is DummyCell || event == null)
             return false
 
-        val cell = view as DummyCell
         val shortcut = event.localState as ImageView
 
-//        println("view=${dummyCell?.javaClass?.simpleName} ${dummyCell.hashCode()}, event.action=${event.action} event.loacalState=${event.localState.javaClass.simpleName} ${event.localState.hashCode()}")
-
         when (event.action) {
+
             DragEvent.ACTION_DRAG_STARTED -> {
                 cell.onDragStarted()
             }
+
             DragEvent.ACTION_DRAG_ENTERED -> {
                 cell.onDragEntered()
+                dragSide = Point(0, 0)
+
             }
+
             DragEvent.ACTION_DRAG_LOCATION -> {
+                val newDragSide: Point
                 // remember that the origin of coordinate system is [left, top]
-                if (event.y > event.x) dragSide =
+                if (event.y > event.x) newDragSide =
                     if (event.y > cellHeight - event.x) Point(0, 1) else Point(-1, 0)
-                else dragSide =
+                else newDragSide =
                     if (event.y > cellHeight - event.x) Point(1, 0) else Point(0, -1)
 
-                cell.doTranslateBy(-dragSide.x, -dragSide.y, 100f)
+                if (dragSide != newDragSide) {
+                    cell.doTranslateBy(-dragSide.x, -dragSide.y, 0f) // back translating
+                    dragSide = newDragSide
+                    cell.doTranslateBy(-dragSide.x, -dragSide.y, 100f)
+                }
             }
+
             DragEvent.ACTION_DRAG_EXITED -> {
+                cell.doTranslateBy(-dragSide.x, -dragSide.y, 0f) // back translating
                 cell.onDragExited()
             }
+
             DragEvent.ACTION_DROP -> {
-                // dummyCell is the cell to drop
+                // cell is the cell to drop
                 if (cell.canMoveBy(-dragSide.x, -dragSide.y)) {
+                    cell.doTranslateBy(-dragSide.x, -dragSide.y, 0f) // back translating - just for anti-blink
                     (shortcut.parent as DummyCell).removeView(shortcut)
                     cell.doMoveBy(-dragSide.x, -dragSide.y)
                     cell.addView(shortcut)
-                }
+                } else return false
             }
+
             DragEvent.ACTION_DRAG_ENDED -> {
                 // back to default state
                 cell.onDragEnded()

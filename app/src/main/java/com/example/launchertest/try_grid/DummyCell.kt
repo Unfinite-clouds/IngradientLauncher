@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Point
 import android.os.Build
-import android.os.Handler
 import android.util.AttributeSet
 import android.view.View
 import android.widget.ImageView
@@ -48,8 +47,8 @@ class DummyCell : LinearLayout, DragListener {
         isReserved = false
     }
 
-    fun getShortcut(): ImageView {
-        return getChildAt(0) as ImageView
+    fun getShortcut(): ImageView? {
+        return getChildAt(0) as ImageView?
     }
 
 
@@ -60,14 +59,14 @@ class DummyCell : LinearLayout, DragListener {
     override fun onDragEntered() {
         setBackgroundResource(R.drawable.bot_gradient)
 
-        if (childCount != 0) {
+//        if (childCount != 0) {
 //            println("anim1_start")
-            Handler().postDelayed(slideAnimation, 1500)
+//            Handler().postDelayed(slideAnimation, 1500)
 
 //            val anim = ObjectAnimator.ofFloat(this.getChildAt(0), View.TRANSLATION_Y, toPx(-30))
 //            anim.duration = 300
 //            anim.start()
-        }
+//        }
     }
 
     override fun onDragLocationChanged(x: Float, y: Float){
@@ -81,24 +80,38 @@ class DummyCell : LinearLayout, DragListener {
     override fun onDragEnded() {
         setBackgroundColor(bgcolor)
         isReserved = false
-        getShortcut().translationX = 0f
-        getShortcut().translationY = 0f
+        getShortcut()?.translationX = 0f
+        getShortcut()?.translationY = 0f
     }
 
-    fun canMoveBy(directionX: Int, directionY: Int): Boolean {
+    private fun doRecursionPass(directionX: Int, directionY: Int, action: (nextCell: DummyCell) -> Unit): Boolean {
         if (isEmptyCell()) {
+            return true
+        }
+        if (directionX == 0 && directionY == 0) {
+            action(this)
             return true
         }
         val next = Point(position.x + directionX, position.y + directionY)
         val nextCell: DummyCell? = (parent as LauncherScreenGrid).getCellAt(next)
-        if (nextCell?.canMoveBy(directionX, directionY) == true) {
+        if (nextCell?.doRecursionPass(directionX, directionY, action) == true) {
+            action(nextCell)
             return true
         }
         return false
     }
 
+    fun canMoveBy(directionX: Int, directionY: Int): Boolean {
+        return doRecursionPass(directionX, directionY) {}
+    }
+
     fun doMoveBy(directionX: Int, directionY: Int): Boolean {
-        if (isEmptyCell()) {
+        return doRecursionPass(directionX, directionY) { nextCell ->
+            val child = getChildAt(0)
+            removeAllViews()
+            nextCell.addView(child)
+        }
+/*        if (isEmptyCell()) {
             return true
         }
         val next = Point(position.x + directionX, position.y + directionY)
@@ -109,21 +122,30 @@ class DummyCell : LinearLayout, DragListener {
             nextCell.addView(child)
             return true
         }
-        return false
+        return false*/
     }
 
     fun doTranslateBy(directionX: Int, directionY: Int, value: Float): Boolean {
-        if (isEmptyCell()) {
+        return doRecursionPass(directionX, directionY) {
+            getShortcut()?.translationX = value*directionX
+            getShortcut()?.translationY = value*directionY
+        }
+/*        if (isEmptyCell()) {
+            return true
+        }
+        if (directionX == 0 && directionY == 0) {
+            getShortcut()?.translationX = value*directionX
+            getShortcut()?.translationY = value*directionY
             return true
         }
         val next = Point(position.x + directionX, position.y + directionY)
         val nextCell: DummyCell? = (parent as LauncherScreenGrid).getCellAt(next)
         if (nextCell?.doTranslateBy(directionX, directionY, value) == true) {
-            getShortcut().translationX = value*directionX
-            getShortcut().translationY = value*directionY
+            getShortcut()?.translationX = value*directionX
+            getShortcut()?.translationY = value*directionY
             return true
         }
-        return false
+        return false*/
     }
 
     fun isEmptyCell(): Boolean {
