@@ -6,8 +6,10 @@ import android.graphics.Point
 import android.os.Build
 import android.os.Handler
 import android.util.AttributeSet
+import android.view.View
 import android.widget.LinearLayout
 import androidx.annotation.RequiresApi
+import com.example.launchertest.LauncherException
 import com.example.launchertest.R
 
 
@@ -30,6 +32,13 @@ class DummyCell : LinearLayout, DragListener {
     init {
         clipChildren = false
         setBackgroundColor(bgcolor)
+    }
+
+    override fun onViewAdded(child: View?) {
+        if (childCount > 0) {
+            throw LauncherException("${javaClass.simpleName} can only have 1 child")
+        }
+        super.onViewAdded(child)
     }
 
 
@@ -62,4 +71,18 @@ class DummyCell : LinearLayout, DragListener {
         setBackgroundColor(bgcolor)
     }
 
+    fun tryMoveBy(direction: Point): Boolean {
+        if (childCount == 0) {
+            return true
+        }
+        val next = Point(position.x + direction.x, position.y + direction.y)
+        val nextCell: DummyCell? = (parent as LauncherScreenGrid).getCellAt(next)
+        if (nextCell?.tryMoveBy(direction) == true) {
+            val child = getChildAt(0)
+            removeAllViews()
+            nextCell.addView(child)
+            return true
+        }
+        return false
+    }
 }

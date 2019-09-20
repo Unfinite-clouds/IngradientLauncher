@@ -38,7 +38,7 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
             img.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             img.setOnLongClickListener(this)
             img.setImageDrawable(getAllAppsList(this)[Random.nextInt(getAllAppsList(this).size)].icon)
-            grid.addViewTo(img, i/grid.columnCount, i%grid.columnCount)
+            grid.addViewTo(img, i%grid.columnCount, i/grid.columnCount)
         }
     }
 
@@ -83,11 +83,12 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
 
     private fun startDrag(shortcut: ImageView) {
         println("${shortcut.javaClass.simpleName} ${shortcut.hashCode()}")
-        shortcut.visibility = View.INVISIBLE
+//        shortcut.visibility = View.INVISIBLE
         shortcut.setColorFilter(Color.rgb(181, 232, 255), PorterDuff.Mode.MULTIPLY)
         val data = ClipData.newPlainText("", "")
         val shadowBuilder = View.DragShadowBuilder(shortcut)
         shortcut.startDrag(data, shadowBuilder, shortcut, 0)
+        (shortcut.parent as ViewGroup).removeView(shortcut)
     }
 
     fun createPopupMenu(view: View) {

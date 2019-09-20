@@ -32,7 +32,7 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener{
             for (x in 0 until columnCount) {
                 addView(DummyCell(context).apply {
                     position = Point(x,y)
-                    layoutParams = LayoutParams(spec(position.x), spec(position.y))
+                    layoutParams = LayoutParams(spec(position.y), spec(position.x))
                     layoutParams.width = cellWidth
                     layoutParams.height = cellHeight
                     (layoutParams as LayoutParams).setMargins(margins)
@@ -60,6 +60,10 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener{
         return null
     }
 
+    fun getCellAt(pos: Point): DummyCell? {
+        return getCellAt(pos.x, pos.y)
+    }
+
     fun checkCellAt(x: Int, y: Int): Boolean {
         if (x in 0 until columnCount && y in 0 until rowCount) {
             return true
@@ -85,22 +89,28 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener{
             }
             DragEvent.ACTION_DRAG_LOCATION -> {
                 // remember that origin of coordinate system is [left, top]
-                if (event.y > event.x) dragSide = if (event.y > cellHeight - event.x) Point(0,1) else Point(-1,0)
-                else dragSide = if (event.y > cellHeight - event.x) Point(1,0) else Point(0,-1)
-                }
+                if (event.y > event.x) dragSide =
+                    if (event.y > cellHeight - event.x) Point(0, 1) else Point(-1, 0)
+                else dragSide =
+                    if (event.y > cellHeight - event.x) Point(1, 0) else Point(0, -1)
+            }
             DragEvent.ACTION_DRAG_EXITED -> {
                 dummyCell.onDragExited()
             }
             DragEvent.ACTION_DROP -> {
+                // dummyCell is cell to drop
                 println(dragSide)
                 var cell: DummyCell? = dummyCell
 //                var emptyCell : DummyCell? = null
-                while (cell != null && cell.childCount != 0) {
-                    println("${cell.position.x}, ${cell.position.y}")
-                    cell = getCellAt(cell.position.x - dragSide.x, cell.position.y - dragSide.y)
-                }
-                if (cell != null) println("empty cell: ${cell.position}")
-                else println("no empty cell")
+//                while (cell != null && cell.childCount != 0) {
+//                    cell = getCellAt(cell.position.x - dragSide.x, cell.position.y - dragSide.y)
+//                }
+//                if (cell != null) {
+//
+//                }
+//                else println("no empty cell")
+
+                dummyCell.tryMoveBy(dragSide)
             }
             DragEvent.ACTION_DRAG_ENDED -> {
                 // back to default state
