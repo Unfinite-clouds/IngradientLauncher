@@ -82,13 +82,15 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
     }
 
     private fun startDrag(shortcut: ImageView) {
-        println("${shortcut.javaClass.simpleName} ${shortcut.hashCode()}")
-//        shortcut.visibility = View.INVISIBLE
+        shortcut.visibility = View.INVISIBLE
         shortcut.setColorFilter(Color.rgb(181, 232, 255), PorterDuff.Mode.MULTIPLY)
+
+        val cell = (shortcut.parent as DummyCell)
+        cell.isReserved = true
+
         val data = ClipData.newPlainText("", "")
         val shadowBuilder = View.DragShadowBuilder(shortcut)
         shortcut.startDrag(data, shadowBuilder, shortcut, 0)
-        (shortcut.parent as ViewGroup).removeView(shortcut)
     }
 
     fun createPopupMenu(view: View) {

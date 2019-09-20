@@ -21,11 +21,12 @@ class DummyCell : LinearLayout, DragListener {
     constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) : super(context, attrs, defStyleAttr, defStyleRes)
 
 
+    var isReserved: Boolean = false
     lateinit var position: Point
     private val bgcolor = Color.argb(40,0,0,0)
     val slideAnimation = object : Runnable {
         override fun run() {
-            println("slideAnimation")
+//            println("slideAnimation")
         }
     }
 
@@ -35,10 +36,15 @@ class DummyCell : LinearLayout, DragListener {
     }
 
     override fun onViewAdded(child: View?) {
-        if (childCount > 0) {
+        if (childCount > 1) {
             throw LauncherException("${javaClass.simpleName} can only have 1 child")
         }
         super.onViewAdded(child)
+    }
+
+    override fun onViewRemoved(child: View?) {
+        super.onViewRemoved(child)
+        isReserved = false
     }
 
 
@@ -50,7 +56,7 @@ class DummyCell : LinearLayout, DragListener {
         setBackgroundResource(R.drawable.bot_gradient)
 
         if (childCount != 0) {
-            println("anim1_start")
+//            println("anim1_start")
             Handler().postDelayed(slideAnimation, 1500)
 
 //            val anim = ObjectAnimator.ofFloat(this.getChildAt(0), View.TRANSLATION_Y, toPx(-30))
@@ -69,20 +75,28 @@ class DummyCell : LinearLayout, DragListener {
 
     override fun onDragEnded() {
         setBackgroundColor(bgcolor)
+        isReserved = false
     }
 
-    fun tryMoveBy(direction: Point): Boolean {
-        if (childCount == 0) {
+    fun tryMoveBy(directionX: Int, directionY: Int): Boolean {
+        println("move try: $position")
+        if (isEmptyCell()) {
             return true
         }
-        val next = Point(position.x + direction.x, position.y + direction.y)
+        val next = Point(position.x + directionX, position.y + directionY)
         val nextCell: DummyCell? = (parent as LauncherScreenGrid).getCellAt(next)
-        if (nextCell?.tryMoveBy(direction) == true) {
+        if (nextCell?.tryMoveBy(directionX, directionY) == true) {
             val child = getChildAt(0)
             removeAllViews()
             nextCell.addView(child)
             return true
         }
+        return false
+    }
+
+    fun isEmptyCell(): Boolean {
+        if (childCount == 0 || isReserved)
+            return true
         return false
     }
 }

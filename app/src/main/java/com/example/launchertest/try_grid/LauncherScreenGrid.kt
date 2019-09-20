@@ -100,7 +100,13 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener{
             DragEvent.ACTION_DROP -> {
                 // dummyCell is cell to drop
                 println(dragSide)
-                var cell: DummyCell? = dummyCell
+                val cell: DummyCell? = dummyCell
+                if (cell?.tryMoveBy(-dragSide.x, -dragSide.y) == false) {
+                    println("no empty cell")
+                } else {
+                    (shortcut.parent as DummyCell).removeView(shortcut)
+                    cell?.addView(shortcut)
+                }
 //                var emptyCell : DummyCell? = null
 //                while (cell != null && cell.childCount != 0) {
 //                    cell = getCellAt(cell.position.x - dragSide.x, cell.position.y - dragSide.y)
@@ -110,7 +116,7 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener{
 //                }
 //                else println("no empty cell")
 
-                dummyCell.tryMoveBy(dragSide)
+//                dummyCell.tryMoveBy(dragSide)
             }
             DragEvent.ACTION_DRAG_ENDED -> {
                 // back to default state
