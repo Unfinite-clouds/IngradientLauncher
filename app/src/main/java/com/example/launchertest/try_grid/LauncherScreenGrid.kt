@@ -1,26 +1,38 @@
 package com.example.launchertest.try_grid
 
+import android.content.ClipData
 import android.content.Context
+import android.graphics.Color
 import android.graphics.Point
+import android.graphics.PointF
+import android.graphics.PorterDuff
 import android.util.AttributeSet
-import android.view.DragEvent
-import android.view.Gravity
-import android.view.View
+import android.view.*
 import android.widget.GridLayout
 import android.widget.ImageView
+import androidx.appcompat.view.menu.MenuBuilder
+import androidx.appcompat.view.menu.MenuPopupHelper
+import androidx.core.view.iterator
 import androidx.core.view.setMargins
+import androidx.core.view.setPadding
+import com.example.launchertest.R
+import kotlin.math.abs
 
-class LauncherScreenGrid : GridLayout, View.OnDragListener{
+class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemClickListener, View.OnLongClickListener{
     constructor(context: Context, nrows: Int, ncols: Int) : super(context)
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
 
     // TODO: remove magic values
-    private var cellWidth = 144
-    private var cellHeight = 144
-    private var margins = 20
+    private var margins = 0
+    private var padding = 20
+    private var cellWidth = 144 + padding*2
+    private var cellHeight = 144 + padding*2
 
     val positions = Array(columnCount) { IntArray(rowCount) }
-    var dragSide = Point(0, 0)
+    private var dragSide = Point(0, 0)
+    private var dragStartPoint: PointF? = null
+    private val radius = 20
+    private lateinit var menuHelper: MenuPopupHelper
 
     init {
         fillEmptyGrid()
@@ -35,6 +47,7 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener{
                     layoutParams.width = cellWidth
                     layoutParams.height = cellHeight
                     (layoutParams as LayoutParams).setMargins(margins)
+                    setPadding(this@LauncherScreenGrid.padding)
                     (layoutParams as LayoutParams).setGravity(Gravity.CENTER)
                     setOnDragListener(this@LauncherScreenGrid)
                 })
@@ -85,6 +98,7 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener{
             DragEvent.ACTION_DRAG_ENTERED -> {
                 cell.onDragEntered()
                 dragSide = Point(0, 0)
+                dragStartPoint = null
 
             }
 
@@ -100,6 +114,13 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener{
                     cell.doTranslateBy(-dragSide.x, -dragSide.y, 0f) // back translating
                     dragSide = newDragSide
                     cell.doTranslateBy(-dragSide.x, -dragSide.y, 100f)
+                }
+
+                if (dragStartPoint == null) {
+                    dragStartPoint = PointF(event.x, event.y)
+                }
+                if (abs(dragStartPoint!!.x - event.x) > radius || abs(dragStartPoint!!.y - event.y) > radius) {
+                    menuHelper.dismiss()
                 }
             }
 
@@ -130,5 +151,40 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener{
     private fun endDrag(shortcut: ImageView) {
         shortcut.clearColorFilter()
         shortcut.visibility = View.VISIBLE
+    }
+
+    override fun onLongClick(view: View?): Boolean {
+        createPopupMenu(view!!)
+        startDrag(view!! as ImageView)
+        return true
+    }
+
+    private fun startDrag(shortcut: ImageView) {
+        shortcut.visibility = View.INVISIBLE
+        shortcut.setColorFilter(Color.rgb(181, 232, 255), PorterDuff.Mode.MULTIPLY)
+
+        val cell = (shortcut.parent as DummyCell)
+        cell.isReserved = true
+
+        val data = ClipData.newPlainText("", "")
+        val shadowBuilder = View.DragShadowBuilder(shortcut)
+        shortcut.startDrag(data, shadowBuilder, shortcut, 0)
+    }
+
+    fun createPopupMenu(view: View) {
+        val builder = MenuBuilder(view.context)
+        val inflater = MenuInflater(view.context)
+        inflater.inflate(R.menu.shortcut_popup_menu, builder)
+        for (item in builder.iterator()) {
+            item.setOnMenuItemClickListener(this)
+        }
+        menuHelper = MenuPopupHelper(view.context, builder, view)
+        menuHelper.setForceShowIcon(true)
+        menuHelper.show()
+    }
+
+    override fun onMenuItemClick(item: MenuItem?): Boolean {
+        println(item?.title)
+        return true
     }
 }

@@ -1,18 +1,9 @@
 package com.example.launchertest.try_grid
 
-import android.content.ClipData
-import android.graphics.Color
-import android.graphics.PorterDuff
 import android.os.Bundle
-import android.view.MenuInflater
-import android.view.MenuItem
-import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.view.menu.MenuBuilder
-import androidx.appcompat.view.menu.MenuPopupHelper
-import androidx.core.view.iterator
 import com.example.launchertest.AppInfo
 import com.example.launchertest.R
 import com.example.launchertest.getAllAppsList
@@ -20,7 +11,7 @@ import kotlinx.android.synthetic.main.activity_try_grid.*
 import kotlin.random.Random
 
 
-class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, View.OnLongClickListener {
+class TryGridActivity : AppCompatActivity() {
     lateinit var allApps: ArrayList<AppInfo>
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,7 +27,7 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
         for (i in 0 until (0.5*grid.childCount).toInt()) {
             val img = ImageView(this)
             img.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-            img.setOnLongClickListener(this)
+            img.setOnLongClickListener(try_grid)
             img.setImageDrawable(getAllAppsList(this)[Random.nextInt(getAllAppsList(this).size)].icon)
             grid.addViewTo(img, i%grid.columnCount, i/grid.columnCount)
         }
@@ -75,40 +66,9 @@ class TryGridActivity : AppCompatActivity(), MenuItem.OnMenuItemClickListener, V
         return true
     }*/
 
-    override fun onLongClick(view: View?): Boolean {
-//        createPopupMenu(view!!)
-        startDrag(view!! as ImageView)
-        return true
-    }
 
-    private fun startDrag(shortcut: ImageView) {
-        shortcut.visibility = View.INVISIBLE
-        shortcut.setColorFilter(Color.rgb(181, 232, 255), PorterDuff.Mode.MULTIPLY)
 
-        val cell = (shortcut.parent as DummyCell)
-        cell.isReserved = true
 
-        val data = ClipData.newPlainText("", "")
-        val shadowBuilder = View.DragShadowBuilder(shortcut)
-        shortcut.startDrag(data, shadowBuilder, shortcut, 0)
-    }
-
-    fun createPopupMenu(view: View) {
-        val builder = MenuBuilder(view.context)
-        val inflater = MenuInflater(view.context)
-        inflater.inflate(R.menu.shortcut_popup_menu, builder)
-        for (item in builder.iterator()) {
-            item.setOnMenuItemClickListener(this)
-        }
-        val menuHelper = MenuPopupHelper(view.context, builder, view)
-        menuHelper.setForceShowIcon(true)
-        menuHelper.show()
-    }
-
-    override fun onMenuItemClick(item: MenuItem?): Boolean {
-        println(item?.title)
-        return true
-    }
 
 /*
     override fun onContentChanged() {

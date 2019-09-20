@@ -32,6 +32,7 @@ class DummyCell : LinearLayout, DragListener {
 
     init {
         clipChildren = false
+        clipToPadding = false
         setBackgroundColor(bgcolor)
     }
 
