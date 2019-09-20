@@ -20,7 +20,7 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener{
     private var cellHeight = 144
     private var margins = 20
 
-    val positions = Array(rowCount) { IntArray(columnCount) }
+    val positions = Array(columnCount) { IntArray(rowCount) }
     var dragSide = Point(0, 0)
 
     init {
@@ -28,10 +28,10 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener{
     }
 
     private fun fillEmptyGrid() {
-        for (i in 0 until rowCount) {
-            for (j in 0 until columnCount) {
+        for (y in 0 until rowCount) {
+            for (x in 0 until columnCount) {
                 addView(DummyCell(context).apply {
-                    position = Point(i,j)
+                    position = Point(x,y)
                     layoutParams = LayoutParams(spec(position.x), spec(position.y))
                     layoutParams.width = cellWidth
                     layoutParams.height = cellHeight
@@ -39,7 +39,7 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener{
                     (layoutParams as LayoutParams).setGravity(Gravity.CENTER)
                     setOnDragListener(this@LauncherScreenGrid)
                 })
-                positions[i][j] = childCount-1
+                positions[x][y] = childCount-1
             }
         }
     }
@@ -50,11 +50,21 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener{
     }
 
     fun addViewTo(child: View, x: Int, y: Int) {
-        getCellAt(x,y).addView(child)
+        getCellAt(x,y)?.addView(child)
     }
 
-    fun getCellAt(x: Int, y: Int): DummyCell {
-        return getChildAt(positions[x][y])
+    fun getCellAt(x: Int, y: Int): DummyCell? {
+        if (checkCellAt(x, y)) {
+            return getChildAt(positions[x][y])
+        }
+        return null
+    }
+
+    fun checkCellAt(x: Int, y: Int): Boolean {
+        if (x in 0 until columnCount && y in 0 until rowCount) {
+            return true
+        }
+        return false
     }
 
     override fun onDrag(view: View?, event: DragEvent?): Boolean {
@@ -82,11 +92,15 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener{
                 dummyCell.onDragExited()
             }
             DragEvent.ACTION_DROP -> {
-                var cell = dummyCell
-                while (cell.childCount != 0) {
-                    cell = getCellAt(dummyCell.position.x + dragSide.x, dummyCell.position.y + dragSide.y)
+                println(dragSide)
+                var cell: DummyCell? = dummyCell
+//                var emptyCell : DummyCell? = null
+                while (cell != null && cell.childCount != 0) {
+                    println("${cell.position.x}, ${cell.position.y}")
+                    cell = getCellAt(cell.position.x - dragSide.x, cell.position.y - dragSide.y)
                 }
-                moveShortcut(shortcut, dummyCell as ViewGroup)
+                if (cell != null) println("empty cell: ${cell.position}")
+                else println("no empty cell")
             }
             DragEvent.ACTION_DRAG_ENDED -> {
                 // back to default state
@@ -97,9 +111,9 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener{
         return true
     }
 
-    private fun moveShortcut(shortcut: ImageView, newDummy: ViewGroup) {
+    private fun moveShortcut(shortcut: ImageView, newCell: ViewGroup) {
         (shortcut.parent as ViewGroup).removeView(shortcut)
-        newDummy.addView(shortcut)
+        newCell.addView(shortcut)
     }
 
     private fun endDrag(shortcut: ImageView) {
