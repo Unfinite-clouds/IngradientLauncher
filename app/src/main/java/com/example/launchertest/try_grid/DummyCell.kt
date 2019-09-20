@@ -84,73 +84,49 @@ class DummyCell : LinearLayout, DragListener {
         getShortcut()?.translationY = 0f
     }
 
-    private fun doRecursionPass(directionX: Int, directionY: Int, action: (nextCell: DummyCell) -> Unit): Boolean {
+    private fun doRecursionPass(directionX: Int, directionY: Int, action: (thisCell: DummyCell, nextCell: DummyCell) -> Unit): Boolean {
         if (isEmptyCell()) {
             return true
         }
         if (directionX == 0 && directionY == 0) {
-            action(this)
+            action(this, this)
             return true
         }
         val next = Point(position.x + directionX, position.y + directionY)
         val nextCell: DummyCell? = (parent as LauncherScreenGrid).getCellAt(next)
         if (nextCell?.doRecursionPass(directionX, directionY, action) == true) {
-            action(nextCell)
+            action(this, nextCell)
             return true
         }
         return false
     }
 
     fun canMoveBy(directionX: Int, directionY: Int): Boolean {
-        return doRecursionPass(directionX, directionY) {}
+        return doRecursionPass(directionX, directionY) { thisCell, nextCell -> }
     }
 
     fun doMoveBy(directionX: Int, directionY: Int): Boolean {
-        return doRecursionPass(directionX, directionY) { nextCell ->
-            val child = getChildAt(0)
-            removeAllViews()
+        return doRecursionPass(directionX, directionY) { thisCell, nextCell ->
+            val child = thisCell.getShortcut()
+            thisCell.removeAllViews()
             nextCell.addView(child)
         }
-/*        if (isEmptyCell()) {
-            return true
-        }
-        val next = Point(position.x + directionX, position.y + directionY)
-        val nextCell: DummyCell? = (parent as LauncherScreenGrid).getCellAt(next)
-        if (nextCell?.doMoveBy(directionX, directionY) == true) {
-            val child = getChildAt(0)
-            removeAllViews()
-            nextCell.addView(child)
-            return true
-        }
-        return false*/
     }
 
     fun doTranslateBy(directionX: Int, directionY: Int, value: Float): Boolean {
-        return doRecursionPass(directionX, directionY) {
-            getShortcut()?.translationX = value*directionX
-            getShortcut()?.translationY = value*directionY
+        return doRecursionPass(directionX, directionY) { thisCell, nextCell ->
+            thisCell.getShortcut()?.translationX = value*directionX
+            thisCell.getShortcut()?.translationY = value*directionY
         }
-/*        if (isEmptyCell()) {
-            return true
-        }
-        if (directionX == 0 && directionY == 0) {
-            getShortcut()?.translationX = value*directionX
-            getShortcut()?.translationY = value*directionY
-            return true
-        }
-        val next = Point(position.x + directionX, position.y + directionY)
-        val nextCell: DummyCell? = (parent as LauncherScreenGrid).getCellAt(next)
-        if (nextCell?.doTranslateBy(directionX, directionY, value) == true) {
-            getShortcut()?.translationX = value*directionX
-            getShortcut()?.translationY = value*directionY
-            return true
-        }
-        return false*/
     }
 
     fun isEmptyCell(): Boolean {
         if (childCount == 0 || isReserved)
             return true
         return false
+    }
+
+    override fun toString(): String {
+        return "${javaClass.simpleName}: $position empty=${isEmptyCell()} reserved=$isReserved"
     }
 }

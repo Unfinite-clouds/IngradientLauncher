@@ -6,7 +6,6 @@ import android.util.AttributeSet
 import android.view.DragEvent
 import android.view.Gravity
 import android.view.View
-import android.view.ViewGroup
 import android.widget.GridLayout
 import android.widget.ImageView
 import androidx.core.view.setMargins
@@ -128,17 +127,8 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener{
         return true
     }
 
-    private fun moveShortcut(shortcut: ImageView, newCell: ViewGroup) {
-        (shortcut.parent as ViewGroup).removeView(shortcut)
-        newCell.addView(shortcut)
-    }
-
     private fun endDrag(shortcut: ImageView) {
         shortcut.clearColorFilter()
         shortcut.visibility = View.VISIBLE
-    }
-
-    private fun swapShortcuts() {
-        //
     }
 }
