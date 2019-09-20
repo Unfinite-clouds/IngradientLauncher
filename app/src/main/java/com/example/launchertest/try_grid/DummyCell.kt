@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Handler
 import android.util.AttributeSet
 import android.view.View
+import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.annotation.RequiresApi
 import com.example.launchertest.LauncherException
@@ -47,6 +48,10 @@ class DummyCell : LinearLayout, DragListener {
         isReserved = false
     }
 
+    fun getShortcut(): ImageView {
+        return getChildAt(0) as ImageView
+    }
+
 
     override fun onDragStarted() {
 
@@ -76,19 +81,46 @@ class DummyCell : LinearLayout, DragListener {
     override fun onDragEnded() {
         setBackgroundColor(bgcolor)
         isReserved = false
+        getShortcut().translationX = 0f
+        getShortcut().translationY = 0f
     }
 
-    fun tryMoveBy(directionX: Int, directionY: Int): Boolean {
-        println("move try: $position")
+    fun canMoveBy(directionX: Int, directionY: Int): Boolean {
         if (isEmptyCell()) {
             return true
         }
         val next = Point(position.x + directionX, position.y + directionY)
         val nextCell: DummyCell? = (parent as LauncherScreenGrid).getCellAt(next)
-        if (nextCell?.tryMoveBy(directionX, directionY) == true) {
+        if (nextCell?.canMoveBy(directionX, directionY) == true) {
+            return true
+        }
+        return false
+    }
+
+    fun doMoveBy(directionX: Int, directionY: Int): Boolean {
+        if (isEmptyCell()) {
+            return true
+        }
+        val next = Point(position.x + directionX, position.y + directionY)
+        val nextCell: DummyCell? = (parent as LauncherScreenGrid).getCellAt(next)
+        if (nextCell?.doMoveBy(directionX, directionY) == true) {
             val child = getChildAt(0)
             removeAllViews()
             nextCell.addView(child)
+            return true
+        }
+        return false
+    }
+
+    fun doTranslateBy(directionX: Int, directionY: Int, value: Float): Boolean {
+        if (isEmptyCell()) {
+            return true
+        }
+        val next = Point(position.x + directionX, position.y + directionY)
+        val nextCell: DummyCell? = (parent as LauncherScreenGrid).getCellAt(next)
+        if (nextCell?.doTranslateBy(directionX, directionY, value) == true) {
+            getShortcut().translationX = value*directionX
+            getShortcut().translationY = value*directionY
             return true
         }
         return false

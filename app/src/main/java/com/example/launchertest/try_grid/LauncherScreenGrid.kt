@@ -75,52 +75,41 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener{
         if (view !is DummyCell || event == null)
             return false
 
-        val dummyCell = view as DummyCell
+        val cell = view as DummyCell
         val shortcut = event.localState as ImageView
 
 //        println("view=${dummyCell?.javaClass?.simpleName} ${dummyCell.hashCode()}, event.action=${event.action} event.loacalState=${event.localState.javaClass.simpleName} ${event.localState.hashCode()}")
 
         when (event.action) {
             DragEvent.ACTION_DRAG_STARTED -> {
-                dummyCell.onDragStarted()
+                cell.onDragStarted()
             }
             DragEvent.ACTION_DRAG_ENTERED -> {
-                dummyCell.onDragEntered()
+                cell.onDragEntered()
             }
             DragEvent.ACTION_DRAG_LOCATION -> {
-                // remember that origin of coordinate system is [left, top]
+                // remember that the origin of coordinate system is [left, top]
                 if (event.y > event.x) dragSide =
                     if (event.y > cellHeight - event.x) Point(0, 1) else Point(-1, 0)
                 else dragSide =
                     if (event.y > cellHeight - event.x) Point(1, 0) else Point(0, -1)
+
+                cell.doTranslateBy(-dragSide.x, -dragSide.y, 100f)
             }
             DragEvent.ACTION_DRAG_EXITED -> {
-                dummyCell.onDragExited()
+                cell.onDragExited()
             }
             DragEvent.ACTION_DROP -> {
-                // dummyCell is cell to drop
-                println(dragSide)
-                val cell: DummyCell? = dummyCell
-                if (cell?.tryMoveBy(-dragSide.x, -dragSide.y) == false) {
-                    println("no empty cell")
-                } else {
+                // dummyCell is the cell to drop
+                if (cell.canMoveBy(-dragSide.x, -dragSide.y)) {
                     (shortcut.parent as DummyCell).removeView(shortcut)
-                    cell?.addView(shortcut)
+                    cell.doMoveBy(-dragSide.x, -dragSide.y)
+                    cell.addView(shortcut)
                 }
-//                var emptyCell : DummyCell? = null
-//                while (cell != null && cell.childCount != 0) {
-//                    cell = getCellAt(cell.position.x - dragSide.x, cell.position.y - dragSide.y)
-//                }
-//                if (cell != null) {
-//
-//                }
-//                else println("no empty cell")
-
-//                dummyCell.tryMoveBy(dragSide)
             }
             DragEvent.ACTION_DRAG_ENDED -> {
                 // back to default state
-                dummyCell.onDragEnded()
+                cell.onDragEnded()
                 endDrag(shortcut)
             }
         }
