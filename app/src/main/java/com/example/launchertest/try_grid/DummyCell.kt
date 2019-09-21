@@ -6,7 +6,6 @@ import android.graphics.Point
 import android.os.Build
 import android.util.AttributeSet
 import android.view.View
-import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.annotation.RequiresApi
 import com.example.launchertest.LauncherException
@@ -48,8 +47,8 @@ class DummyCell : LinearLayout, DragListener {
         isReserved = false
     }
 
-    fun getShortcut(): ImageView? {
-        return getChildAt(0) as ImageView?
+    fun getShortcut(): AppShortcut? {
+        return getChildAt(0) as AppShortcut?
     }
 
 

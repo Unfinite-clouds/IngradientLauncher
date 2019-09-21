@@ -9,7 +9,6 @@ import android.graphics.PorterDuff
 import android.util.AttributeSet
 import android.view.*
 import android.widget.GridLayout
-import android.widget.ImageView
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.view.menu.MenuPopupHelper
 import androidx.core.view.iterator
@@ -87,7 +86,7 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
         if (cell !is DummyCell || event == null)
             return false
 
-        val shortcut = event.localState as ImageView
+        val shortcut = event.localState as AppShortcut
 
         when (event.action) {
 
@@ -148,20 +147,20 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
         return true
     }
 
-    private fun endDrag(shortcut: ImageView) {
-        shortcut.clearColorFilter()
+    private fun endDrag(shortcut: AppShortcut) {
+        shortcut.iconView.clearColorFilter()
         shortcut.visibility = View.VISIBLE
     }
 
     override fun onLongClick(view: View?): Boolean {
         createPopupMenu(view!!)
-        startDrag(view!! as ImageView)
+        startDrag(view!! as AppShortcut)
         return true
     }
 
-    private fun startDrag(shortcut: ImageView) {
+    private fun startDrag(shortcut: AppShortcut) {
         shortcut.visibility = View.INVISIBLE
-        shortcut.setColorFilter(Color.rgb(181, 232, 255), PorterDuff.Mode.MULTIPLY)
+        shortcut.iconView.setColorFilter(Color.rgb(181, 232, 255), PorterDuff.Mode.MULTIPLY)
 
         val cell = (shortcut.parent as DummyCell)
         cell.isReserved = true
