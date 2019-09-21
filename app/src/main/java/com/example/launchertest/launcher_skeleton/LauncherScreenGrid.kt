@@ -1,4 +1,4 @@
-package com.example.launchertest.try_grid
+package com.example.launchertest.launcher_skeleton
 
 import android.content.ClipData
 import android.content.Context
@@ -18,7 +18,9 @@ import com.example.launchertest.R
 import kotlin.math.abs
 
 class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemClickListener, View.OnLongClickListener{
-    constructor(context: Context, nrows: Int, ncols: Int) : super(context)
+    constructor(context: Context, nrows: Int, ncols: Int) : super(context) {
+        setGridSize(nrows, ncols)
+    }
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
 
     // TODO: remove magic values
@@ -27,14 +29,14 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
     private var cellWidth = 144 + padding*2
     private var cellHeight = 144 + padding*2
 
-    val positions = Array(columnCount) { IntArray(rowCount) }
+    lateinit var positions: Array<IntArray>
     private var dragSide = Point(0, 0)
     private var dragStartPoint: PointF? = null
     private val radius = 20
     private lateinit var menuHelper: MenuPopupHelper
 
     init {
-        fillEmptyGrid()
+//        RelativeLayout.LayoutParams(-1,-1).
     }
 
     private fun fillEmptyGrid() {
@@ -53,6 +55,14 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
                 positions[x][y] = childCount-1
             }
         }
+    }
+
+    fun setGridSize(nrows: Int, ncols: Int) {
+        removeAllViews()
+        rowCount = nrows
+        columnCount = ncols
+        positions = Array(columnCount) { IntArray(rowCount) }
+        fillEmptyGrid()
     }
 
 

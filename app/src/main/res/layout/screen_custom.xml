@@ -2,12 +2,11 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
              android:layout_width="match_parent"
              android:layout_height="match_parent">
-    <GridLayout
-            android:id="@+id/app_grid"
+    <com.example.launchertest.launcher_skeleton.LauncherScreenGrid
+            android:id="@+id/screen_grid"
             android:orientation="horizontal"
-            android:columnCount="5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
     android:layout_gravity="center">
-    </GridLayout>
+    </com.example.launchertest.launcher_skeleton.LauncherScreenGrid>
 </RelativeLayout>

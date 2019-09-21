@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.launchertest.AppInfo
 import com.example.launchertest.R
 import com.example.launchertest.getAllAppsList
+import com.example.launchertest.launcher_skeleton.AppShortcut
+import com.example.launchertest.launcher_skeleton.LauncherScreenGrid
 import kotlinx.android.synthetic.main.activity_try_grid.*
 import kotlin.random.Random
 

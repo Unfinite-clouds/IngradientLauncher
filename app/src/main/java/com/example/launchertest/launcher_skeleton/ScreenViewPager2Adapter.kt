@@ -1,14 +1,9 @@
 package com.example.launchertest.launcher_skeleton
 
 import android.content.Context
-import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.example.launchertest.IconFactoryGrid
-import com.example.launchertest.R
 import com.example.launchertest.getAllAppsList
-import kotlinx.android.synthetic.main.screen_app_grid.view.*
 
 class ScreenViewPager2Adapter : RecyclerView.Adapter<ScreenHolder>() {
 
@@ -30,7 +25,7 @@ class ScreenViewPager2Adapter : RecyclerView.Adapter<ScreenHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ScreenHolder {
         context = parent.context
-        return ScreenHolder(context,LayoutInflater.from(context).inflate(R.layout.screen_app_grid, parent, false))
+        return ScreenHolder(context, LauncherScreenGrid(context, 6, 5))
     }
 
 
@@ -42,37 +37,31 @@ class ScreenViewPager2Adapter : RecyclerView.Adapter<ScreenHolder>() {
 }
 
 
-class ScreenHolder(private val context: Context, view: View) : RecyclerView.ViewHolder(view){
-    val grid = view.app_grid
+class ScreenHolder(private val context: Context, val grid: LauncherScreenGrid) : RecyclerView.ViewHolder(grid) {
     var bindedPos = -1
-    var width = 5
-    var height = 6
-
-    init {
-        grid.columnCount = width
-        grid.rowCount = height
-    }
+    val width = grid.columnCount
+    val height = grid.rowCount
 
     fun bind(position: Int) {
         if (bindedPos != position) {
-            grid.removeAllViews()
-
             // all apps
             var app: Int
             for (i in 0 until width*height) {
                 app = i+width*height*position
                 if (app > getAllAppsList(context).size - 1)
                     break
-                grid.addView(IconFactoryGrid.createIcon(context, getAllAppsList(context)[app], 720, 1520, width, height))
+                val appInfo = getAllAppsList(context)[app]
+                grid.addViewTo(AppShortcut(context, appInfo), i%width, i/width)
+//                grid.addView(IconFactoryGrid.createIcon(context, getAllAppsList(context)[app], 720, 1520, width, height))
             }
 
             // custom screen
-            for (i in 0 until width*height) {
-                app = i+width*height*position
-                if (app > getAllAppsList(context).size - 1)
-                    break
-                grid.addView(IconFactoryGrid.createIcon(context, getAllAppsList(context)[app], 720, 1520, width, height))
-            }
+//            for (i in 0 until width*height) {
+//                app = i+width*height*position
+//                if (app > getAllAppsList(context).size - 1)
+//                    break
+//                grid.addView(IconFactoryGrid.createIcon(context, getAllAppsList(context)[app], 720, 1520, width, height))
+//            }
 
             (grid.parent as ViewGroup).setBackgroundResource(ScreenViewPager2Adapter.colors[position])
             bindedPos = position

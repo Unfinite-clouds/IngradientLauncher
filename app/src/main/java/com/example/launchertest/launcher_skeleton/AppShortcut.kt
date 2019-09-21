@@ -1,4 +1,4 @@
-package com.example.launchertest.try_grid
+package com.example.launchertest.launcher_skeleton
 
 import android.content.Context
 import android.graphics.drawable.Drawable
