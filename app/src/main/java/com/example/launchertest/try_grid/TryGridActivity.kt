@@ -1,8 +1,6 @@
 package com.example.launchertest.try_grid
 
 import android.os.Bundle
-import android.view.ViewGroup
-import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.launchertest.AppInfo
 import com.example.launchertest.R
@@ -25,11 +23,15 @@ class TryGridActivity : AppCompatActivity() {
 
     private fun fillGrid(grid: LauncherScreenGrid) {
         for (i in 0 until (0.5*grid.childCount).toInt()) {
-            val img = ImageView(this)
-            img.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-            img.setOnLongClickListener(try_grid)
-            img.setImageDrawable(getAllAppsList(this)[Random.nextInt(getAllAppsList(this).size)].icon)
-            grid.addViewTo(img, i%grid.columnCount, i/grid.columnCount)
+//            val img = ImageView(this)
+//            img.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+//            img.setOnLongClickListener(try_grid)
+//            img.setImageDrawable(getAllAppsList(this)[Random.nextInt(getAllAppsList(this).size)].icon)
+//            grid.addViewTo(img, i%grid.columnCount, i/grid.columnCount)
+
+            val appInfo = getAllAppsList(this)[Random.nextInt(getAllAppsList(this).size)]
+            val shortcut = AppShortcut(this, appInfo)
+            grid.addViewTo(shortcut, i%grid.columnCount, i/grid.columnCount)
         }
     }
 
