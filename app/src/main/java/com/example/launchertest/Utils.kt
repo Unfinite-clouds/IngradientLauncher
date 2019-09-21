@@ -1,6 +1,8 @@
 package com.example.launchertest
 
 import android.content.res.Resources
+import android.graphics.Color
+import kotlin.random.Random
 
 fun toDp(px: Float): Float {
     return px / Resources.getSystem().displayMetrics.density
@@ -30,4 +32,8 @@ class LauncherException : Exception {
         writableStackTrace
     )
 
+}
+
+fun randomColor() : Int {
+    return Color.rgb(Random.nextInt(255),Random.nextInt(255),Random.nextInt(255))
 }

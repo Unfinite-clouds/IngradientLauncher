@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.launchertest.getAllAppsList
+import com.example.launchertest.randomColor
 
 class ScreenViewPager2Adapter : RecyclerView.Adapter<ScreenHolder>() {
 
@@ -25,7 +26,8 @@ class ScreenViewPager2Adapter : RecyclerView.Adapter<ScreenHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ScreenHolder {
         context = parent.context
-        return ScreenHolder(context, LauncherScreenGrid(context, 6, 5))
+//        LayoutInflater.from(context).inflate(R.layout.screen_custom_grid, parent, true)
+        return ScreenHolder(context, LauncherScreenGrid(context, 4, 3))
     }
 
 
@@ -44,6 +46,7 @@ class ScreenHolder(private val context: Context, val grid: LauncherScreenGrid) :
 
     fun bind(position: Int) {
         if (bindedPos != position) {
+            grid.clearGrid()
             // all apps
             var app: Int
             for (i in 0 until width*height) {
@@ -51,6 +54,7 @@ class ScreenHolder(private val context: Context, val grid: LauncherScreenGrid) :
                 if (app > getAllAppsList(context).size - 1)
                     break
                 val appInfo = getAllAppsList(context)[app]
+                // one way to fix it is add shortcuts after Grid.onLayout()
                 grid.addViewTo(AppShortcut(context, appInfo), i%width, i/width)
 //                grid.addView(IconFactoryGrid.createIcon(context, getAllAppsList(context)[app], 720, 1520, width, height))
             }
@@ -62,8 +66,7 @@ class ScreenHolder(private val context: Context, val grid: LauncherScreenGrid) :
 //                    break
 //                grid.addView(IconFactoryGrid.createIcon(context, getAllAppsList(context)[app], 720, 1520, width, height))
 //            }
-
-            (grid.parent as ViewGroup).setBackgroundResource(ScreenViewPager2Adapter.colors[position])
+            grid.setBackgroundColor(randomColor())
             bindedPos = position
         }
     }

@@ -58,7 +58,7 @@ class LevelHolder(private val context: Context, itemView: View) : RecyclerView.V
             } else {
                 // Screen level
                 View.inflate(context, R.layout.level_screens, level.root)
-                level.view_pager.adapter = ScreenViewPager2Adapter()
+                level.screen_pager.adapter = ScreenViewPager2Adapter()
             }
             level.setBackgroundResource(LevelViewPager2Adapter.colors[position])
 

@@ -8,6 +8,7 @@ import android.graphics.PointF
 import android.graphics.PorterDuff
 import android.util.AttributeSet
 import android.view.*
+import android.view.ViewGroup.LayoutParams
 import android.widget.GridLayout
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.view.menu.MenuPopupHelper
@@ -16,6 +17,7 @@ import androidx.core.view.setMargins
 import androidx.core.view.setPadding
 import com.example.launchertest.R
 import kotlin.math.abs
+import kotlin.math.min
 
 class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemClickListener, View.OnLongClickListener{
     constructor(context: Context, nrows: Int, ncols: Int) : super(context) {
@@ -24,10 +26,11 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
 
     // TODO: remove magic values
-    private var margins = 0
-    private var padding = 20
-    private var cellWidth = 144 + padding*2
-    private var cellHeight = 144 + padding*2
+    private var cellMargins = 0
+    private var cellPadding = 20
+    private var cellWidth = -1
+    private var cellHeight = -1
+    private var iconSizeDesired = 0.75f
 
     lateinit var positions: Array<IntArray>
     private var dragSide = Point(0, 0)
@@ -36,7 +39,37 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
     private lateinit var menuHelper: MenuPopupHelper
 
     init {
-//        RelativeLayout.LayoutParams(-1,-1).
+        layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        orientation = HORIZONTAL
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
+
+        cellWidth = width/columnCount
+        cellHeight = height/rowCount
+        cellPadding = ( (1f - iconSizeDesired) * min(cellWidth, cellHeight) ).toInt()
+/*        val iconSize = min(iconSizeDesired*cellWidth, iconSizeDesired*cellHeight).toInt()
+        val textSize = 42 // TODO - replace magic value
+
+        image.layoutParams.height = iconSize
+        image.layoutParams.width = iconSize
+
+        val layoutParams = GridLayout.LayoutParams()
+        layoutParams.width = iconSize
+        layoutParams.height = iconSize + textSize //label.textSize.toInt()*2
+        layoutParams.setMargins((cellWidth-iconSize)/2, (cellHeight-iconSize-textSize)/2, (cellWidth-iconSize)/2, (cellHeight-iconSize-textSize)/2)
+        layoutParams.setGravity(Gravity.CENTER)
+        label.text = appInfo.label
+
+//        println("$iconSize, ${label.textSize}") // 108, 28.0
+
+        view.layoutParams = layoutParams
+        view.setOnClickListener { context.startActivity(context.packageManager.getLaunchIntentForPackage(appInfo.packageName)) }
+        view.setOnLongClickListener { IconFactoryGrid.createPopupMenu(it, context, appInfo) }
+        view.setBackgroundColor(Color.argb(100, Random.nextInt(255), Random.nextInt(255), Random.nextInt(255)))*/
+
+        fillEmptyGrid()
     }
 
     private fun fillEmptyGrid() {
@@ -47,8 +80,8 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
                     layoutParams = LayoutParams(spec(position.y), spec(position.x))
                     layoutParams.width = cellWidth
                     layoutParams.height = cellHeight
-                    (layoutParams as LayoutParams).setMargins(margins)
-                    setPadding(this@LauncherScreenGrid.padding)
+                    (layoutParams as LayoutParams).setMargins(cellMargins)
+                    setPadding(cellPadding)
                     (layoutParams as LayoutParams).setGravity(Gravity.CENTER)
                     setOnDragListener(this@LauncherScreenGrid)
                 })
@@ -57,21 +90,26 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
         }
     }
 
-    fun setGridSize(nrows: Int, ncols: Int) {
+    fun setGridSize(nrows: Int, ncols: Int, fill: Boolean = true) {
         removeAllViews()
         rowCount = nrows
         columnCount = ncols
         positions = Array(columnCount) { IntArray(rowCount) }
-        fillEmptyGrid()
+        if (fill) fillEmptyGrid()
     }
 
+    fun clearGrid() {
+        for (cell in iterator()) {
+            (cell as DummyCell).removeAllViews()
+        }
+    }
 
     override fun getChildAt(index: Int): DummyCell {
         return super.getChildAt(index) as DummyCell
     }
 
     fun addViewTo(child: View, x: Int, y: Int) {
-        getCellAt(x,y)?.addView(child)
+        getCellAt(x,y)!!.addView(child)
     }
 
     fun getCellAt(x: Int, y: Int): DummyCell? {

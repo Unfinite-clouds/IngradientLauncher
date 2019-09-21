@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.viewpager2.widget.ViewPager2 xmlns:android="http://schemas.android.com/apk/res/android"
-              android:id="@+id/view_pager"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent">
-</androidx.viewpager2.widget.ViewPager2>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingTop="60dp"
+        android:paddingBottom="60dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        >
+
+    <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/screen_pager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+</LinearLayout>
