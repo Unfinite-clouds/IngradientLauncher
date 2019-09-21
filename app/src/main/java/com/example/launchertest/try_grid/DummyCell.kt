@@ -23,11 +23,6 @@ class DummyCell : LinearLayout, DragListener {
     var isReserved: Boolean = false
     lateinit var position: Point
     private val bgcolor = Color.argb(40,0,0,0)
-    val slideAnimation = object : Runnable {
-        override fun run() {
-//            println("slideAnimation")
-        }
-    }
 
     init {
         clipChildren = false
@@ -58,15 +53,6 @@ class DummyCell : LinearLayout, DragListener {
 
     override fun onDragEntered() {
         setBackgroundResource(R.drawable.bot_gradient)
-
-//        if (childCount != 0) {
-//            println("anim1_start")
-//            Handler().postDelayed(slideAnimation, 1500)
-
-//            val anim = ObjectAnimator.ofFloat(this.getChildAt(0), View.TRANSLATION_Y, toPx(-30))
-//            anim.duration = 300
-//            anim.start()
-//        }
     }
 
     override fun onDragLocationChanged(x: Float, y: Float){

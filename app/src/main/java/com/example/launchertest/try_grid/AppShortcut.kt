@@ -22,7 +22,6 @@ class AppShortcut private constructor(context: Context, attributeSet: AttributeS
         iconView = layout.findViewById(R.id.app_shortcut_icon)
         labelView = layout.findViewById(R.id.app_shortcut_label)
 
-        iconView.layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
         iconView.setImageDrawable(icon)
         labelView.text = label
     }
@@ -38,8 +37,4 @@ class AppShortcut private constructor(context: Context, attributeSet: AttributeS
         layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
         orientation = VERTICAL
     }
-
-
-
-
 }
