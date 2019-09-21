@@ -34,7 +34,7 @@ class AppShortcut private constructor(context: Context, attributeSet: AttributeS
     lateinit var labelView: TextView
 
     init {
-        layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
+//        layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
         orientation = VERTICAL
     }
 }

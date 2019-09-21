@@ -50,7 +50,7 @@ class ScreenHolder(private val context: Context, val grid: LauncherScreenGrid) :
             // all apps
             var app: Int
             for (i in 0 until width*height) {
-                app = i+width*height*position
+                app = 13+i+width*height*position
                 if (app > getAllAppsList(context).size - 1)
                     break
                 val appInfo = getAllAppsList(context)[app]

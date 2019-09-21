@@ -3,23 +3,24 @@ package com.example.launchertest.launcher_skeleton
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Point
-import android.os.Build
 import android.util.AttributeSet
 import android.view.View
+import android.view.ViewGroup
+import android.widget.GridLayout
 import android.widget.LinearLayout
-import androidx.annotation.RequiresApi
 import com.example.launchertest.DragListener
 import com.example.launchertest.LauncherException
 import com.example.launchertest.R
 
 
 class DummyCell : LinearLayout, DragListener {
-    constructor(context: Context?) : super(context)
+    constructor(context: Context?, x: Int, y: Int) : super(context) {
+        position = Point(x,y)
+        layoutParams = GridLayout.LayoutParams(GridLayout.spec(position.y),GridLayout.spec(position.x))
+        layoutParams.width = 0
+        layoutParams.height = 0
+    }
     constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
-    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) : super(context, attrs, defStyleAttr, defStyleRes)
-
 
     var isReserved: Boolean = false
     lateinit var position: Point
@@ -31,10 +32,15 @@ class DummyCell : LinearLayout, DragListener {
         setBackgroundColor(bgcolor)
     }
 
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+
     override fun onViewAdded(child: View?) {
         if (childCount > 1) {
             throw LauncherException("${javaClass.simpleName} can only have 1 child")
         }
+        child?.layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         super.onViewAdded(child)
     }
 
