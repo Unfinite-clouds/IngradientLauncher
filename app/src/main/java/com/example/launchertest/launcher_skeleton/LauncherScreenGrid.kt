@@ -13,8 +13,6 @@ import android.widget.GridLayout
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.view.menu.MenuPopupHelper
 import androidx.core.view.iterator
-import androidx.core.view.setMargins
-import androidx.core.view.setPadding
 import com.example.launchertest.R
 import kotlin.math.abs
 import kotlin.math.min
@@ -43,11 +41,17 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
         orientation = HORIZONTAL
     }
 
+    override fun onMeasure(widthSpec: Int, heightSpec: Int) {
+        cellWidth = measuredWidth/columnCount
+        cellHeight = measuredHeight/rowCount
+        super.onMeasure(cellWidth, cellHeight)
+//        measureChildren(cellWidth, cellHeight)
+    }
+
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
 
-        cellWidth = width/columnCount
-        cellHeight = height/rowCount
+
         cellPadding = ( (1f - iconSizeDesired) * min(cellWidth, cellHeight) ).toInt()
 /*        val iconSize = min(iconSizeDesired*cellWidth, iconSizeDesired*cellHeight).toInt()
         val textSize = 42 // TODO - replace magic value
@@ -77,12 +81,12 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
             for (x in 0 until columnCount) {
                 addView(DummyCell(context).apply {
                     position = Point(x,y)
-                    layoutParams = LayoutParams(spec(position.y), spec(position.x))
+/*                    layoutParams = LayoutParams(spec(position.y), spec(position.x))
                     layoutParams.width = cellWidth
                     layoutParams.height = cellHeight
                     (layoutParams as LayoutParams).setMargins(cellMargins)
                     setPadding(cellPadding)
-                    (layoutParams as LayoutParams).setGravity(Gravity.CENTER)
+                    (layoutParams as LayoutParams).setGravity(Gravity.CENTER)*/
                     setOnDragListener(this@LauncherScreenGrid)
                 })
                 positions[x][y] = childCount-1
