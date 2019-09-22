@@ -1,7 +1,6 @@
 package com.example.launchertest.launcher_skeleton
 
 import android.content.Context
-import android.graphics.Color
 import android.graphics.Point
 import android.util.AttributeSet
 import android.view.View
@@ -11,6 +10,7 @@ import android.widget.LinearLayout
 import com.example.launchertest.DragListener
 import com.example.launchertest.LauncherException
 import com.example.launchertest.R
+import com.example.launchertest.randomColor
 
 
 class DummyCell : LinearLayout, DragListener {
@@ -24,7 +24,8 @@ class DummyCell : LinearLayout, DragListener {
 
     var isReserved: Boolean = false
     lateinit var position: Point
-    private val bgcolor = Color.argb(40,0,0,0)
+//    private val bgcolor = Color.argb(40,0,0,0)
+    private val bgcolor = randomColor()
 
     init {
         clipChildren = false

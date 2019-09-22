@@ -69,7 +69,6 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
 //        super.onMeasure(widthSpec, heightSpec) // it will measure self and children
 
         measureChildren(widthChildSpec, heightChildSpec)
-//
         setMeasuredDimension(myWidth, myHeight)
     }
 
@@ -217,7 +216,7 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
     }
 
     private fun endDrag(shortcut: AppShortcut) {
-        shortcut.iconView.clearColorFilter()
+        shortcut.iconDrawable.clearColorFilter()
         shortcut.visibility = View.VISIBLE
     }
 
@@ -229,7 +228,7 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
 
     private fun startDrag(shortcut: AppShortcut) {
         shortcut.visibility = View.INVISIBLE
-        shortcut.iconView.setColorFilter(Color.rgb(181, 232, 255), PorterDuff.Mode.MULTIPLY)
+        shortcut.iconDrawable.setColorFilter(Color.rgb(181, 232, 255), PorterDuff.Mode.MULTIPLY)
 
         val cell = (shortcut.parent as DummyCell)
         cell.isReserved = true
