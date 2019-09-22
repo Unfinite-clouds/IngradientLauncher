@@ -62,14 +62,15 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
         val heightChildSpec = MeasureSpec.makeMeasureSpec(heightCell, MeasureSpec.EXACTLY)
 
         this.iterator().forEach {
-            layoutParams.width = widthCell
-            layoutParams.height = heightCell
+            it.layoutParams.width = widthCell
+            it.layoutParams.height = heightCell
         }
-        super.onMeasure(widthSpec, heightSpec) // it will measure self and children
+        
+//        super.onMeasure(widthSpec, heightSpec) // it will measure self and children
 
-//        measureChildren(widthChildSpec, heightChildSpec)
+        measureChildren(widthChildSpec, heightChildSpec)
 //
-//        setMeasuredDimension(myWidth, myHeight)
+        setMeasuredDimension(myWidth, myHeight)
     }
 
 //    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {

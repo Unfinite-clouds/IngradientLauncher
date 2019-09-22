@@ -13,15 +13,17 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:columnCount="4"
-            android:rowCount="7">
+            android:rowCount="6"
+            android:layout_weight="1">
 
     </com.example.launchertest.launcher_skeleton.LauncherScreenGrid>
 
-    <Button
+    <com.example.launchertest.try_grid.ButtonType
             android:id="@+id/try_grid_request_btn"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="requestLayout()"
-            android:textAllCaps="false"/>
+            android:layout_height="100dp"
+            android:text="relayout()"
+            android:textAllCaps="false"
+            android:layout_weight="0"/>
 
 </LinearLayout>
