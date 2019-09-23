@@ -34,7 +34,9 @@ class DummyCell : LinearLayout, DragListener {
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        measureChildren(widthMeasureSpec, heightMeasureSpec)
+        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.getSize(heightMeasureSpec))
+//        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
     override fun onViewAdded(child: View?) {

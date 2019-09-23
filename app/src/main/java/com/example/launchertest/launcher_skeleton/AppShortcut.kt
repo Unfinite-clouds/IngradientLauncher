@@ -41,23 +41,12 @@ class AppShortcut constructor(context: Context, attributeSet: AttributeSet?) : T
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        println(textSize)
-        val size = kotlin.math.min(w,(h-textSize).toInt())
-        appInfo.icon?.bounds = Rect(0,0, size, size)
+        val iconSize = kotlin.math.min(w,(h-textSize).toInt())
+        val x = 0
+        val y = (h-textSize-iconSize).toInt()/2
+        appInfo.icon?.bounds = Rect(x, y, x+iconSize, y+iconSize)
         setCompoundDrawables(null, appInfo.icon, null, null)
         super.onSizeChanged(w, h, oldw, oldh)
-    }
-
-    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        super.onLayout(changed, left, top, right, bottom)
-    }
-
-    override fun layout(l: Int, t: Int, r: Int, b: Int) {
-        super.layout(l, t, r, b)
-    }
-
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
     private fun rasterize(drawable: Drawable, bitmap: Bitmap, canvas: Canvas, size: Int) {

@@ -2,10 +2,7 @@ package com.example.launchertest.launcher_skeleton
 
 import android.content.ClipData
 import android.content.Context
-import android.graphics.Color
-import android.graphics.Point
-import android.graphics.PointF
-import android.graphics.PorterDuff
+import android.graphics.*
 import android.util.AttributeSet
 import android.view.DragEvent
 import android.view.MenuInflater
@@ -17,6 +14,8 @@ import androidx.appcompat.view.menu.MenuPopupHelper
 import androidx.core.view.iterator
 import com.example.launchertest.R
 import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.floor
 
 class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemClickListener, View.OnLongClickListener {
     constructor(context: Context, nrows: Int, ncols: Int) : super(context) {
@@ -38,6 +37,7 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
     private var dragStartPoint: PointF? = null
     private val radius = 20
     private lateinit var menuHelper: MenuPopupHelper
+    private val decimalPadding = Rect()
 
     init {
         clipChildren = false
@@ -52,63 +52,46 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
     }
 
     override fun onMeasure(widthSpec: Int, heightSpec: Int) {
-
-        // set width and height for children
         val myWidth = MeasureSpec.getSize(widthSpec)
         val myHeight = MeasureSpec.getSize(heightSpec)
-        widthCell = myWidth/columnCount
-        heightCell = myHeight/rowCount
+
+        if (myWidth != measuredWidth || myHeight != measuredHeight) {
+            widthCell = myWidth/columnCount
+            heightCell = myHeight/rowCount
+
+            this.iterator().forEach {
+                it.layoutParams.width = widthCell
+                it.layoutParams.height = heightCell
+            }
+
+            // if cells can't fill full size due to int division, we will add padding to Grid
+            val decimalWidth = myWidth - widthCell*columnCount
+            val decimalHeight = myHeight - heightCell*rowCount
+
+            decimalPadding.set(floor(decimalWidth.toFloat()/2f).toInt(),
+                floor(decimalHeight.toFloat()/2f).toInt(),
+                ceil(decimalWidth.toFloat()/2f).toInt(),
+                ceil(decimalHeight.toFloat()/2f).toInt())
+        }
+
         val widthChildSpec = MeasureSpec.makeMeasureSpec(widthCell, MeasureSpec.EXACTLY)
         val heightChildSpec = MeasureSpec.makeMeasureSpec(heightCell, MeasureSpec.EXACTLY)
-
-        this.iterator().forEach {
-            it.layoutParams.width = widthCell
-            it.layoutParams.height = heightCell
-        }
-        
-//        super.onMeasure(widthSpec, heightSpec) // it will measure self and children
-
         measureChildren(widthChildSpec, heightChildSpec)
         setMeasuredDimension(myWidth, myHeight)
     }
 
-//    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-//        super.onLayout(changed, left, top, right, bottom)
-
-//        default layoutParams:
-//        layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-//
-//        cellPadding = ( (1f - iconSizeDesired) * min(widthCell, heightCell) ).toInt()
-///*        val iconSize = min(iconSizeDesired*widthCell, iconSizeDesired*heightCell).toInt()
-//        val textSize = 42 // TODO - replace magic value
-//
-//        image.layoutParams.height = iconSize
-//        image.layoutParams.width = iconSize
-//
-//        val layoutParams = GridLayout.LayoutParams()
-//        layoutParams.width = iconSize
-//        layoutParams.height = iconSize + textSize //label.textSize.toInt()*2
-//        layoutParams.setMargins((widthCell-iconSize)/2, (heightCell-iconSize-textSize)/2, (widthCell-iconSize)/2, (heightCell-iconSize-textSize)/2)
-//        layoutParams.setGravity(Gravity.CENTER)
-//        label.text = appInfo.label
-//
-////        println("$iconSize, ${label.textSize}") // 108, 28.0
-//
-//        view.layoutParams = layoutParams
-//        view.setOnClickListener { context.startActivity(context.packageManager.getLaunchIntentForPackage(appInfo.packageName)) }
-//        view.setOnLongClickListener { IconFactoryGrid.createPopupMenu(it, context, appInfo) }
-//        view.setBackgroundColor(Color.argb(100, Random.nextInt(255), Random.nextInt(255), Random.nextInt(255)))*/
-//
-//        fillEmptyGrid()
-//    }
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        setPadding(paddingLeft + decimalPadding.left,
+            paddingTop + decimalPadding.top,
+            paddingRight + decimalPadding.right,
+            paddingBottom + decimalPadding.bottom)
+        super.onLayout(changed, left, top, right, bottom)
+    }
 
     private fun fillEmptyGrid() {
         for (y in 0 until rowCount) {
             for (x in 0 until columnCount) {
                 addView(DummyCell(context, x, y).apply {
-//                    (layoutParams as LayoutParams).setMargins(cellMargins)
-//                    setPadding(cellPadding)
-//                    (layoutParams as LayoutParams).setGravity(Gravity.CENTER)
                     setOnDragListener(this@LauncherScreenGrid)
                 })
                 positions[x][y] = childCount-1

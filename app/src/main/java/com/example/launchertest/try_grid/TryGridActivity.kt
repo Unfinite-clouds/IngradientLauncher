@@ -28,7 +28,7 @@ class TryGridActivity : AppCompatActivity() {
         var a = 0
         for (i in 0 until (0.5*grid.childCount).toInt()) {
             a++
-            val appInfo = getAllAppsList(this)[a+17]
+            val appInfo = getAllAppsList(this)[a+25]
             val shortcut = AppShortcut(this, appInfo)
             shortcut.setOnLongClickListener(try_grid)
             grid.addViewTo(shortcut, i%grid.columnCount, i/grid.columnCount)
