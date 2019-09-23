@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/try_icons_root"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".launcher_skeleton.TryAdaptiveIcons"
+        tools:context=".try_grid.TryAdaptiveIconsActivity"
         android:padding="50dp">
 
-    <ImageView
-            android:id="@+id/try_icons_imageView"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            app:srcCompat="@mipmap/ic_launcher" />
+    <com.example.launchertest.launcher_skeleton.AppShortcut
+            android:id="@+id/try_icons_shortcut"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="no_app"/>
+
+
 </LinearLayout>

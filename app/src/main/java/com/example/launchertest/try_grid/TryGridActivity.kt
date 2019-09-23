@@ -30,7 +30,6 @@ class TryGridActivity : AppCompatActivity() {
             a++
             val appInfo = getAllAppsList(this)[a+17]
             val shortcut = AppShortcut(this, appInfo)
-//            View.inflate(this, R.layout.shortcut_icon, grid)
             shortcut.setOnLongClickListener(try_grid)
             grid.addViewTo(shortcut, i%grid.columnCount, i/grid.columnCount)
         }

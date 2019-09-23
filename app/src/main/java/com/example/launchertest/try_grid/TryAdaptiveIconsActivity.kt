@@ -1,4 +1,4 @@
-package com.example.launchertest.launcher_skeleton
+package com.example.launchertest.try_grid
 
 import android.graphics.drawable.AdaptiveIconDrawable
 import android.os.Build
@@ -8,7 +8,7 @@ import com.example.launchertest.R
 import com.example.launchertest.getAllAppsList
 import kotlinx.android.synthetic.main.activity_try_adaptive_icons.*
 
-class TryAdaptiveIcons : AppCompatActivity() {
+class TryAdaptiveIconsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -17,10 +17,7 @@ class TryAdaptiveIcons : AppCompatActivity() {
         val allApps = getAllAppsList(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val adaptiveIcon = allApps[28].icon as AdaptiveIconDrawable
-            try_icons_imageView.setImageDrawable(adaptiveIcon)
-
-        } else {
-            TODO("VERSION.SDK_INT < O")
+            try_icons_shortcut.appInfo = allApps[44]
         }
     }
 }

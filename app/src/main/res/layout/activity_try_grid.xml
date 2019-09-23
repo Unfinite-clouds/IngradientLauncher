@@ -12,8 +12,8 @@
             android:id="@+id/try_grid"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:columnCount="4"
-            android:rowCount="6"
+            android:columnCount="3"
+            android:rowCount="7"
             android:layout_weight="1">
 
     </com.example.launchertest.launcher_skeleton.LauncherScreenGrid>

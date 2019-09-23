@@ -39,7 +39,16 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-data class AppInfo (var label: CharSequence, var packageName: String, var icon: Drawable)
+class AppInfo(){
+    var label: CharSequence = ""
+    var packageName: String = ""
+    var icon: Drawable? = null
+    constructor(label: CharSequence, packageName: String, icon: Drawable) : this() {
+        this.label = label
+        this.packageName = packageName
+        this.icon = icon
+    }
+}
 
 private var allApps = ArrayList<AppInfo>()
 var invalid = true
