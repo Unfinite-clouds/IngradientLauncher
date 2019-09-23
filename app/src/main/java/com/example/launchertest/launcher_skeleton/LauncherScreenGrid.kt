@@ -26,11 +26,8 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
     }
 
     // TODO: remove magic values
-    private var cellMargins = 0
-    private var cellPadding = 20
     private var widthCell = -1
     private var heightCell = -1
-    private var iconSizeDesired = 0.75f
 
     lateinit var positions: Array<IntArray>
     private var dragSide = Point(0, 0)
@@ -64,7 +61,7 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
                 it.layoutParams.height = heightCell
             }
 
-            // if cells can't fill full size due to int division, we will add padding to Grid
+            // if cells can't fill full size due to int division, we will add little padding to Grid
             val decimalWidth = myWidth - widthCell*columnCount
             val decimalHeight = myHeight - heightCell*rowCount
 
@@ -98,8 +95,6 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
             }
         }
     }
-
-
 
     fun clearGrid() {
         for (cell in iterator()) {
