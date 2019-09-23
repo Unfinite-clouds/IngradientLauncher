@@ -32,7 +32,7 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
     lateinit var positions: Array<IntArray>
     private var dragSide = Point(0, 0)
     private var dragStartPoint: PointF? = null
-    private val radius = 20
+    private val dismissRadius = 20
     private lateinit var menuHelper: MenuPopupHelper
     private val decimalPadding = Rect()
 
@@ -164,7 +164,7 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
                 if (dragStartPoint == null) {
                     dragStartPoint = PointF(event.x, event.y)
                 }
-                if (abs(dragStartPoint!!.x - event.x) > radius || abs(dragStartPoint!!.y - event.y) > radius) {
+                if (abs(dragStartPoint!!.x - event.x) > dismissRadius || abs(dragStartPoint!!.y - event.y) > dismissRadius) {
                     menuHelper.dismiss()
                 }
             }

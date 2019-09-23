@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.launchertest.IconFactory
-import com.example.launchertest.LauncherPreferences
+import com.example.launchertest.PreferenceKeys
 import com.example.launchertest.R
 import com.example.launchertest.getAllAppsList
 import kotlinx.android.synthetic.main.level.view.*
@@ -53,7 +53,7 @@ class LevelHolder(private val context: Context, itemView: View) : RecyclerView.V
                 View.inflate(context, R.layout.level_scroll, level.root)
                 for (i in 0..10) {
                     //fill first 10 apps
-                    level.iconContainer.addView(IconFactory(context,PreferenceManager(context).sharedPreferences.getInt(LauncherPreferences.MAIN_SCREEN_ICONS_COUNT, -1)).createIcon(getAllAppsList(context)[i]))
+                    level.iconContainer.addView(IconFactory(context,PreferenceManager(context).sharedPreferences.getInt(PreferenceKeys.MAIN_SCREEN_ICONS_COUNT, -1)).createIcon(getAllAppsList(context)[i]))
                 }
             } else {
                 // Screen level

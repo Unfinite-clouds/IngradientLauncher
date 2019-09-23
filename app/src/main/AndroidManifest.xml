@@ -22,7 +22,7 @@
         <activity
                 android:name=".try_grid.TryGridActivity"
                 android:exported="true"></activity>
-        <activity android:name=".launcher_skeleton.SeleketonTestActivity">
+        <activity android:name=".launcher_skeleton.SkeletonTestActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

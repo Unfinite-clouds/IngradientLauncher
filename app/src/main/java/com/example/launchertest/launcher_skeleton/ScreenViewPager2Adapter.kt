@@ -26,7 +26,7 @@ class ScreenViewPager2Adapter : RecyclerView.Adapter<ScreenHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ScreenHolder {
         context = parent.context
-//        LayoutInflater.from(context).inflate(R.layout.screen_custom_grid, parent, true)
+
         return ScreenHolder(context, LauncherScreenGrid(context, 4, 3).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         })

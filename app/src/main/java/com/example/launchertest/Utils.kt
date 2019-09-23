@@ -1,7 +1,10 @@
 package com.example.launchertest
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.content.res.Resources
 import android.graphics.Color
+import androidx.preference.PreferenceManager
 import kotlin.random.Random
 
 fun toDp(px: Float): Float {
@@ -36,4 +39,8 @@ class LauncherException : Exception {
 
 fun randomColor() : Int {
     return Color.rgb(Random.nextInt(255),Random.nextInt(255),Random.nextInt(255))
+}
+
+fun getPrefs(context: Context) : SharedPreferences {
+    return PreferenceManager.getDefaultSharedPreferences(context)
 }
