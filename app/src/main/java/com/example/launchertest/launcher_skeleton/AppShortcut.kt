@@ -29,6 +29,7 @@ class AppShortcut private constructor(context: Context, attributeSet: AttributeS
         setTextColor(Color.WHITE)
         gravity = Gravity.BOTTOM
         includeFontPadding = false
+
         maxLines = 1
     }
 

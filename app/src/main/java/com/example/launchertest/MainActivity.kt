@@ -60,6 +60,17 @@ fun getAllAppsList(context: Context) : ArrayList<AppInfo> {
     }
     invalid = false
 
+
+    // way 2 (may be more efficient)
+/*    val launcherIntent = Intent().apply { addCategory(Intent.CATEGORY_LAUNCHER) }
+    pm.getInstalledApplications(0).forEach { appInfo ->
+        launcherIntent.`package` = appInfo.packageName
+        // only show launch-able apps
+        if (pm.queryIntentActivities(launcherIntent, 0).size > 0) {
+            allApps.add(AppInfo(appInfo.loadLabel(pm), appInfo.packageName, appInfo.loadIcon(pm)))
+        }
+    }*/
+
     return allApps
 }
 
