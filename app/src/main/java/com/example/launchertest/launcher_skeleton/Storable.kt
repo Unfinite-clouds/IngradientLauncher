@@ -1,0 +1,43 @@
+package com.example.launchertest.launcher_skeleton
+
+import android.content.Context
+import java.io.*
+
+object Storable {
+    data class FileInfo<T>(val fileName: String, val type: Class<T>)
+
+    val TEST = FileInfo("test", List::class.java)
+    val SORTED_ALL_APPS = FileInfo("SORTED_ALL_APPS", MutableMap::class.java)
+    val APP_LOCATIONS = FileInfo("APP_LOCATIONS", MutableMap::class.java)
+    val APP_LOCATIONS_MAIN_SCREEN = FileInfo("APP_LOCATIONS_MAIN_SCREEN", MutableMap::class.java)
+
+    fun load(inputStream: FileInputStream) : Any? {
+        val loaded: Any?
+        var objIn: ObjectInputStream? = null
+        try {
+            objIn = ObjectInputStream(inputStream)
+            loaded = objIn.readObject()
+        } finally {
+            objIn?.close()
+        }
+        return loaded
+    }
+
+    inline fun <reified T> loadAuto(context: Context, what: FileInfo<T>): T? {
+        val a: Any?
+        var inputStream: InputStream? = null
+        try {
+            inputStream = context.openFileInput(what.fileName)
+            a = load(inputStream)
+        } catch (e: FileNotFoundException) {
+            return null
+        } finally {
+            inputStream?.close()
+        }
+        return if (a is T) a else null
+    }
+
+    inline fun <reified T> dumpAuto(context: Context, what: Any, how: FileInfo<T>) {
+        ObjectOutputStream(context.openFileOutput(how.fileName, Context.MODE_PRIVATE)).use { it.writeObject(what) }
+    }
+}

@@ -3,7 +3,7 @@ package com.example.launchertest.launcher_skeleton
 import android.content.Context
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.example.launchertest.getAllAppsList
+import com.example.launchertest.getAllApps
 import com.example.launchertest.randomColor
 
 class ScreenViewPager2Adapter : RecyclerView.Adapter<ScreenHolder>() {
@@ -53,9 +53,9 @@ class ScreenHolder(private val context: Context, val grid: LauncherScreenGrid) :
             var app: Int
             for (i in 0 until width*height) {
                 app = 13+i+width*height*position
-                if (app > getAllAppsList(context).size - 1)
+                if (app > getAllApps(context).size - 1)
                     break
-                val appInfo = getAllAppsList(context)[app]
+                val appInfo = getAllApps(context)[app]
 
                 grid.addViewTo(AppShortcut(context, appInfo).apply { setOnLongClickListener(grid) }, i%width, i/width)
             }
@@ -63,9 +63,9 @@ class ScreenHolder(private val context: Context, val grid: LauncherScreenGrid) :
             // custom screen
 //            for (i in 0 until width*height) {
 //                app = i+width*height*position
-//                if (app > getAllAppsList(context).size - 1)
+//                if (app > getAllApps(context).size - 1)
 //                    break
-//                grid.addView(IconFactoryGrid.createIcon(context, getAllAppsList(context)[app], 720, 1520, width, height))
+//                grid.addView(IconFactoryGrid.createIcon(context, getAllApps(context)[app], 720, 1520, width, height))
 //            }
             grid.setBackgroundColor(randomColor())
             bindedPos = position

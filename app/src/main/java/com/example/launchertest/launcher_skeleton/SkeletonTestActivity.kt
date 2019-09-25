@@ -19,22 +19,23 @@ class SkeletonTestActivity : AppCompatActivity() {
         if (getPrefs(this).getBoolean(PreferenceKeys.LOAD_DEFAULTS, true))
             loadDefaultPreferences()
 
-        val levelVP2 = findViewById<ViewPager2>(R.id.root_viewpager)
-        levelVP2.adapter = LevelViewPager2Adapter()
-        levelVP2.setPageTransformer(PageTransformer())
-        levelVP2.orientation = ViewPager2.ORIENTATION_VERTICAL
+        val stages = findViewById<ViewPager2>(R.id.root_viewpager)
+        stages.adapter = LevelViewPager2Adapter()
+        stages.setPageTransformer(PageTransformer())
+        stages.orientation = ViewPager2.ORIENTATION_VERTICAL
 
-        levelVP2.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+        stages.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
             }
         })
     }
 
+    // Here is default preferences
     fun loadDefaultPreferences() {
         getPrefs(this).edit {
             putBoolean(PreferenceKeys.LOAD_DEFAULTS, false)
-            putInt(PreferenceKeys.MAIN_SCREEN_ICONS_COUNT, 6)
+            putInt(PreferenceKeys.MAIN_SCREEN_ICONS_COUNT, 5)
             putInt(PreferenceKeys.ALLAPPS_COLUMN_COUNT, 5)
             putInt(PreferenceKeys.ALLAPPS_ROW_COUNT, 7)
         }
