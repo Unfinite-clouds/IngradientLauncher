@@ -7,15 +7,22 @@ import com.example.launchertest.launcher_skeleton.AppInfo
 import com.example.launchertest.launcher_skeleton.Storable
 
 object AppManager {
-    private var allApps: MutableMap<String, AppInfo>? = null
+    private lateinit var sortedApps: List<String>
+    private var isSorted: Boolean = false
+    private var isLoaded: Boolean = false
+    var allApps: MutableMap<String, AppInfo> = mutableMapOf()
+        private set(value) {
+            isSorted = false
+            field = value
+        }
+        get() { return if (isLoaded) field else throw LauncherException("allApps is not laded") }
 
-    fun getAllApps(context: Context): MutableMap<String, AppInfo> {
-        return allApps ?: loadAllApps(context)
-    }
-
-    private fun loadAllApps(context: Context) : MutableMap<String, AppInfo> {
+    fun loadAllApps(context: Context) {
         println("loading All Apps...")
-        return Storable.loadAuto(context, Storable.SORTED_ALL_APPS) as? MutableMap<String, AppInfo> ?: mutableMapOf<String, AppInfo>()
+        allApps = Storable.loadAuto(context, Storable.SORTED_ALL_APPS) as? MutableMap<String, AppInfo> ?: mutableMapOf()
+        if (allApps.isEmpty()) {
+            updateAllApps(context)
+        }
     }
 
     fun getLaunchableApps(context: Context): List<ResolveInfo> {
@@ -26,13 +33,13 @@ object AppManager {
         return pm.queryIntentActivities(launcherIntent, 0)
     }
 
-    fun updateCachedApps(context: Context): MutableMap<String, AppInfo> {
+    fun updateAllApps(context: Context) {
         val realAppInfo = getLaunchableApps(context)
         val realAppMap = mutableMapOf<String, ResolveInfo>()
         realAppInfo.forEach {realAppMap[AppInfo.getIdFromResolveInfo(it)] = it}
         val realApps = realAppMap.keys
 
-        val cachedAppInfo = getAllApps(context)
+        val cachedAppInfo = allApps
         val cachedApps = cachedAppInfo.keys as Set<String>
 
         if (realApps != cachedApps) {
@@ -53,11 +60,17 @@ object AppManager {
 
         cachedAppInfo.forEach {it.value.loadIconFromDump(context)}
 
-        return cachedAppInfo
+        allApps = cachedAppInfo
     }
 
-    fun getSortedApps(context: Context): List<String> {
-        return getAllApps(context).values.sortedBy { it.label }.map { it.id }
+    fun getSortedApps(): List<String> {
+        if (!isSorted)
+            sortedApps = allApps.values.sortedBy { it.label }.map { it.id }
+        return sortedApps
+    }
+
+    fun getApp(id: String): AppInfo? {
+        return allApps[id]
     }
 
 }

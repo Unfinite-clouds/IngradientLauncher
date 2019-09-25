@@ -5,9 +5,10 @@ import android.graphics.Point
 import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.LinearLayout
+import com.example.launchertest.launcher_skeleton.AppInfo
 
 class IconFactory(private val context: Context, nIconsOnScreen: Int) {
-//    private val nIconsOnScreen = PreferenceManager(context).sharedPreferences.getInt(PreferenceKeys.MAIN_SCREEN_ICONS_COUNT, -1)
+//    private val nIconsOnScreen = PreferenceManager(context).sharedPreferences.getInt(Preferences.MAIN_SCREEN_ICONS_COUNT, -1)
     private val nIconsOnScreen = nIconsOnScreen
     private val buttonWidth: Int
     private val iconWidth: Int

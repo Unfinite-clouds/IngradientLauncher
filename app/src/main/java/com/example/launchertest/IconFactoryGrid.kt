@@ -15,6 +15,7 @@ import android.widget.TextView
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.view.menu.MenuPopupHelper
 import androidx.core.view.iterator
+import com.example.launchertest.launcher_skeleton.AppInfo
 import kotlin.math.min
 import kotlin.random.Random
 

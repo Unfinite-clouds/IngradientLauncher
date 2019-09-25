@@ -10,24 +10,19 @@ import android.util.AttributeSet
 import android.view.Gravity
 import android.view.ViewGroup.LayoutParams
 import android.widget.TextView
-import com.example.launchertest.AppInfo
 import com.example.launchertest.randomColor
 
 
-class AppShortcut constructor(context: Context, attributeSet: AttributeSet?) : TextView(context, attributeSet) {
+class AppShortcut : TextView {
     var appInfo: AppInfo = AppInfo()
         set(value) {
             field = value
             text = field.label
             field.icon?.bounds = Rect(0,0,width,height)
-
         }
+
     val icon: Drawable?
         get() = compoundDrawables[1]
-
-    constructor(context: Context, appInfo: AppInfo, attributeSet: AttributeSet? = null) : this(context, attributeSet) {
-        this.appInfo = appInfo
-    }
 
     init {
         layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
@@ -39,6 +34,8 @@ class AppShortcut constructor(context: Context, attributeSet: AttributeSet?) : T
         maxLines = 1
         setBackgroundColor(randomColor())
     }
+    constructor(context: Context, appInfo: AppInfo) : super(context) { this.appInfo = appInfo }
+    constructor(context: Context, attributeSet: AttributeSet) : super(context, attributeSet)
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         val iconSize = kotlin.math.min(w,(h-textSize).toInt())
