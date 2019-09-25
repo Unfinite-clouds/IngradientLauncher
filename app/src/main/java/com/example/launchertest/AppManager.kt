@@ -20,6 +20,7 @@ object AppManager {
     fun loadAllApps(context: Context) {
         println("loading All Apps...")
         allApps = Storable.loadAuto(context, Storable.SORTED_ALL_APPS) as? MutableMap<String, AppInfo> ?: mutableMapOf()
+        isLoaded = true
         if (allApps.isEmpty()) {
             updateAllApps(context)
         }

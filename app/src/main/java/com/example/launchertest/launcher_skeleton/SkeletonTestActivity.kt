@@ -5,6 +5,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.viewpager2.widget.ViewPager2
+import com.example.launchertest.AppManager
 import com.example.launchertest.Preferences
 import com.example.launchertest.R
 import com.example.launchertest.getPrefs
@@ -15,6 +16,7 @@ class SkeletonTestActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main)
+        AppManager.loadAllApps(this)
 
         if (getPrefs(this).getBoolean(Preferences.FIRST_LOAD, true))
             loadDefaultPreferences()

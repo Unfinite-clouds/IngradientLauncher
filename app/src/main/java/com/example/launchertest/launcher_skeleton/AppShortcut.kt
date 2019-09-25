@@ -14,7 +14,7 @@ import com.example.launchertest.randomColor
 
 
 class AppShortcut : TextView {
-    var appInfo: AppInfo = AppInfo()
+    var appInfo: AppInfo
         set(value) {
             field = value
             text = field.label
@@ -26,16 +26,20 @@ class AppShortcut : TextView {
 
     init {
         layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
-
-        setTextColor(Color.WHITE)
         gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
         includeFontPadding = false
-
         maxLines = 1
         setBackgroundColor(randomColor())
+        setTextColor(Color.WHITE)
     }
-    constructor(context: Context, appInfo: AppInfo) : super(context) { this.appInfo = appInfo }
-    constructor(context: Context, attributeSet: AttributeSet) : super(context, attributeSet)
+
+    constructor(context: Context, appInfo: AppInfo) : super(context) {
+        this.appInfo = appInfo
+    }
+    constructor(context: Context, attributeSet: AttributeSet) : super(context, attributeSet) {
+        this.appInfo = AppInfo("test", "test")
+    }
+
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         val iconSize = kotlin.math.min(w,(h-textSize).toInt())
