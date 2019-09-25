@@ -7,8 +7,8 @@ object Storable {
     data class FileInfo<T>(val fileName: String, val type: Class<T>)
 
     val TEST = FileInfo("test", List::class.java)
-    val SORTED_ALL_APPS = FileInfo("SORTED_ALL_APPS", MutableMap::class.java)
-    val APP_LOCATIONS = FileInfo("APP_LOCATIONS", MutableMap::class.java)
+    val ALL_APPS = FileInfo("ALL_APPS", MutableMap::class.java)
+    val CUSTOM_GRID_APPS = FileInfo("CUSTOM_GRID_APPS", MutableMap::class.java)
     val APP_LOCATIONS_MAIN_SCREEN = FileInfo("APP_LOCATIONS_MAIN_SCREEN", MutableMap::class.java)
 
     fun load(inputStream: FileInputStream) : Any? {

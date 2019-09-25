@@ -36,8 +36,8 @@ class AppInfo(var packageName: String, var name:String, var label: String? = nul
 
     private var iconByteArray: ByteArray? = null
 
-    fun prepareIconToDump(size: Int) {
-        iconByteArray = encodeBitmap(icon!!.toBitmap(size, size))
+    fun prepareIconToDump(size: Int?) {
+        iconByteArray = encodeBitmap(if (size == null) icon!!.toBitmap() else icon!!.toBitmap(size, size))
     }
 
     fun loadIconFromDump(context: Context) {

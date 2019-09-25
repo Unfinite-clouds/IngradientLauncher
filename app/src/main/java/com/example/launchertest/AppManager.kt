@@ -17,13 +17,17 @@ object AppManager {
         }
         get() { return if (isLoaded) field else throw LauncherException("allApps is not laded") }
 
+    var customGridApps: MutableMap<String, Int> = mutableMapOf()
+
     fun loadAllApps(context: Context) {
         println("loading All Apps...")
-        allApps = Storable.loadAuto(context, Storable.SORTED_ALL_APPS) as? MutableMap<String, AppInfo> ?: mutableMapOf()
+        allApps = Storable.loadAuto(context, Storable.ALL_APPS) as? MutableMap<String, AppInfo> ?: mutableMapOf()
         isLoaded = true
         if (allApps.isEmpty()) {
             updateAllApps(context)
         }
+        allApps.forEach { it.value.loadIconFromDump(context)}
+        customGridApps = Storable.loadAuto(context, Storable.CUSTOM_GRID_APPS) as? MutableMap<String, Int> ?: mutableMapOf()
     }
 
     fun getLaunchableApps(context: Context): List<ResolveInfo> {
@@ -34,7 +38,7 @@ object AppManager {
         return pm.queryIntentActivities(launcherIntent, 0)
     }
 
-    fun updateAllApps(context: Context) {
+    fun updateAllApps(context: Context, size: Int? = null) {
         val realAppInfo = getLaunchableApps(context)
         val realAppMap = mutableMapOf<String, ResolveInfo>()
         realAppInfo.forEach {realAppMap[AppInfo.getIdFromResolveInfo(it)] = it}
@@ -52,14 +56,12 @@ object AppManager {
             newApps.forEach {
                 val resolveInfo = realAppMap[it]
                 cachedAppInfo[it] = AppInfo.createFromResolveInfo(context, resolveInfo!!).apply {
-                    prepareIconToDump(100)
+                    prepareIconToDump(size)
                 }
             }
 
-            Storable.dumpAuto(context, cachedAppInfo, Storable.SORTED_ALL_APPS)
+            Storable.dumpAuto(context, cachedAppInfo, Storable.ALL_APPS)
         }
-
-        cachedAppInfo.forEach {it.value.loadIconFromDump(context)}
 
         allApps = cachedAppInfo
     }
@@ -73,5 +75,7 @@ object AppManager {
     fun getApp(id: String): AppInfo? {
         return allApps[id]
     }
+
+
 
 }

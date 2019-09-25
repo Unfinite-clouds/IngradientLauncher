@@ -11,19 +11,9 @@ import kotlinx.android.synthetic.main.stage_0_main_screen.view.*
 import kotlinx.android.synthetic.main.stage_2_all_apps.view.*
 
 class StageAdapter : RecyclerView.Adapter<StageHolder>() {
-
     private lateinit var context: Context
-    companion object {
-        val colors = intArrayOf(
-            android.R.color.transparent,
-            android.R.color.holo_red_light,
-            android.R.color.holo_blue_dark,
-            android.R.color.holo_purple,
-            android.R.color.black
-        )
-    }
 
-    override fun getItemCount(): Int = colors.size
+    override fun getItemCount(): Int = 4
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StageHolder {
         context = parent.context
@@ -58,7 +48,7 @@ class StageHolder(private val context: Context, itemView: View) : RecyclerView.V
                 View.inflate(context, R.layout.stage_2_all_apps, stage.root)
                 stage.screen_pager.adapter = AllAppsGridAdapter()
             }
-            stage.setBackgroundResource(StageAdapter.colors[position])
+            stage.setBackgroundResource(R.color.colorVignette)
 
             bindedPos = position
         }
