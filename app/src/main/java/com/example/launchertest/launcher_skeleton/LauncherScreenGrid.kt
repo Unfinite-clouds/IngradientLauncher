@@ -179,11 +179,14 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
             DragEvent.ACTION_DROP -> {
                 // cell is the cell to drop
                 if (cell.canMoveBy(-dragSide.x, -dragSide.y)) {
-                    cell.doTranslateBy(-dragSide.x, -dragSide.y, 0f) // back translating - just for anti-blink
-                    (shortcut.parent as DummyCell).removeView(shortcut)
+                    val oldCell =  (shortcut.parent as DummyCell)
+
+                    onDropCallback(shortcut.appInfo, pointToPos(cell.position), pointToPos(oldCell.position))
+
+                    cell.doTranslateBy(-dragSide.x, -dragSide.y, 0f) // back translating - just for prevent blinking
+                    oldCell.removeView(shortcut)
                     cell.doMoveBy(-dragSide.x, -dragSide.y)
                     cell.addView(shortcut)
-                    onDropCallback(shortcut.appInfo, GridPositionHelper(columnCount, rowCount).pointToPos(cell.position), )
                 } else return false
             }
 
@@ -258,23 +261,20 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
         }
     }
 
-    // invert to Grid
-    class GridPositionHelper(var width: Int, var height: Int, var orientation: Int = GridLayout.HORIZONTAL) {
-        fun pointToPos(x: Int, y: Int, page: Int = 0): Int {
-            return if (orientation == HORIZONTAL) page*width*height + width*y + x else page*width*height + height*x + y
-        }
+    fun pointToPos(x: Int, y: Int, page: Int = 0): Int {
+        return if (orientation == HORIZONTAL) page*columnCount*rowCount + columnCount*y + x else page*columnCount*rowCount + rowCount*x + y
+    }
 
-        fun pointToPos(pos: Point, page: Int = 0): Int {
-            return pointToPos(pos.x, pos.y, page)
-        }
+    fun pointToPos(pos: Point, page: Int = 0): Int {
+        return pointToPos(pos.x, pos.y, page)
+    }
 
-        fun posToPoint(pos: Int) : Point {
-            val pos_ =  pos % (width*height)
-            return if (orientation == HORIZONTAL) Point(pos_ % width, pos_ / height) else Point(pos_ / width, pos_ % height)
-        }
+    fun posToPoint(pos: Int) : Point {
+        val pos_ =  pos % (columnCount*rowCount)
+        return if (orientation == HORIZONTAL) Point(pos_ % columnCount, pos_ / rowCount) else Point(pos_ / columnCount, pos_ % rowCount)
+    }
 
-        fun getPageFromPos(pos: Int) : Int {
-            return pos / (width*height)
-        }
+    fun getPageFromPos(pos: Int) : Int {
+        return pos / (columnCount*rowCount)
     }
 }

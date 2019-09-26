@@ -7,10 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.GridLayout
 import android.widget.LinearLayout
-import com.example.launchertest.DragListener
-import com.example.launchertest.LauncherException
-import com.example.launchertest.R
-import com.example.launchertest.randomColor
+import com.example.launchertest.*
 
 
 class DummyCell : LinearLayout, DragListener {
@@ -41,7 +38,7 @@ class DummyCell : LinearLayout, DragListener {
 
     override fun onViewAdded(child: View?) {
         if (childCount > 1) {
-            throw LauncherException("${javaClass.simpleName} can only have 1 child")
+            throw LauncherException("$this can only have 1 child")
         }
         child?.layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         super.onViewAdded(child)
@@ -104,6 +101,7 @@ class DummyCell : LinearLayout, DragListener {
     fun doMoveBy(directionX: Int, directionY: Int): Boolean {
         return doRecursionPass(directionX, directionY) { thisCell, nextCell ->
             val child = thisCell.getShortcut()
+            AppManager.applyCustomGridChanges(context, thisCell.getShortcut()!!.appInfo.id, (thisCell.parent as LauncherScreenGrid).pointToPos(nextCell.position))
             thisCell.removeAllViews()
             nextCell.addView(child)
         }
@@ -123,6 +121,6 @@ class DummyCell : LinearLayout, DragListener {
     }
 
     override fun toString(): String {
-        return "${javaClass.simpleName}: $position empty=${isEmptyCell()} reserved=$isReserved"
+        return "\"${javaClass.simpleName}: $position empty=${isEmptyCell()} reserved=$isReserved\""
     }
 }
