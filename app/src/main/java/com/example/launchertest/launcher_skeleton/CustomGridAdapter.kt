@@ -41,7 +41,7 @@ class CustomGridAdapter : RecyclerView.Adapter<CustomScreenHolder>() {
 }
 
 
-class CustomScreenHolder(private val context: Context, val grid: LauncherScreenGrid) : RecyclerView.ViewHolder(grid) {
+class CustomScreenHolder(private val context: Context, val grid: LauncherScreenGrid) : RecyclerView.ViewHolder(grid), LauncherScreenGrid.OnDropListener {
     var bindedPos = -1
     val width = grid.columnCount
     val height = grid.rowCount
@@ -50,6 +50,7 @@ class CustomScreenHolder(private val context: Context, val grid: LauncherScreenG
         if (bindedPos != position) {
 
             grid.clearGrid()
+            grid.addOnDropListener(this)
 
             val customGridAppsApps = AppManager.customGridApps
             var appInfo: AppInfo?
@@ -66,5 +67,7 @@ class CustomScreenHolder(private val context: Context, val grid: LauncherScreenG
         }
     }
 
-//    fun  o
+    override fun onDrop(appInfo: AppInfo, newPos: Int, oldPos: Int) {
+        AppManager.applyCustomGridChanges(context, appInfo.id, newPos)
+    }
 }

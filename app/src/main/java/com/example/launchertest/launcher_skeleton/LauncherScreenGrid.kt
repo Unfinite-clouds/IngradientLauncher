@@ -13,18 +13,12 @@ import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.view.menu.MenuPopupHelper
 import androidx.core.view.iterator
 import com.example.launchertest.R
+import java.lang.ref.WeakReference
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
 
 class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemClickListener, View.OnLongClickListener {
-    constructor(context: Context, nrows: Int, ncols: Int) : super(context) {
-        setGridSize(nrows, ncols)
-    }
-    constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
-        setGridSize(rowCount, columnCount)
-    }
-
     // TODO: remove magic values
     private var widthCell = -1
     private var heightCell = -1
@@ -35,9 +29,17 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
     private val dismissRadius = 20
     private lateinit var menuHelper: MenuPopupHelper
     private val decimalPadding = Rect()
+    private val onDropListeners: MutableList<WeakReference<OnDropListener>> = mutableListOf()
 
     init {
         clipChildren = false
+    }
+
+    constructor(context: Context, nrows: Int, ncols: Int) : super(context) {
+        setGridSize(nrows, ncols)
+    }
+    constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
+        setGridSize(rowCount, columnCount)
     }
 
     fun setGridSize(nrows: Int, ncols: Int, fill: Boolean = true) {
@@ -181,6 +183,7 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
                     (shortcut.parent as DummyCell).removeView(shortcut)
                     cell.doMoveBy(-dragSide.x, -dragSide.y)
                     cell.addView(shortcut)
+                    onDropCallback(shortcut.appInfo, cell.position, )
                 } else return false
             }
 
@@ -216,7 +219,7 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
         shortcut.startDrag(data, shadowBuilder, shortcut, 0)
     }
 
-    fun createPopupMenu(view: View) {
+    private fun createPopupMenu(view: View) {
         val builder = MenuBuilder(view.context)
         val inflater = MenuInflater(view.context)
         inflater.inflate(R.menu.shortcut_popup_menu, builder)
@@ -231,5 +234,41 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
     override fun onMenuItemClick(item: MenuItem?): Boolean {
         println(item?.title)
         return true
+    }
+
+    interface OnDropListener {
+        fun onDrop(appInfo: AppInfo, newPos: Int, oldPos: Int)
+    }
+
+    fun addOnDropListener(listener: OnDropListener) {
+        onDropListeners.add(WeakReference(listener))
+    }
+
+    fun removeOnDropListener(listener: OnDropListener) {
+        var i = 0
+        onDropListeners.forEach {
+            if (it.get() == listener) onDropListeners.removeAt(i)
+            i++
+        }
+    }
+
+    private fun onDropCallback(appInfo: AppInfo, newPos: Int, oldPos: Int) {
+        onDropListeners.forEach {
+            it.get()?.onDrop(appInfo, newPos, oldPos)
+        }
+    }
+
+    class GridPosition : Point {
+        var orientation: Int = HORIZONTAL
+        var width = -1
+        var height = -1
+        constructor() : super()
+        constructor(x: Int, y: Int) : super(x, y)
+        constructor(src: Point) : super(src)
+        constructor(pos: Int)
+
+        fun toInt(): Int {
+            return if (orientation == HORIZONTAL) width*y+x else height*x+y
+        }
     }
 }
