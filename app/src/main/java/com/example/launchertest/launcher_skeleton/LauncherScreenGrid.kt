@@ -27,7 +27,7 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
     private var dragSide = Point(0, 0)
     private var dragStartPoint: PointF? = null
     private val dismissRadius = 20
-    private lateinit var menuHelper: MenuPopupHelper
+    private var menuHelper: MenuPopupHelper? = null
     private val decimalPadding = Rect()
     private val onDropListeners: MutableList<WeakReference<OnDropListener>> = mutableListOf()
 
@@ -167,7 +167,11 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
                     dragStartPoint = PointF(event.x, event.y)
                 }
                 if (abs(dragStartPoint!!.x - event.x) > dismissRadius || abs(dragStartPoint!!.y - event.y) > dismissRadius) {
-                    menuHelper.dismiss()
+                    menuHelper?.dismiss()
+                }
+
+                if (cell.position.x == columnCount - 1 && dragSide == Point(1, 0)) {
+                    println("NEXT")
                 }
             }
 
@@ -230,8 +234,8 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
             item.setOnMenuItemClickListener(this)
         }
         menuHelper = MenuPopupHelper(view.context, builder, view)
-        menuHelper.setForceShowIcon(true)
-        menuHelper.show()
+        menuHelper?.setForceShowIcon(true)
+        menuHelper?.show()
     }
 
     override fun onMenuItemClick(item: MenuItem?): Boolean {

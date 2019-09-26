@@ -10,7 +10,6 @@ import android.util.AttributeSet
 import android.view.Gravity
 import android.view.ViewGroup.LayoutParams
 import android.widget.TextView
-import com.example.launchertest.randomColor
 
 
 class AppShortcut : TextView {
@@ -29,7 +28,6 @@ class AppShortcut : TextView {
         gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
         includeFontPadding = false
         maxLines = 1
-        setBackgroundColor(randomColor())
         setTextColor(Color.WHITE)
     }
 

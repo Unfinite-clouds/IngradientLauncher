@@ -21,6 +21,15 @@ class SkeletonTestActivity : AppCompatActivity() {
         if (getPrefs(this).getBoolean(Preferences.FIRST_LOAD, true))
             loadDefaultPreferences()
 
+        /*
+        val allApps = AppManager.allApps
+        var i = 0
+        for (app in allApps) {
+            if (i > 12) break
+            AppManager.applyCustomGridChanges(this, app.key, i)
+            i++
+        }*/
+
         val stages = findViewById<ViewPager2>(R.id.root_viewpager)
         stages.adapter = StageAdapter()
         stages.orientation = ViewPager2.ORIENTATION_VERTICAL

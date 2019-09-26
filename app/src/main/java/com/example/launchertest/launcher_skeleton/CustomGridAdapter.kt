@@ -4,7 +4,6 @@ import android.content.Context
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.launchertest.AppManager
-import com.example.launchertest.randomColor
 
 class CustomGridAdapter : RecyclerView.Adapter<CustomScreenHolder>() {
 
@@ -62,7 +61,6 @@ class CustomScreenHolder(private val context: Context, val grid: LauncherScreenG
                 }
             }
 
-            grid.setBackgroundColor(randomColor())
             bindedPos = page
         }
     }
