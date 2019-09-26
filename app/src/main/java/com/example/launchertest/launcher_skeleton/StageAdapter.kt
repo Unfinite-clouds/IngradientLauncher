@@ -45,8 +45,8 @@ class StageHolder(private val context: Context, itemView: View) : RecyclerView.V
                 }
             } else {
                 // Screen stage
-                View.inflate(context, R.layout.stage_2_all_apps, stage.root)
-                stage.screen_pager.adapter = AllAppsGridAdapter()
+                View.inflate(context, R.layout.stage_1_custom_grid, stage.root)
+                stage.screen_pager.adapter = CustomGridAdapter()
             }
             stage.setBackgroundResource(R.color.colorVignette)
 

@@ -22,7 +22,7 @@ class CustomGridAdapter : RecyclerView.Adapter<CustomScreenHolder>() {
         )
     }
 
-    override fun getItemCount(): Int = colors.size
+    override fun getItemCount(): Int = 2
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CustomScreenHolder {
         context = parent.context
@@ -48,19 +48,19 @@ class CustomScreenHolder(private val context: Context, val grid: LauncherScreenG
 
     fun bind(position: Int) {
         if (bindedPos != position) {
+            println("BIND")
 
             grid.clearGrid()
 
-            val allApps = AppManager.getSortedApps()
-            var app: Int
-            for (i in 0 until width*height) {
-                app = i+width*height*position
-                if (app > allApps.size - 1)
-                    break
-                val appInfo = AppManager.getApp(allApps[app])
+//            val customGridAppsApps = AppManager.customGridAppsApps()
+            val customGridAppsApps = mutableMapOf<String, Int>(Pair("abc", 5), Pair("aBS", 3))
+            var appInfo: AppInfo?
 
-                if (appInfo != null)
-                    grid.addViewTo(AppShortcut(context, appInfo).apply { setOnLongClickListener(grid) }, i%width, i/width)
+            customGridAppsApps.forEach {
+                if (it.value in width*height*position until width*height*(position+1)) {
+                    appInfo = AppManager.getApp(it.key)
+                    if (appInfo != null) grid.addViewTo(AppShortcut(context, appInfo!!).apply { setOnLongClickListener(grid) }, it.value%width, it.value/width)
+                }
             }
 
             grid.setBackgroundColor(randomColor())
