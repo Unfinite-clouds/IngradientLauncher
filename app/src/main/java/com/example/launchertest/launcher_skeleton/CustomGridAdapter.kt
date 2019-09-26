@@ -33,10 +33,10 @@ class CustomGridAdapter : RecyclerView.Adapter<CustomScreenHolder>() {
     }
 
 
-    override fun onBindViewHolder(screenHolder: CustomScreenHolder, position: Int) {
-        if (screenHolder.adapterPosition != position || screenHolder.layoutPosition != position || screenHolder.adapterPosition != screenHolder.layoutPosition)
+    override fun onBindViewHolder(screenHolder: CustomScreenHolder, page: Int) {
+        if (screenHolder.adapterPosition != page || screenHolder.layoutPosition != page || screenHolder.adapterPosition != screenHolder.layoutPosition)
             println("Bind with bug APos: ${screenHolder.adapterPosition}, LPos: ${screenHolder.layoutPosition}")
-        screenHolder.bind(position)
+        screenHolder.bind(page)
     }
 }
 
@@ -46,8 +46,8 @@ class CustomScreenHolder(private val context: Context, val grid: LauncherScreenG
     val width = grid.columnCount
     val height = grid.rowCount
 
-    fun bind(position: Int) {
-        if (bindedPos != position) {
+    fun bind(page: Int) {
+        if (bindedPos != page) {
 
             grid.clearGrid()
             grid.addOnDropListener(this)
@@ -56,14 +56,14 @@ class CustomScreenHolder(private val context: Context, val grid: LauncherScreenG
             var appInfo: AppInfo?
 
             customGridAppsApps.forEach {
-                if (it.value in width*height*position until width*height*(position+1)) {
+                if (it.value in width*height*page until width*height*(page+1)) {
                     appInfo = AppManager.getApp(it.key)
                     if (appInfo != null) grid.addViewTo(AppShortcut(context, appInfo!!).apply { setOnLongClickListener(grid) }, it.value%width, it.value/width)
                 }
             }
 
             grid.setBackgroundColor(randomColor())
-            bindedPos = position
+            bindedPos = page
         }
     }
 

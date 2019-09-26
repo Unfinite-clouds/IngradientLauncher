@@ -183,7 +183,7 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
                     (shortcut.parent as DummyCell).removeView(shortcut)
                     cell.doMoveBy(-dragSide.x, -dragSide.y)
                     cell.addView(shortcut)
-                    onDropCallback(shortcut.appInfo, cell.position, )
+                    onDropCallback(shortcut.appInfo, GridPositionHelper(columnCount, rowCount).pointToPos(cell.position), )
                 } else return false
             }
 
@@ -258,17 +258,23 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
         }
     }
 
-    class GridPosition : Point {
-        var orientation: Int = HORIZONTAL
-        var width = -1
-        var height = -1
-        constructor() : super()
-        constructor(x: Int, y: Int) : super(x, y)
-        constructor(src: Point) : super(src)
-        constructor(pos: Int)
+    // invert to Grid
+    class GridPositionHelper(var width: Int, var height: Int, var orientation: Int = GridLayout.HORIZONTAL) {
+        fun pointToPos(x: Int, y: Int, page: Int = 0): Int {
+            return if (orientation == HORIZONTAL) page*width*height + width*y + x else page*width*height + height*x + y
+        }
 
-        fun toInt(): Int {
-            return if (orientation == HORIZONTAL) width*y+x else height*x+y
+        fun pointToPos(pos: Point, page: Int = 0): Int {
+            return pointToPos(pos.x, pos.y, page)
+        }
+
+        fun posToPoint(pos: Int) : Point {
+            val pos_ =  pos % (width*height)
+            return if (orientation == HORIZONTAL) Point(pos_ % width, pos_ / height) else Point(pos_ / width, pos_ % height)
+        }
+
+        fun getPageFromPos(pos: Int) : Int {
+            return pos / (width*height)
         }
     }
 }

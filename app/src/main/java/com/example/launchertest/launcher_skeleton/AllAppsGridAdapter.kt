@@ -33,10 +33,10 @@ class AllAppsGridAdapter : RecyclerView.Adapter<ScreenHolder>() {
     }
 
 
-    override fun onBindViewHolder(screenHolder: ScreenHolder, position: Int) {
-        if (screenHolder.adapterPosition != position || screenHolder.layoutPosition != position || screenHolder.adapterPosition != screenHolder.layoutPosition)
+    override fun onBindViewHolder(screenHolder: ScreenHolder, page: Int) {
+        if (screenHolder.adapterPosition != page || screenHolder.layoutPosition != page || screenHolder.adapterPosition != screenHolder.layoutPosition)
             println("Bind with bug APos: ${screenHolder.adapterPosition}, LPos: ${screenHolder.layoutPosition}")
-        screenHolder.bind(position)
+        screenHolder.bind(page)
     }
 }
 
@@ -46,15 +46,15 @@ class ScreenHolder(private val context: Context, val grid: LauncherScreenGrid) :
     val width = grid.columnCount
     val height = grid.rowCount
 
-    fun bind(position: Int) {
-        if (bindedPos != position) {
+    fun bind(page: Int) {
+        if (bindedPos != page) {
 
             grid.clearGrid()
 
             val allApps = AppManager.getSortedApps()
             var app: Int
             for (i in 0 until width*height) {
-                app = i+width*height*position
+                app = i+width*height*page
                 if (app > allApps.size - 1)
                     break
                 val appInfo = AppManager.getApp(allApps[app])
@@ -64,7 +64,7 @@ class ScreenHolder(private val context: Context, val grid: LauncherScreenGrid) :
             }
 
             grid.setBackgroundColor(randomColor())
-            bindedPos = position
+            bindedPos = page
         }
     }
 }
