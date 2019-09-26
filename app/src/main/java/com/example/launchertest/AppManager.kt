@@ -18,16 +18,29 @@ object AppManager {
         get() { return if (isLoaded) field else throw LauncherException("allApps is not laded") }
 
     var customGridApps: MutableMap<String, Int> = mutableMapOf()
+        private set
+        get() { return if (isLoaded) field else throw LauncherException("allApps is not laded") }
 
     fun loadAllApps(context: Context) {
         println("loading All Apps...")
         allApps = Storable.loadAuto(context, Storable.ALL_APPS) as? MutableMap<String, AppInfo> ?: mutableMapOf()
-        isLoaded = true
-        if (allApps.isEmpty()) {
-            updateAllApps(context)
-        }
-        allApps.forEach { it.value.loadIconFromDump(context)}
         customGridApps = Storable.loadAuto(context, Storable.CUSTOM_GRID_APPS) as? MutableMap<String, Int> ?: mutableMapOf()
+
+        isLoaded = true
+        if (allApps.isEmpty()) { updateAllApps(context) }
+        allApps.forEach { it.value.loadIconFromDump(context)}
+    }
+
+    fun applyCustomGridChanges(context: Context, app: String, pos: Int) {
+        customGridApps[app] = pos
+        Storable.dumpAuto(context, customGridApps, Storable.CUSTOM_GRID_APPS)
+    }
+
+    fun applyCustomGridChanges(context: Context, apps: Map<String, Int>) {
+        apps.forEach {
+            customGridApps[it.key] = it.value
+        }
+        Storable.dumpAuto(context, customGridApps, Storable.CUSTOM_GRID_APPS)
     }
 
     fun getLaunchableApps(context: Context): List<ResolveInfo> {

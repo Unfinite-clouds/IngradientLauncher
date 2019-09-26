@@ -48,12 +48,10 @@ class CustomScreenHolder(private val context: Context, val grid: LauncherScreenG
 
     fun bind(position: Int) {
         if (bindedPos != position) {
-            println("BIND")
 
             grid.clearGrid()
 
-//            val customGridAppsApps = AppManager.customGridAppsApps()
-            val customGridAppsApps = mutableMapOf<String, Int>(Pair("abc", 5), Pair("aBS", 3))
+            val customGridAppsApps = AppManager.customGridApps
             var appInfo: AppInfo?
 
             customGridAppsApps.forEach {
@@ -67,4 +65,6 @@ class CustomScreenHolder(private val context: Context, val grid: LauncherScreenG
             bindedPos = position
         }
     }
+
+//    fun  o
 }

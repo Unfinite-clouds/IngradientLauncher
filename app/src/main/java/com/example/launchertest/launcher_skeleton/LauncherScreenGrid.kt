@@ -200,7 +200,7 @@ class LauncherScreenGrid : GridLayout, View.OnDragListener, MenuItem.OnMenuItemC
 
     override fun onLongClick(view: View?): Boolean {
         createPopupMenu(view!!)
-        startDrag(view!! as AppShortcut)
+        startDrag(view as AppShortcut)
         return true
     }
 
