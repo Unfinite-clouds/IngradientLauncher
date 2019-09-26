@@ -52,15 +52,15 @@ class ScreenHolder(private val context: Context, val grid: LauncherScreenGrid) :
             grid.clearGrid()
 
             val allApps = AppManager.getSortedApps()
-            var app: Int
+            var position: Int
             for (i in 0 until width*height) {
-                app = i+width*height*page
-                if (app > allApps.size - 1)
+                position = i+width*height*page
+                if (position > allApps.size - 1)
                     break
-                val appInfo = AppManager.getApp(allApps[app])
+                val appInfo = AppManager.getApp(allApps[position])
 
                 if (appInfo != null)
-                    grid.addViewTo(AppShortcut(context, appInfo).apply { setOnLongClickListener(grid) }, i%width, i/width)
+                    grid.addViewTo(AppShortcut(context, appInfo, position), i%width, i/width)
             }
 
             grid.setBackgroundColor(randomColor())
