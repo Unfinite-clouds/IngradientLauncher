@@ -3,6 +3,7 @@ package com.example.launchertest.launcher_skeleton
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Point
+import android.graphics.PointF
 import android.util.AttributeSet
 import android.view.DragEvent
 import android.view.View
@@ -12,6 +13,8 @@ import android.widget.LinearLayout
 import com.example.launchertest.AppManager
 import com.example.launchertest.LauncherException
 import com.example.launchertest.R
+import com.example.launchertest.launcher_skeleton.AppShortcut.Companion.DISMISS_RADIUS
+import kotlin.math.abs
 
 
 class DummyCell : LinearLayout, View.OnDragListener {
@@ -23,6 +26,7 @@ class DummyCell : LinearLayout, View.OnDragListener {
     private var dragSide = Point()
     val shortcut: AppShortcut?
         get() = getChildAt(0) as AppShortcut?
+    private var touchStartPoint: PointF? = null
 
     init {
         clipChildren = false
@@ -67,6 +71,7 @@ class DummyCell : LinearLayout, View.OnDragListener {
         when (event.action) {
 
             DragEvent.ACTION_DRAG_STARTED -> {
+                touchStartPoint = PointF(event.x, event.y)
             }
 
             DragEvent.ACTION_DRAG_ENTERED -> {
@@ -89,13 +94,13 @@ class DummyCell : LinearLayout, View.OnDragListener {
                     cell.doTranslateBy(-dragSide.x, -dragSide.y, 100f)
                 }
 
-//                if (abs(dragStartPoint!!.x - event.x) > DISMISS_RADIUS || abs(dragStartPoint!!.y - event.y) > DISMISS_RADIUS) {
-//                    cell.shortcut.menuHelper?.dismiss()
-//                }
+                if (abs(touchStartPoint!!.x - event.x) > DISMISS_RADIUS || abs(touchStartPoint!!.y - event.y) > DISMISS_RADIUS) {
+                    cell.shortcut?.menuHelper?.dismiss()
+                }
 
-//                if (cell.relativePosition.x == columnCount - 1 && dragSide == Point(1, 0)) {
-//                    println("NEXT")
-//                }
+                if (cell.relativePosition.x == columnCount - 1 && dragSide == Point(1, 0)) {
+                    println("NEXT")
+                }
             }
 
             DragEvent.ACTION_DRAG_EXITED -> {
@@ -134,7 +139,7 @@ class DummyCell : LinearLayout, View.OnDragListener {
         if (shortuct != null && newCell != null) {
             this.removeAllViews()
             newCell.addView(shortuct)
-            AppManager.applyCustomGridChanges(context, shortuct.appInfo.id, position)
+            AppManager.applyCustomGridChanges(context, shortuct.appInfo.id, newCell.position)
         }
     }
 
@@ -161,7 +166,7 @@ class DummyCell : LinearLayout, View.OnDragListener {
 
     fun doMoveBy(directionX: Int, directionY: Int): Boolean {
         return doRecursionPass(directionX, directionY) { thisCell, nextCell ->
-            moveShortcutInto(nextCell.relativePosition)
+            thisCell.moveShortcutInto(nextCell.relativePosition)
         }
     }
 

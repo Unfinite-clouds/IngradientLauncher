@@ -8,7 +8,10 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.provider.Settings
 import android.util.AttributeSet
-import android.view.*
+import android.view.Gravity
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
 import android.view.ViewGroup.LayoutParams
 import android.widget.TextView
 import androidx.appcompat.view.menu.MenuBuilder
@@ -16,9 +19,12 @@ import androidx.appcompat.view.menu.MenuPopupHelper
 import androidx.core.view.iterator
 import com.example.launchertest.R
 
-private const val DISMISS_RADIUS = 20
 
-class AppShortcut : TextView, View.OnLongClickListener, MenuItem.OnMenuItemClickListener, View.OnClickListener, View.OnTouchListener {
+class AppShortcut : TextView, View.OnLongClickListener, MenuItem.OnMenuItemClickListener, View.OnClickListener {
+companion object {
+    const val DISMISS_RADIUS = 20
+}
+
     var appInfo: AppInfo
         set(value) {
             field = value
@@ -29,8 +35,7 @@ class AppShortcut : TextView, View.OnLongClickListener, MenuItem.OnMenuItemClick
     val icon: Drawable?
         get() = compoundDrawables[1]
 
-    private var menuHelper: MenuPopupHelper? = null
-    private var touchStartPoint: PointF? = null
+    var menuHelper: MenuPopupHelper? = null
 
     init {
         layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
@@ -39,7 +44,6 @@ class AppShortcut : TextView, View.OnLongClickListener, MenuItem.OnMenuItemClick
         maxLines = 1
         setTextColor(Color.WHITE)
         setOnClickListener(this)
-//        setOnTouchListener(this)
         setOnLongClickListener(this)
     }
 
@@ -67,6 +71,7 @@ class AppShortcut : TextView, View.OnLongClickListener, MenuItem.OnMenuItemClick
     override fun onLongClick(view: View?): Boolean {
         createPopupMenu(view!!)
         startDrag(view as AppShortcut)
+        println("onLongClick")
         return true
     }
 
@@ -99,17 +104,6 @@ class AppShortcut : TextView, View.OnLongClickListener, MenuItem.OnMenuItemClick
             R.id.popup_menu_info -> context.startActivity(intentToInfo())
             R.id.popup_menu_uninstall -> context.startActivity(intentToUninstall())
         }
-        return true
-    }
-
-    override fun onTouch(v: View?, event: MotionEvent): Boolean {
-/*        if (v is AppShortcut)
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> touchStartPoint = PointF(event.x, event.y)
-                MotionEvent.ACTION_MOVE ->
-                    if (abs(touchStartPoint!!.x - event.x) > DISMISS_RADIUS || abs(touchStartPoint!!.y - event.y) > DISMISS_RADIUS)
-                        v.menuHelper?.dismiss()
-            }*/
         return true
     }
 

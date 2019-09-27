@@ -24,7 +24,6 @@ class LauncherScreenGrid : GridLayout {
 
     init {
         clipChildren = false
-        orientation = HORIZONTAL
     }
 
     constructor(context: Context, nrows: Int, ncols: Int, page: Int = -1) : super(context) {
