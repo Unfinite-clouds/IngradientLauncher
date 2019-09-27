@@ -7,33 +7,41 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.GridLayout
 import androidx.core.view.iterator
+import com.example.launchertest.LauncherException
 import kotlin.math.ceil
 import kotlin.math.floor
 
 class LauncherScreenGrid : GridLayout {
-    // TODO: remove magic values
+    var page = -1
+    val size: Int
+        get() = rowCount*columnCount
+    lateinit var positions: IntArray  // global cell positions within whole stage
     private var widthCell = -1
     private var heightCell = -1
-
-    lateinit var positions: Array<IntArray>
     private val decimalPadding = Rect()
+    val gridBounds: IntRange
+    get() = size*page until size*(page+1)
 
     init {
         clipChildren = false
+        orientation = HORIZONTAL
     }
 
-    constructor(context: Context, nrows: Int, ncols: Int) : super(context) {
+    constructor(context: Context, nrows: Int, ncols: Int, page: Int = -1) : super(context) {
+        println("creating Grid for page $page")
+        this.page = page
         setGridSize(nrows, ncols)
     }
+
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
         setGridSize(rowCount, columnCount)
     }
 
-    private fun setGridSize(nrows: Int, ncols: Int, fill: Boolean = true) {
+    public fun setGridSize(nrows: Int, ncols: Int, fill: Boolean = true) {
         removeAllViews()
         rowCount = nrows
         columnCount = ncols
-        positions = Array(columnCount) { IntArray(rowCount) }
+        positions = IntArray(size)
         if (fill) fillEmptyGrid()
     }
 
@@ -75,11 +83,9 @@ class LauncherScreenGrid : GridLayout {
     }
 
     private fun fillEmptyGrid() {
-        for (y in 0 until rowCount) {
-            for (x in 0 until columnCount) {
-                addView(DummyCell(context, pointToPos(x,y), x, y))
-                positions[x][y] = childCount-1
-            }
+        for (pos in 0 until size) {
+            addView(DummyCell(context, page*size+pos, toRelativePosition(pos)))
+            positions[pos] = childCount-1
         }
     }
 
@@ -93,42 +99,47 @@ class LauncherScreenGrid : GridLayout {
         return super.getChildAt(index) as DummyCell
     }
 
-    fun addViewTo(child: View, x: Int, y: Int) {
-        getCellAt(x,y)!!.addView(child)
+    fun addViewTo(child: View, pos: Int) {
+        val cell = getCellAt(pos) ?: throw LauncherException("can't add view $child to position $pos; the position is out of gridBounds $gridBounds")
+        cell.addView(child)
     }
 
-    fun getCellAt(x: Int, y: Int): DummyCell? {
-        if (checkCellAt(x, y)) {
-            return getChildAt(positions[x][y])
+    fun getCellAt(pos: Int): DummyCell? {
+        if (checkCellAt(pos)) {
+            return getChildAt(positions[pos])
         }
         return null
     }
 
-    fun getCellAt(pos: Point): DummyCell? {
-        return getCellAt(pos.x, pos.y)
+    fun getCellAt(relativePos: Point): DummyCell? {
+        return getCellAt(toGlobalPosition(relativePos))
     }
 
-    fun checkCellAt(x: Int, y: Int): Boolean {
-        if (x in 0 until columnCount && y in 0 until rowCount) {
+
+    fun checkCellAt(pos: Int): Boolean {
+        if (pos in gridBounds) {
             return true
         }
         return false
     }
 
-    fun pointToPos(x: Int, y: Int, page: Int = 0): Int {
-        return if (orientation == HORIZONTAL) page*columnCount*rowCount + columnCount*y + x else page*columnCount*rowCount + rowCount*x + y
+    fun toGlobalPosition(relativePos: Point): Int {
+        return if (orientation == HORIZONTAL)
+            page*size + columnCount*relativePos.y + relativePos.x
+        else
+            page*size + rowCount*relativePos.x + relativePos.y
     }
 
-    fun pointToPos(pos: Point, page: Int = 0): Int {
-        return pointToPos(pos.x, pos.y, page)
-    }
+    fun toRelativePosition(pos: Int) : Point {
+        val pos_relative =  pos % size
 
-    fun posToPoint(pos: Int) : Point {
-        val pos_ =  pos % (columnCount*rowCount)
-        return if (orientation == HORIZONTAL) Point(pos_ % columnCount, pos_ / rowCount) else Point(pos_ / columnCount, pos_ % rowCount)
+        return if (orientation == HORIZONTAL)
+            Point(pos_relative % columnCount, pos_relative / columnCount)
+        else
+            Point(pos_relative / rowCount, pos_relative % rowCount)
     }
 
     fun getPageFromPos(pos: Int) : Int {
-        return pos / (columnCount*rowCount)
+        return pos / size
     }
 }

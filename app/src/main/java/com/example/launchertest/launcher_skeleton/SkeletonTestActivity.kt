@@ -56,6 +56,6 @@ class SkeletonTestActivity : AppCompatActivity() {
 
 class PageTransformer : ViewPager2.PageTransformer {
     override fun transformPage(view: View, position: Float) {
-//        println("Transfroming: $oldPosition")
+//        println("Transfroming: $relativePosition")
     }
 }

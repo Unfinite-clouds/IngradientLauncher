@@ -34,8 +34,6 @@ class AllAppsGridAdapter : RecyclerView.Adapter<ScreenHolder>() {
 
 
     override fun onBindViewHolder(screenHolder: ScreenHolder, page: Int) {
-        if (screenHolder.adapterPosition != page || screenHolder.layoutPosition != page || screenHolder.adapterPosition != screenHolder.layoutPosition)
-            println("Bind with bug APos: ${screenHolder.adapterPosition}, LPos: ${screenHolder.layoutPosition}")
         screenHolder.bind(page)
     }
 }
@@ -50,6 +48,7 @@ class ScreenHolder(private val context: Context, val grid: LauncherScreenGrid) :
         if (bindedPos != page) {
 
             grid.clearGrid()
+            grid.page = page
 
             val allApps = AppManager.getSortedApps()
             var position: Int
@@ -60,7 +59,7 @@ class ScreenHolder(private val context: Context, val grid: LauncherScreenGrid) :
                 val appInfo = AppManager.getApp(allApps[position])
 
                 if (appInfo != null)
-                    grid.addViewTo(AppShortcut(context, appInfo, position), i%width, i/width)
+                    grid.addViewTo(AppShortcut(context, appInfo), position)
             }
 
             grid.setBackgroundColor(randomColor())

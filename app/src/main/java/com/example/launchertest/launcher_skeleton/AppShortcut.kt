@@ -29,7 +29,6 @@ class AppShortcut : TextView, View.OnLongClickListener, MenuItem.OnMenuItemClick
     val icon: Drawable?
         get() = compoundDrawables[1]
 
-    var position: Int = -1
     private var menuHelper: MenuPopupHelper? = null
     private var touchStartPoint: PointF? = null
 
@@ -40,11 +39,11 @@ class AppShortcut : TextView, View.OnLongClickListener, MenuItem.OnMenuItemClick
         maxLines = 1
         setTextColor(Color.WHITE)
         setOnClickListener(this)
-        setOnTouchListener(this)
+//        setOnTouchListener(this)
         setOnLongClickListener(this)
     }
 
-    constructor(context: Context, appInfo: AppInfo, position: Int) : super(context) {
+    constructor(context: Context, appInfo: AppInfo) : super(context) {
         this.appInfo = appInfo
     }
     constructor(context: Context, attributeSet: AttributeSet) : super(context, attributeSet) {

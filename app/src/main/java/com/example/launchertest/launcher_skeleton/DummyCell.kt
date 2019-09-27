@@ -17,7 +17,7 @@ import com.example.launchertest.R
 class DummyCell : LinearLayout, View.OnDragListener {
 
     var isReserved: Boolean = false
-    lateinit var oldPosition: Point
+    lateinit var relativePosition: Point // the position within one ScreenGrid (not considering page number)
     var position: Int = -1
     private val bgcolor = Color.argb(40,0,0,0)
     private var dragSide = Point()
@@ -31,14 +31,14 @@ class DummyCell : LinearLayout, View.OnDragListener {
         setOnDragListener(this)
     }
 
-    constructor(context: Context?, position: Int, x: Int, y: Int) : super(context) {
+    constructor(context: Context, position: Int, relativePosition: Point) : super(context) {
         this.position = position
-        oldPosition = Point(x,y)
-        layoutParams = GridLayout.LayoutParams(GridLayout.spec(oldPosition.y),GridLayout.spec(oldPosition.x))
+        this.relativePosition = relativePosition
+        layoutParams = GridLayout.LayoutParams(GridLayout.spec(relativePosition.y),GridLayout.spec(relativePosition.x))
         layoutParams.width = 0
         layoutParams.height = 0
     }
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         measureChildren(widthMeasureSpec, heightMeasureSpec)
@@ -76,9 +76,8 @@ class DummyCell : LinearLayout, View.OnDragListener {
             }
 
             DragEvent.ACTION_DRAG_LOCATION -> {
-                val newDragSide: Point
-                // remember that the origin of coordinate system is [left, top]
-                newDragSide =
+                // remember the origin of coordinate system is [left, top]
+                val newDragSide: Point =
                     if (event.y > event.x)
                         if (event.y > height - event.x) Point(0, 1) else Point(-1, 0)
                     else
@@ -90,12 +89,11 @@ class DummyCell : LinearLayout, View.OnDragListener {
                     cell.doTranslateBy(-dragSide.x, -dragSide.y, 100f)
                 }
 
-
 //                if (abs(dragStartPoint!!.x - event.x) > DISMISS_RADIUS || abs(dragStartPoint!!.y - event.y) > DISMISS_RADIUS) {
 //                    cell.shortcut.menuHelper?.dismiss()
 //                }
 
-//                if (cell.oldPosition.x == columnCount - 1 && dragSide == Point(1, 0)) {
+//                if (cell.relativePosition.x == columnCount - 1 && dragSide == Point(1, 0)) {
 //                    println("NEXT")
 //                }
             }
@@ -108,15 +106,9 @@ class DummyCell : LinearLayout, View.OnDragListener {
             DragEvent.ACTION_DROP -> {
                 // cell is the cell to drop
                 if (cell.canMoveBy(-dragSide.x, -dragSide.y)) {
-                    val oldCell =  (dragShortcut.parent as DummyCell)
-
-                    // TODO: move this to add/removeView() or similar for auto-apply
-                    AppManager.applyCustomGridChanges(context, dragShortcut.appInfo.id, cell.position)
-
                     cell.doTranslateBy(-dragSide.x, -dragSide.y, 0f) // back translating - just for prevent blinking
-                    oldCell.removeView(dragShortcut)
                     cell.doMoveBy(-dragSide.x, -dragSide.y)
-                    cell.addView(dragShortcut)
+                    (dragShortcut.parent as DummyCell).moveShortcutInto(cell.relativePosition)
                 } else
                     return false
             }
@@ -127,11 +119,23 @@ class DummyCell : LinearLayout, View.OnDragListener {
                 dragShortcut.icon?.clearColorFilter()
                 setBackgroundColor(bgcolor)
                 isReserved = false
-                this.shortcut?.translationX = 0f
-                this.shortcut?.translationY = 0f
+                cell.shortcut?.translationX = 0f
+                cell.shortcut?.translationY = 0f
             }
         }
         return true
+    }
+
+    private fun moveShortcutInto(relativePos: Point) {
+        val shortuct = this.shortcut
+        val grid = (parent as LauncherScreenGrid)
+        val newCell = grid.getCellAt(relativePos)
+
+        if (shortuct != null && newCell != null) {
+            this.removeAllViews()
+            newCell.addView(shortuct)
+            AppManager.applyCustomGridChanges(context, shortuct.appInfo.id, position)
+        }
     }
 
     private fun doRecursionPass(directionX: Int, directionY: Int, action: (thisCell: DummyCell, nextCell: DummyCell) -> Unit): Boolean {
@@ -142,7 +146,7 @@ class DummyCell : LinearLayout, View.OnDragListener {
             action(this, this)
             return true
         }
-        val next = Point(oldPosition.x + directionX, oldPosition.y + directionY)
+        val next = Point(relativePosition.x + directionX, relativePosition.y + directionY)
         val nextCell: DummyCell? = (parent as LauncherScreenGrid).getCellAt(next)
         if (nextCell?.doRecursionPass(directionX, directionY, action) == true) {
             action(this, nextCell)
@@ -157,10 +161,7 @@ class DummyCell : LinearLayout, View.OnDragListener {
 
     fun doMoveBy(directionX: Int, directionY: Int): Boolean {
         return doRecursionPass(directionX, directionY) { thisCell, nextCell ->
-            val child = thisCell.shortcut
-            AppManager.applyCustomGridChanges(context, thisCell.shortcut!!.appInfo.id, (thisCell.parent as LauncherScreenGrid).pointToPos(nextCell.oldPosition))
-            thisCell.removeAllViews()
-            nextCell.addView(child)
+            moveShortcutInto(nextCell.relativePosition)
         }
     }
 
@@ -178,6 +179,6 @@ class DummyCell : LinearLayout, View.OnDragListener {
     }
 
     override fun toString(): String {
-        return "\"${javaClass.simpleName}: $oldPosition empty=${isEmptyCell()} reserved=$isReserved\""
+        return "\"${javaClass.simpleName}: $relativePosition empty=${isEmptyCell()} reserved=$isReserved\""
     }
 }

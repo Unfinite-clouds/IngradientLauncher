@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.launchertest.AppManager
+import com.example.launchertest.randomColor
 
 class CustomGridAdapter : RecyclerView.Adapter<CustomScreenHolder>() {
 
@@ -21,7 +22,7 @@ class CustomGridAdapter : RecyclerView.Adapter<CustomScreenHolder>() {
         )
     }
 
-    override fun getItemCount(): Int = 2
+    override fun getItemCount(): Int = 20
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CustomScreenHolder {
         context = parent.context
@@ -33,9 +34,27 @@ class CustomGridAdapter : RecyclerView.Adapter<CustomScreenHolder>() {
 
 
     override fun onBindViewHolder(screenHolder: CustomScreenHolder, page: Int) {
-        if (screenHolder.adapterPosition != page || screenHolder.layoutPosition != page || screenHolder.adapterPosition != screenHolder.layoutPosition)
-            println("Bind with bug APos: ${screenHolder.adapterPosition}, LPos: ${screenHolder.layoutPosition}")
         screenHolder.bind(page)
+    }
+
+//    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+//        super.onAttachedToRecyclerView(recyclerView)
+//    }
+//
+//    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+//        super.onDetachedFromRecyclerView(recyclerView)
+//    }
+
+    override fun onViewAttachedToWindow(holder: CustomScreenHolder) {
+        super.onViewAttachedToWindow(holder)
+    }
+
+    override fun onViewDetachedFromWindow(holder: CustomScreenHolder) {
+        super.onViewDetachedFromWindow(holder)
+    }
+
+    override fun onViewRecycled(holder: CustomScreenHolder) {
+        super.onViewRecycled(holder)
     }
 }
 
@@ -47,24 +66,23 @@ class CustomScreenHolder(private val context: Context, val grid: LauncherScreenG
 
     fun bind(page: Int) {
         if (bindedPos != page) {
-
+            println("loading page $page")
             grid.clearGrid()
+            grid.page = page
 
             val customGridAppsApps = AppManager.customGridApps
             var appInfo: AppInfo?
 
             customGridAppsApps.forEach {
-                if (it.value in width*height*page until width*height*(page+1)) {
+                if (it.value in grid.gridBounds) {
                     appInfo = AppManager.getApp(it.key)
-                    if (appInfo != null) grid.addViewTo(AppShortcut(context, appInfo!!, it.value), it.value%width, it.value/width)
+                    if (appInfo != null) grid.addViewTo(AppShortcut(context, appInfo!!), it.value)
                 }
             }
 
             bindedPos = page
+            grid.setBackgroundColor(randomColor())
         }
     }
 
-//    override fun onDrop(appInfo: AppInfo, newPos: Int, oldPos: Int) {
-//        AppManager.applyCustomGridChanges(context, appInfo.id, newPos)
-//    }
 }
