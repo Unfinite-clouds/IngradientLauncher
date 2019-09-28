@@ -7,6 +7,7 @@ import androidx.viewpager2.widget.ViewPager2
 import com.example.launchertest.launcher_skeleton.StageAdapter
 
 class MainActivity : AppCompatActivity() {
+    lateinit var stageCustomGrid: ViewPager2
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

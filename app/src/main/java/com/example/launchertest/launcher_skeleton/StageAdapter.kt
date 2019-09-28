@@ -47,6 +47,7 @@ class StageHolder(private val context: Context, itemView: View) : RecyclerView.V
                 // Screen stage
                 View.inflate(context, R.layout.stage_1_custom_grid, stage.root)
                 stage.custom_grid_vp.adapter = CustomGridAdapter()
+                (context as MainActivity).stageCustomGrid = stage.custom_grid_vp
             }
             stage.setBackgroundResource(R.color.colorVignette)
 

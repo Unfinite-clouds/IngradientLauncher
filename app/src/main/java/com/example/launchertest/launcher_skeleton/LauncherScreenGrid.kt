@@ -9,16 +9,15 @@ import android.view.View
 import android.widget.GridLayout
 import androidx.core.view.iterator
 import com.example.launchertest.LauncherException
+import com.example.launchertest.MainActivity
 import kotlin.math.ceil
 import kotlin.math.floor
 
 class LauncherScreenGrid : GridLayout {
     private val flipPageRunnable = object : Runnable {
         override fun run() {
-            if (flipDirection == 1) {
-                println("NEXT")
-            } else if (flipDirection == -1) {
-                println("PREV")
+            if (flipDirection != 0) {
+                (context as MainActivity).stageCustomGrid.currentItem += flipDirection
             }
             isWaitingForFlip = false
         }
@@ -121,7 +120,7 @@ class LauncherScreenGrid : GridLayout {
     }
 
     private fun fillEmptyGrid() {
-        for (pos in 0 until size) {
+        for (pos in gridBounds) {
             addView(DummyCell(context, page*size+pos, toRelativePosition(pos)))
             positions[pos] = childCount-1
         }
@@ -155,7 +154,7 @@ class LauncherScreenGrid : GridLayout {
 
 
     fun checkCellAt(pos: Int): Boolean {
-        if (pos in gridBounds) {
+        if (pos in gridBounds && pos in positions) {
             return true
         }
         return false
