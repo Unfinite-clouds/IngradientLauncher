@@ -13,10 +13,40 @@ import kotlin.math.ceil
 import kotlin.math.floor
 
 class LauncherScreenGrid : GridLayout {
+    private val flipPageRunnable = object : Runnable {
+        override fun run() {
+            if (flipDirection == 1) {
+                println("NEXT")
+            } else if (flipDirection == -1) {
+                println("PREV")
+            }
+            isWaitingForFlip = false
+        }
+    }
+
     fun handleDrag(cell: DummyCell, event: DragEvent) {
         if (cell.relativePosition.x == columnCount - 1 && event.x + cell.left > right - 50) {
-            //nextPage
+            flipDirection = 1
+            // TODO: start suspending scroll animation
         }
+        else if (cell.relativePosition.x == 0 && event.x < 50) {
+            flipDirection = -1
+            // TODO: start suspending scroll animation
+        }
+        else
+            dragExited()
+
+        if (flipDirection != 0 && !isWaitingForFlip) {
+            println("Post...")
+            isWaitingForFlip = true
+            handler.postDelayed(flipPageRunnable, 1000)
+        }
+    }
+
+    fun dragExited() {
+        flipDirection = 0
+        isWaitingForFlip = false
+        handler.removeCallbacks(flipPageRunnable)
     }
 
     var page = -1
@@ -27,7 +57,9 @@ class LauncherScreenGrid : GridLayout {
     private var heightCell = -1
     private val decimalPadding = Rect()
     val gridBounds: IntRange
-    get() = size*page until size*(page+1)
+        get() = size*page until size*(page+1)
+    private var isWaitingForFlip = false
+    private var flipDirection = 0
 
     init {
         clipChildren = false

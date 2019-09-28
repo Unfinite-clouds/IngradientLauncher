@@ -99,7 +99,7 @@ class DummyCell : LinearLayout, View.OnDragListener {
                 }
 
 //                if (cell.relativePosition.x == columnCount - 1 && dragSide == Point(1, 0)) {
-                // TODO: bad way to handle nextPage event
+                // TODO: bad way to handle flipPage event
                 (cell.parent as LauncherScreenGrid).handleDrag(cell, event)
 //                }
             }
@@ -121,6 +121,7 @@ class DummyCell : LinearLayout, View.OnDragListener {
 
             DragEvent.ACTION_DRAG_ENDED -> {
                 // back to default state
+                (cell.parent as LauncherScreenGrid).dragExited()
                 dragShortcut.visibility = View.VISIBLE
                 dragShortcut.icon?.clearColorFilter()
                 setBackgroundColor(bgcolor)
