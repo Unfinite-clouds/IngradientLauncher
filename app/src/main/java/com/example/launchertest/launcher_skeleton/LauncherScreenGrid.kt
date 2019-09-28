@@ -23,7 +23,7 @@ class LauncherScreenGrid : GridLayout {
         }
     }
 
-    fun handleDrag(cell: DummyCell, event: DragEvent) {
+    fun tryFlipPage(cell: DummyCell, event: DragEvent) {
         if (cell.relativePosition.x == columnCount - 1 && event.x + cell.left > right - 50) {
             flipDirection = 1
             // TODO: start suspending scroll animation
@@ -121,8 +121,8 @@ class LauncherScreenGrid : GridLayout {
 
     private fun fillEmptyGrid() {
         for (pos in gridBounds) {
-            addView(DummyCell(context, page*size+pos, toRelativePosition(pos)))
-            positions[pos] = childCount-1
+            addView(DummyCell(context, pos, toRelativePosition(pos)))
+            positions[toPosInArray(pos)] = childCount-1
         }
     }
 
@@ -143,7 +143,7 @@ class LauncherScreenGrid : GridLayout {
 
     fun getCellAt(pos: Int): DummyCell? {
         if (checkCellAt(pos)) {
-            return getChildAt(positions[pos])
+            return getChildAt(positions[toPosInArray(pos)])
         }
         return null
     }
@@ -154,7 +154,7 @@ class LauncherScreenGrid : GridLayout {
 
 
     fun checkCellAt(pos: Int): Boolean {
-        if (pos in gridBounds && pos in positions) {
+        if (pos in gridBounds) {
             return true
         }
         return false
@@ -174,6 +174,10 @@ class LauncherScreenGrid : GridLayout {
             Point(pos_relative % columnCount, pos_relative / columnCount)
         else
             Point(pos_relative / rowCount, pos_relative % rowCount)
+    }
+
+    private fun toPosInArray(globalPos: Int): Int {
+        return globalPos % size
     }
 
     fun getPageFromPos(pos: Int) : Int {
