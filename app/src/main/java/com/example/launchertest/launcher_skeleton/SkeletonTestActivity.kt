@@ -31,7 +31,7 @@ class SkeletonTestActivity : AppCompatActivity() {
         }*/
 
         val stages = findViewById<ViewPager2>(R.id.root_viewpager)
-        stages.adapter = StageAdapter()
+        stages.adapter = StageAdapter(this)
         stages.orientation = ViewPager2.ORIENTATION_VERTICAL
         stages.setPageTransformer(PageTransformer())
 
