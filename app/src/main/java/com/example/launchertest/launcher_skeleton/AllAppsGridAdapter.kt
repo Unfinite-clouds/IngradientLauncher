@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.launchertest.AppManager
 import com.example.launchertest.randomColor
 
+@Deprecated("")
 class AllAppsGridAdapter : RecyclerView.Adapter<ScreenHolder>() {
 
     private lateinit var context: Context
@@ -39,6 +40,7 @@ class AllAppsGridAdapter : RecyclerView.Adapter<ScreenHolder>() {
 }
 
 
+@Deprecated("")
 class ScreenHolder(private val context: Context, val grid: LauncherScreenGrid) : RecyclerView.ViewHolder(grid) {
     var bindedPos = -1
     val width = grid.columnCount

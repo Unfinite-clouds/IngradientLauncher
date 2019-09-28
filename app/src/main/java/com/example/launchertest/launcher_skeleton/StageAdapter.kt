@@ -114,7 +114,5 @@ fun createAllAppsGrid(context: Context, page: Int): LauncherScreenGrid {
             grid.addViewTo(AppShortcut(context, appInfo), position)
     }
 
-    grid.setBackgroundColor(randomColor())
-
     return grid
 }

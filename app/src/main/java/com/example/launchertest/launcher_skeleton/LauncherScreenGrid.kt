@@ -106,7 +106,7 @@ class LauncherScreenGrid : GridLayout {
             // TODO: start suspending scroll animation
         }
         else
-            dragExited()
+            dragEnded()
 
         if (flipDirection != 0 && !isWaitingForFlip) {
             isWaitingForFlip = true
@@ -114,7 +114,7 @@ class LauncherScreenGrid : GridLayout {
         }
     }
 
-    fun dragExited() {
+    fun dragEnded() {
         flipDirection = 0
         isWaitingForFlip = false
         handler.removeCallbacks(flipPageRunnable)

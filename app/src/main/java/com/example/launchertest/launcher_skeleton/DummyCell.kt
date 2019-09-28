@@ -19,13 +19,13 @@ import kotlin.math.abs
 
 class DummyCell : LinearLayout, View.OnDragListener {
 
-    var isReserved: Boolean = false
+    private var reservedShortcut: AppShortcut? = null // needed only for swap apps
     lateinit var relativePosition: Point // the position within one ScreenGrid (not considering page number)
     var position: Int = -1
     private val bgcolor = Color.argb(40,0,0,0)
     private var dragSide = Point()
     val shortcut: AppShortcut?
-        get() = getChildAt(0) as AppShortcut?
+        get() = getChildAt(0) as? AppShortcut ?: reservedShortcut
     private var touchStartPoint: PointF? = null
 
     init {
@@ -57,27 +57,23 @@ class DummyCell : LinearLayout, View.OnDragListener {
         super.onViewAdded(child)
     }
 
-    override fun onViewRemoved(child: View?) {
-        super.onViewRemoved(child)
-        isReserved = false
-    }
-
     override fun onDrag(cell: View?, event: DragEvent): Boolean {
         // cell is the cell under finger
         if (cell !is DummyCell) return false
 
-        val dragShortcut = event.localState as AppShortcut
+//        val dragCell = event.localState as DummyCell
+//        val dragShortcut = dragCell.shortcut
 
         when (event.action) {
 
             DragEvent.ACTION_DRAG_STARTED -> {
-                touchStartPoint = PointF(event.x, event.y)
             }
 
             DragEvent.ACTION_DRAG_ENTERED -> {
+                (event.localState as DummyCell).reserveShortcut()
                 setBackgroundResource(R.drawable.bot_gradient)
                 dragSide = Point(0, 0)
-
+                touchStartPoint = null
             }
 
             DragEvent.ACTION_DRAG_LOCATION -> {
@@ -94,6 +90,8 @@ class DummyCell : LinearLayout, View.OnDragListener {
                     cell.doTranslateBy(-dragSide.x, -dragSide.y, 100f)
                 }
 
+                if (touchStartPoint == null)
+                    touchStartPoint = PointF(event.x, event.y)
                 if (abs(touchStartPoint!!.x - event.x) > DISMISS_RADIUS || abs(touchStartPoint!!.y - event.y) > DISMISS_RADIUS) {
                     cell.shortcut?.menuHelper?.dismiss()
                 }
@@ -109,41 +107,58 @@ class DummyCell : LinearLayout, View.OnDragListener {
 
             DragEvent.ACTION_DROP -> {
                 // cell is the cell to drop
-                if (cell.canMoveBy(-dragSide.x, -dragSide.y)) {
+
+                val dragCell = event.localState as DummyCell
+                val dragShortcut = dragCell.shortcut
+                if (dragShortcut != null && cell.canMoveBy(-dragSide.x, -dragSide.y)) {
                     cell.doTranslateBy(-dragSide.x, -dragSide.y, 0f) // back translating - just for prevent blinking
                     cell.doMoveBy(-dragSide.x, -dragSide.y)
-                    (dragShortcut.parent as DummyCell).moveShortcutIntoCell(cell)
+                    dragCell.moveShortcutIntoCell(cell)
                 } else
                     return false
             }
 
             DragEvent.ACTION_DRAG_ENDED -> {
                 // back to default state
-                (cell.parent as LauncherScreenGrid).dragExited()
-                dragShortcut.visibility = View.VISIBLE
-                dragShortcut.icon?.clearColorFilter()
-                setBackgroundColor(bgcolor)
-                isReserved = false
+                removeReserve()
+                (cell.parent as LauncherScreenGrid).dragEnded()
+                cell.shortcut?.visibility = View.VISIBLE
+                cell.shortcut?.icon?.clearColorFilter()
                 cell.shortcut?.translationX = 0f
                 cell.shortcut?.translationY = 0f
+                cell.setBackgroundColor(bgcolor)
             }
         }
         return true
     }
 
-    private fun moveShortcutIntoCell(newCell: DummyCell) {
-        if (shortcut != null) {
-            val shortcutTemp = shortcut
-            this.removeAllViews()
-            newCell.addView(shortcutTemp)
-            AppManager.applyCustomGridChanges(context, shortcutTemp!!.appInfo.id, newCell.position)
+    private fun reserveShortcut() {
+        reservedShortcut = shortcut
+        removeAllViews()
+    }
+
+    private fun removeReserve() {
+        if (reservedShortcut != null) {
+            addView(reservedShortcut)
+            reservedShortcut = null
         }
     }
 
+    private fun moveShortcutIntoCell(newCell: DummyCell) {
+        val shortcutTemp = reservedShortcut ?: shortcut
+        if (shortcutTemp != null) {
+            if (reservedShortcut == null)
+                this.removeAllViews()
+            newCell.addView(shortcutTemp)
+            AppManager.applyCustomGridChanges(context, shortcutTemp.appInfo.id, newCell.position)
+        }
+        reservedShortcut = null
+    }
+
     fun removeShortcut() {
-        if (shortcut != null) {
-            AppManager.applyCustomGridChanges(context, shortcut!!.appInfo.id, -1)
-            this.removeAllViews()
+        if (reservedShortcut != null) {
+            AppManager.applyCustomGridChanges(context, reservedShortcut!!.appInfo.id, -1)
+            reservedShortcut = null
         }
     }
 
@@ -182,12 +197,12 @@ class DummyCell : LinearLayout, View.OnDragListener {
     }
 
     fun isEmptyCell(): Boolean {
-        if (childCount == 0 || isReserved)
+        if (childCount == 0)
             return true
         return false
     }
 
     override fun toString(): String {
-        return "\"${javaClass.simpleName}: $relativePosition empty=${isEmptyCell()} reserved=$isReserved\""
+        return "\"${javaClass.simpleName}: $position empty=${isEmptyCell()} reserved=$reservedShortcut\""
     }
 }

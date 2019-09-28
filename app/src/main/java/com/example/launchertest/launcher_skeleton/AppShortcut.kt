@@ -79,11 +79,10 @@ companion object {
         shortcut.icon?.setColorFilter(Color.rgb(181, 232, 255), PorterDuff.Mode.MULTIPLY)
 
         val cell = (shortcut.parent as DummyCell)
-        cell.isReserved = true
 
         val data = ClipData.newPlainText("", "")
         val shadowBuilder = View.DragShadowBuilder(shortcut)
-        shortcut.startDrag(data, shadowBuilder, shortcut, 0)
+        shortcut.startDrag(data, shadowBuilder, cell, 0)
     }
 
     private fun createPopupMenu(view: View) {
