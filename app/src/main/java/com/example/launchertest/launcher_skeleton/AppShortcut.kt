@@ -71,7 +71,6 @@ companion object {
     override fun onLongClick(view: View?): Boolean {
         createPopupMenu(view!!)
         startDrag(view as AppShortcut)
-        println("onLongClick")
         return true
     }
 

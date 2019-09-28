@@ -98,9 +98,10 @@ class DummyCell : LinearLayout, View.OnDragListener {
                     cell.shortcut?.menuHelper?.dismiss()
                 }
 
-                if (cell.relativePosition.x == columnCount - 1 && dragSide == Point(1, 0)) {
-                    println("NEXT")
-                }
+//                if (cell.relativePosition.x == columnCount - 1 && dragSide == Point(1, 0)) {
+                // TODO: bad way to handle nextPage event
+                (cell.parent as LauncherScreenGrid).handleDrag(cell, event)
+//                }
             }
 
             DragEvent.ACTION_DRAG_EXITED -> {

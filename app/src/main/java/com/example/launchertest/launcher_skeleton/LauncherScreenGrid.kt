@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Point
 import android.graphics.Rect
 import android.util.AttributeSet
+import android.view.DragEvent
 import android.view.View
 import android.widget.GridLayout
 import androidx.core.view.iterator
@@ -12,6 +13,12 @@ import kotlin.math.ceil
 import kotlin.math.floor
 
 class LauncherScreenGrid : GridLayout {
+    fun handleDrag(cell: DummyCell, event: DragEvent) {
+        if (cell.relativePosition.x == columnCount - 1 && event.x + cell.left > right - 50) {
+            //nextPage
+        }
+    }
+
     var page = -1
     val size: Int
         get() = rowCount*columnCount
