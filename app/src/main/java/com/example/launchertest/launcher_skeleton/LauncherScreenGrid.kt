@@ -14,40 +14,6 @@ import kotlin.math.ceil
 import kotlin.math.floor
 
 class LauncherScreenGrid : GridLayout {
-    private val flipPageRunnable = object : Runnable {
-        override fun run() {
-            if (flipDirection != 0) {
-                (context as MainActivity).stageCustomGrid.currentItem += flipDirection
-            }
-            isWaitingForFlip = false
-        }
-    }
-
-    fun tryFlipPage(cell: DummyCell, event: DragEvent) {
-        if (cell.relativePosition.x == columnCount - 1 && event.x + cell.left > right - 50) {
-            flipDirection = 1
-            // TODO: start suspending scroll animation
-        }
-        else if (cell.relativePosition.x == 0 && event.x < 50) {
-            flipDirection = -1
-            // TODO: start suspending scroll animation
-        }
-        else
-            dragExited()
-
-        if (flipDirection != 0 && !isWaitingForFlip) {
-            println("Post...")
-            isWaitingForFlip = true
-            handler.postDelayed(flipPageRunnable, 1000)
-        }
-    }
-
-    fun dragExited() {
-        flipDirection = 0
-        isWaitingForFlip = false
-        handler.removeCallbacks(flipPageRunnable)
-    }
-
     var page = -1
     val size: Int
         get() = rowCount*columnCount
@@ -126,6 +92,35 @@ class LauncherScreenGrid : GridLayout {
         }
     }
 
+    private val flipPageRunnable = Runnable {
+        if (flipDirection != 0) (context as MainActivity).stageCustomGrid.currentItem += flipDirection
+        isWaitingForFlip = false
+    }
+
+    fun tryFlipPage(cell: DummyCell, event: DragEvent) {
+        if (cell.relativePosition.x == columnCount - 1 && event.x + cell.left > right - 50) {
+            flipDirection = 1
+            // TODO: start suspending scroll animation
+        }
+        else if (cell.relativePosition.x == 0 && event.x < 50) {
+            flipDirection = -1
+            // TODO: start suspending scroll animation
+        }
+        else
+            dragExited()
+
+        if (flipDirection != 0 && !isWaitingForFlip) {
+            isWaitingForFlip = true
+            handler.postDelayed(flipPageRunnable, 600)
+        }
+    }
+
+    fun dragExited() {
+        flipDirection = 0
+        isWaitingForFlip = false
+        handler.removeCallbacks(flipPageRunnable)
+    }
+
     fun clearGrid() {
         for (cell in iterator()) {
             (cell as DummyCell).removeAllViews()
@@ -149,7 +144,10 @@ class LauncherScreenGrid : GridLayout {
     }
 
     fun getCellAt(relativePos: Point): DummyCell? {
-        return getCellAt(toGlobalPosition(relativePos))
+        return if (relativePos.x < columnCount && relativePos.y < rowCount)
+            getCellAt(toGlobalPosition(relativePos))
+        else
+            null
     }
 
 

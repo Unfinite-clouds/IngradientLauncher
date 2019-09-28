@@ -32,7 +32,10 @@ object AppManager {
     }
 
     fun applyCustomGridChanges(context: Context, app: String, pos: Int) {
-        customGridApps[app] = pos
+        if (pos != -1)
+            customGridApps[app] = pos
+        else
+            customGridApps.remove(app)
         Storable.dumpAuto(context, customGridApps, Storable.CUSTOM_GRID_APPS)
     }
 

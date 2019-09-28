@@ -1,23 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.example.launchertest.launcher_skeleton.ScreenRoot xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/stage_1_root"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:paddingTop="60dp"
-        android:paddingBottom="60dp"
+        android:paddingBottom="20dp"
         android:paddingLeft="20dp"
         android:paddingRight="20dp">
 
     <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/custom_grid_vp"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            />
 
-    <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+    <com.example.launchertest.launcher_skeleton.RemoveZoneView
             android:id="@+id/trash_zone"
-            android:contentDescription="trash zone"/>
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:padding="15dp"
+            android:contentDescription="trash zone"
+            android:src="@drawable/ic_delete"
+            android:layout_weight="0"
+            />
 
-</com.example.launchertest.launcher_skeleton.ScreenRoot>
+</LinearLayout>

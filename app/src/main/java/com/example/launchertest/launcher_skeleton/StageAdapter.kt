@@ -49,7 +49,7 @@ class StageHolder(private val context: Context, itemView: View) : RecyclerView.V
                 stage.custom_grid_vp.adapter = CustomGridAdapter()
                 (context as MainActivity).stageCustomGrid = stage.custom_grid_vp
             }
-            stage.setBackgroundResource(R.color.colorVignette)
+            stage.setBackgroundResource(R.color.Vignette)
 
             bindedPos = position
         }

@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#008577</color>
-    <color name="colorPrimaryDark">#00574B</color>
-    <color name="colorAccent">#D81B60</color>
-    <color name="colorVignette">#70000000</color>
+    <color name="Primary">#008577</color>
+    <color name="PrimaryDark">#00574B</color>
+    <color name="Accent">#D81B60</color>
+    <color name="Vignette">#70000000</color>
+    <color name="Transparent">#00000000</color>
+    <color name="TransparentBlack">#30000000</color>
+    <color name="TransparentWhite">#20FFFFFF</color>
 </resources>

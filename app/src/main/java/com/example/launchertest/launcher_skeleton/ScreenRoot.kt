@@ -17,6 +17,14 @@ class ScreenRoot : LinearLayout {
         return returned
     }
 
+    override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean {
+        println("   pre - Intercept")
+        var returned: Boolean = super.onInterceptTouchEvent(ev)
+        returned = true
+        println("   post - Intercept $returned")
+        return returned
+    }
+
     override fun onTouchEvent(ev: MotionEvent?): Boolean {
         println("   pre - Touch")
         var returned: Boolean = super.onTouchEvent(ev)
@@ -25,11 +33,5 @@ class ScreenRoot : LinearLayout {
         return returned
     }
 
-    override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean {
-        println("   pre - Intercept")
-        var returned: Boolean = super.onInterceptTouchEvent(ev)
-        returned = true
-        println("   post - Intercept $returned")
-        return returned
-    }
+
 }

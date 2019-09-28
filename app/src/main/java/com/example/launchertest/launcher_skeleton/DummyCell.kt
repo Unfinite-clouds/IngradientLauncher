@@ -82,7 +82,6 @@ class DummyCell : LinearLayout, View.OnDragListener {
 
             DragEvent.ACTION_DRAG_LOCATION -> {
                 // remember the origin of coordinate system is [left, top]
-                println("${cell.position} ${cell.relativePosition}")
                 val newDragSide: Point =
                     if (event.y > event.x)
                         if (event.y > height - event.x) Point(0, 1) else Point(-1, 0)
@@ -133,13 +132,18 @@ class DummyCell : LinearLayout, View.OnDragListener {
     }
 
     private fun moveShortcutIntoCell(newCell: DummyCell) {
-        val shortuct = this.shortcut
-        val grid = (parent as LauncherScreenGrid)
-
-        if (shortuct != null) {
+        if (shortcut != null) {
+            val shortcutTemp = shortcut
             this.removeAllViews()
-            newCell.addView(shortuct)
-            AppManager.applyCustomGridChanges(context, shortuct.appInfo.id, newCell.position)
+            newCell.addView(shortcutTemp)
+            AppManager.applyCustomGridChanges(context, shortcutTemp!!.appInfo.id, newCell.position)
+        }
+    }
+
+    fun removeShortcut() {
+        if (shortcut != null) {
+            AppManager.applyCustomGridChanges(context, shortcut!!.appInfo.id, -1)
+            this.removeAllViews()
         }
     }
 
