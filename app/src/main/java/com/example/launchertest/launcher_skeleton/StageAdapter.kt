@@ -6,12 +6,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.launchertest.*
-import kotlinx.android.synthetic.main.stage.view.*
-import kotlinx.android.synthetic.main.stage_0_main_screen.view.*
-import kotlinx.android.synthetic.main.stage_1_custom_grid.view.*
 
 class StageAdapter : RecyclerView.Adapter<StageHolder>() {
     private lateinit var context: Context
+    val stages = mutableListOf<ViewGroup>()
+
 
     override fun getItemCount(): Int = 4
 
@@ -30,28 +29,37 @@ class StageHolder(private val context: Context, itemView: View) : RecyclerView.V
     val stage = itemView as ViewGroup
     var bindedPos = -1
 
-    fun bind(position: Int) {
-        if (bindedPos != position) {
-            stage.removeAllViews()
 
-            if (position == 0){
+}
+
+fun createStage(context: Context, page: Int): ViewGroup {
+        stage.removeAllViews()
+
+        when (position) {
+            0 -> {
                 // Scroll stage
                 View.inflate(context, R.layout.stage_0_main_screen, stage.root)
                 for (i in 0..10) {
                     //fill first 10 apps
-                    stage.iconContainer.addView(IconFactory(context,
-                        getPrefs(context).getInt(Preferences.MAIN_SCREEN_ICONS_COUNT, -1))
-                        .createIcon(AppManager.getApp(AppManager.getSortedApps()[i])!!))
+                    stage.iconContainer.addView(
+                        IconFactory(
+                            context,
+                            getPrefs(context).getInt(Preferences.MAIN_SCREEN_ICONS_COUNT, -1))
+                            .createIcon(AppManager.getApp(AppManager.getSortedApps()[i])!!))
                 }
-            } else {
+            }
+            1 -> {
                 // Screen stage
                 View.inflate(context, R.layout.stage_1_custom_grid, stage.root)
                 stage.custom_grid_vp.adapter = CustomGridAdapter()
                 (context as MainActivity).stageCustomGrid = stage.custom_grid_vp
             }
-            stage.setBackgroundResource(R.color.Vignette)
-
-            bindedPos = position
+            2 -> {
+                // AllApps stage
+                View.inflate(context, R.layout.stage_2_all_apps, stage.root)
+                stage.all_apps_vp.adapter = AllAppsGridAdapter()
+            }
         }
-    }
+        bindedPos = position
+        stage.setBackgroundResource(R.color.Vignette)
 }

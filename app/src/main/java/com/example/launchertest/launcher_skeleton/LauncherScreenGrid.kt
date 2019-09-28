@@ -31,7 +31,6 @@ class LauncherScreenGrid : GridLayout {
     }
 
     constructor(context: Context, nrows: Int, ncols: Int, page: Int = -1) : super(context) {
-        println("creating Grid for page $page")
         this.page = page
         setGridSize(nrows, ncols)
     }
