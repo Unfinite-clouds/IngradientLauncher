@@ -37,6 +37,7 @@ class LauncherScreenGrid : GridLayout {
     }
 
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
+        page = 0
         setGridSize(rowCount, columnCount)
     }
 
@@ -61,7 +62,7 @@ class LauncherScreenGrid : GridLayout {
                 it.layoutParams.height = heightCell
             }
 
-            // if cells can't fill full size due to int division, we will add little padding to Grid
+            // if cells can't fill full size due to int division, we will add a little padding to Grid
             val decimalWidth = myWidth - widthCell*columnCount
             val decimalHeight = myHeight - heightCell*rowCount
 

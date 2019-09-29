@@ -69,8 +69,8 @@ companion object {
         context.startActivity(context.packageManager.getLaunchIntentForPackage(appInfo.packageName))
     }
 
-    override fun onLongClick(view: View?): Boolean {
-        createPopupMenu(view!!)
+    override fun onLongClick(view: View): Boolean {
+        createPopupMenu(view)
         startDrag(view as AppShortcut)
         return true
     }
