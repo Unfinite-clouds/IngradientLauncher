@@ -7,6 +7,7 @@ import android.util.AttributeSet
 import android.view.DragEvent
 import android.widget.GridLayout
 import androidx.core.view.iterator
+import com.example.launchertest.AppManager
 import com.example.launchertest.LauncherException
 import com.example.launchertest.MainActivity
 import kotlin.math.ceil
@@ -114,9 +115,14 @@ class LauncherScreenGrid : GridLayout {
     }
 
     fun dragEnded() {
+        saveState()
         flipDirection = 0
         isWaitingForFlip = false
         handler.removeCallbacks(flipPageRunnable)
+    }
+
+    fun saveState() {
+        AppManager.applyCustomGridChanges(context, )
     }
 
     fun clearGrid() {

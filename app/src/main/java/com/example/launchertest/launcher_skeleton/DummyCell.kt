@@ -19,7 +19,7 @@ class DummyCell : LinearLayout {
     private val bgcolor = Color.argb(40,0,0,0)
     var shortcut: AppShortcut?
         get() = getChildAt(0) as? AppShortcut
-        set(value) {addView(value)}
+        set(value) {if (value != null) addView(value) else removeAllViews()}
     var reservedShortcut: AppShortcut? = null
         private set
 
@@ -75,7 +75,7 @@ class DummyCell : LinearLayout {
         reservedShortcut = null
     }
 
-    fun removeShortcut() {
+    fun applyRemoveShortcut() {
         val shortcutTemp = shortcut
         if (shortcutTemp != null) {
             AppManager.applyCustomGridChanges(context, shortcutTemp.appInfo.id, -1)

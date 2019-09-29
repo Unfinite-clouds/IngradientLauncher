@@ -14,7 +14,6 @@ class DragCustomGrid: View.OnDragListener  {
         private var touchStartPoint: PointF? = null
         private var dragSide = Point()
         private var dragCell: DummyCell? = null
-        private var dropCell: DummyCell? = null
         private var dragShortcut: AppShortcut? = null
     }
 
@@ -25,9 +24,11 @@ class DragCustomGrid: View.OnDragListener  {
         when (event.action) {
 
             DragEvent.ACTION_DRAG_STARTED -> {
-                if (dragCell == null) {
-                    dragCell = event.localState as DummyCell
-                    dragShortcut = dragCell?.shortcut
+                if (dragShortcut == null) {
+                    // will be called only once
+                    val state = (event.localState as Pair<DummyCell, AppShortcut>)
+                    dragCell = state.first
+                    dragShortcut = state.second
                 }
             }
 
@@ -68,31 +69,25 @@ class DragCustomGrid: View.OnDragListener  {
 
             DragEvent.ACTION_DROP -> {
                 // cell is the cell to drop
-                var result = true
-                if (dragShortcut != null && cell.canMoveBy(-dragSide.x, -dragSide.y)) {
+                dragShortcut?.icon?.clearColorFilter()
+                if (cell.canMoveBy(-dragSide.x, -dragSide.y)) {
                     cell.doTranslateBy(-dragSide.x, -dragSide.y, 0f) // back translating - just for prevent blinking
-                    dragCell?.reserveShortcut() // save to temp var
-                    dragCell?.removeAllViews() // now we can remove shortcut cause we have reserved state
                     cell.doMoveBy(-dragSide.x, -dragSide.y)
-                    dragCell?.moveReservedShortcutIntoCell(cell)
-                } else
-                    result = false
-
-/*                if (dragCell != null) {
-                    cell.shortcut?.visibility = View.VISIBLE
-                    cell.shortcut?.icon?.clearColorFilter()
-                    (cell.parent as LauncherScreenGrid).dragEnded()
-                    dragCell = null
-                }*/
-
-                return result
+                    cell.shortcut = dragShortcut
+                    dragShortcut = null
+                } else {
+                    return false
+                }
             }
 
             DragEvent.ACTION_DRAG_ENDED -> {
-                // back to default state
+                if (dragShortcut != null) {
+                    // drag canceled
+                    dragCell?.shortcut = dragShortcut
+                    dragShortcut = null
+                }
                 if (dragCell != null) {
-                    dragShortcut?.visibility = View.VISIBLE
-                    dragShortcut?.icon?.clearColorFilter()
+                    // will be called only once
                     (cell.parent as LauncherScreenGrid).dragEnded()
                     dragCell = null
                 }

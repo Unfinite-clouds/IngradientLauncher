@@ -20,7 +20,7 @@ class RemoveZoneView : ImageView, View.OnDragListener{
         when (event?.action) {
             DragEvent.ACTION_DRAG_STARTED -> activate()
             DragEvent.ACTION_DROP ->
-                (event.localState as? DummyCell)?.removeShortcut()
+                (event.localState as Pair<DummyCell, AppShortcut>).first.applyRemoveShortcut()
             DragEvent.ACTION_DRAG_ENDED -> inactivate()
         }
         return true
