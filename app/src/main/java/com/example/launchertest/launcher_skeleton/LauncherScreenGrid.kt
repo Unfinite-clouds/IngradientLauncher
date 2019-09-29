@@ -122,10 +122,10 @@ class LauncherScreenGrid : GridLayout {
     }
 
     fun saveState() {
-        val customGridApps = mutableMapOf<Int, String>()
+        val customGridApps = mutableMapOf<Int, String?>()
         forEach{
             it as DummyCell
-            customGridApps[it.position] = it.shortcut!!.appInfo.id
+            customGridApps[it.position] = it.shortcut?.appInfo?.id
         }
         AppManager.applyCustomGridChanges(context, customGridApps)
     }
@@ -153,7 +153,7 @@ class LauncherScreenGrid : GridLayout {
     }
 
     fun getCellAt(relativePos: Point): DummyCell? {
-        return if (relativePos.x < columnCount && relativePos.y < rowCount)
+        return if (relativePos.x in 0 until columnCount && relativePos.y in 0 until rowCount)
             getCellAt(toGlobalPosition(relativePos))
         else
             null

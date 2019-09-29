@@ -83,7 +83,12 @@ class DragCustomGrid: View.OnDragListener  {
             DragEvent.ACTION_DRAG_ENDED -> {
                 if (dragShortcut != null) {
                     // drag canceled
-                    dragCell?.shortcut = dragShortcut
+                    dragShortcut?.icon?.clearColorFilter()
+                    if (dragShortcut?.goingToRemove == false) {
+                        dragCell?.shortcut = dragShortcut
+                    } else {
+                        // do nothing to let this shortcut to be removed
+                    }
                     dragShortcut = null
                 }
                 if (dragCell != null) {

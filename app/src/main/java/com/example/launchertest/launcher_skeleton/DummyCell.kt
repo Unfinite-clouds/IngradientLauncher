@@ -20,8 +20,6 @@ class DummyCell : LinearLayout {
     var shortcut: AppShortcut?
         get() = getChildAt(0) as? AppShortcut
         set(value) {if (value != null) addView(value) else removeAllViews()}
-    var reservedShortcut: AppShortcut? = null
-        private set
 
     init {
         clipChildren = false
@@ -66,31 +64,6 @@ class DummyCell : LinearLayout {
         }
     }
 
-    fun moveReservedShortcutIntoCell(newCell: DummyCell) {
-        val shortcutTemp = reservedShortcut
-        if (shortcutTemp != null) {
-            newCell.shortcut = shortcutTemp
-            AppManager.applyCustomGridChanges(context, newCell.position, shortcutTemp.appInfo.id)
-        }
-        reservedShortcut = null
-    }
-
-    fun applyRemoveShortcut() {
-        val shortcutTemp = shortcut
-        if (shortcutTemp != null) {
-            AppManager.applyCustomGridChanges(context, -1, shortcutTemp.appInfo.id)
-            removeAllViews()
-        }
-    }
-
-    fun reserveShortcut() {
-        if (reservedShortcut != null)
-            throw LauncherException("$this - shortcut is already reserved")
-        if (shortcut == null)
-            throw LauncherException("$this - nothing to reserve")
-        reservedShortcut = shortcut
-    }
-
     private fun doRecursionPass(directionX: Int, directionY: Int, action: (thisCell: DummyCell, nextCell: DummyCell) -> Unit): Boolean {
         if (isEmptyCell()) {
             return true
@@ -126,12 +99,12 @@ class DummyCell : LinearLayout {
     }
 
     fun isEmptyCell(): Boolean {
-        if (childCount == 0 || reservedShortcut != null)
+        if (childCount == 0)
             return true
         return false
     }
 
     override fun toString(): String {
-        return "\"${javaClass.simpleName}: $position empty=${isEmptyCell()} reserve=$reservedShortcut\""
+        return "\"${javaClass.simpleName}: $position empty=${isEmptyCell()}\""
     }
 }

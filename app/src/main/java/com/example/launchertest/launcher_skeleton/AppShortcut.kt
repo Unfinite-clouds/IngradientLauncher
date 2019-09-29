@@ -36,6 +36,7 @@ companion object {
         get() = compoundDrawables[1]
 
     var menuHelper: MenuPopupHelper? = null
+    var goingToRemove = false
 
     init {
         layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
@@ -125,5 +126,4 @@ companion object {
         canvas.setBitmap(bitmap)
         drawable.draw(canvas)
     }
-
 }

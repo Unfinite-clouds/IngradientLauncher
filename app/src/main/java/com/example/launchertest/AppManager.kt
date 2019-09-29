@@ -32,16 +32,19 @@ object AppManager {
     }
 
     fun applyCustomGridChanges(context: Context, pos: Int, app: String) {
-        if (app != "")
-            customGridApps[pos] = app
-        else
+        if (app == "")
             customGridApps.remove(pos)
+        else
+            customGridApps[pos] = app
         Storable.dumpAuto(context, customGridApps, Storable.CUSTOM_GRID_APPS)
     }
 
-    fun applyCustomGridChanges(context: Context, apps: Map<Int, String>) {
+    fun applyCustomGridChanges(context: Context, apps: Map<Int, String?>) {
         apps.forEach {
-            customGridApps[it.key] = it.value
+            if (it.value == null)
+                customGridApps.remove(it.key)
+            else
+                customGridApps[it.key] = it.value!!
         }
         Storable.dumpAuto(context, customGridApps, Storable.CUSTOM_GRID_APPS)
     }

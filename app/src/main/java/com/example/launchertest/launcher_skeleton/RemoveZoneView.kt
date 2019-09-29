@@ -19,8 +19,10 @@ class RemoveZoneView : ImageView, View.OnDragListener{
     override fun onDrag(v: View?, event: DragEvent?): Boolean {
         when (event?.action) {
             DragEvent.ACTION_DRAG_STARTED -> activate()
-            DragEvent.ACTION_DROP ->
-                (event.localState as Pair<DummyCell, AppShortcut>).first.applyRemoveShortcut()
+            DragEvent.ACTION_DROP -> {
+                // we have to cancel this drag event and to mark shortcut as removed
+                (event.localState as Pair<DummyCell, AppShortcut>).second.goingToRemove = true
+            }
             DragEvent.ACTION_DRAG_ENDED -> inactivate()
         }
         return true
