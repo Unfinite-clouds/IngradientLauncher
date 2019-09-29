@@ -61,7 +61,7 @@ class ScreenHolder(private val context: Context, val grid: LauncherScreenGrid) :
                 val appInfo = AppManager.getApp(allApps[position])
 
                 if (appInfo != null)
-                    grid.addViewTo(AppShortcut(context, appInfo), position)
+                    grid.addShortcut(AppShortcut(context, appInfo), position)
             }
 
             grid.setBackgroundColor(randomColor())

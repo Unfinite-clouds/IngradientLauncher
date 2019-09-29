@@ -5,7 +5,6 @@ import android.graphics.Point
 import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.DragEvent
-import android.view.View
 import android.widget.GridLayout
 import androidx.core.view.iterator
 import com.example.launchertest.LauncherException
@@ -130,9 +129,9 @@ class LauncherScreenGrid : GridLayout {
         return super.getChildAt(index) as DummyCell
     }
 
-    fun addViewTo(child: View, pos: Int) {
-        val cell = getCellAt(pos) ?: throw LauncherException("can't add view $child to position $pos; the position is out of gridBounds $gridBounds")
-        cell.addView(child)
+    fun addShortcut(shortcut: AppShortcut, pos: Int) {
+        val cell = getCellAt(pos) ?: throw LauncherException("can't add shortcut $shortcut to position $pos; the position is out of gridBounds $gridBounds")
+        cell.shortcut = shortcut
     }
 
     fun getCellAt(pos: Int): DummyCell? {

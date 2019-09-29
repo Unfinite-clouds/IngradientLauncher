@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.forEach
 import androidx.recyclerview.widget.RecyclerView
 import com.example.launchertest.*
 import kotlinx.android.synthetic.main.stage_0_main_screen.view.*
@@ -80,13 +81,17 @@ fun createCustomGrid(context: Context, page: Int): LauncherScreenGrid {
         )
     }
 
+    grid.forEach {
+        it.setOnDragListener(DragCustomGrid())
+    }
+
     val customGridAppsApps = AppManager.customGridApps
     var appInfo: AppInfo?
 
     customGridAppsApps.forEach {
         if (it.value in grid.gridBounds) {
             appInfo = AppManager.getApp(it.key)
-            if (appInfo != null) grid.addViewTo(AppShortcut(context, appInfo!!), it.value)
+            if (appInfo != null) grid.addShortcut(AppShortcut(context, appInfo!!), it.value)
         }
     }
 
@@ -111,7 +116,7 @@ fun createAllAppsGrid(context: Context, page: Int): LauncherScreenGrid {
 
         val appInfo = AppManager.getApp(allApps[position])
         if (appInfo != null)
-            grid.addViewTo(AppShortcut(context, appInfo), position)
+            grid.addShortcut(AppShortcut(context, appInfo), position)
     }
 
     return grid
