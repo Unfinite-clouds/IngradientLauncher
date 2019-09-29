@@ -89,9 +89,9 @@ fun createCustomGrid(context: Context, page: Int): LauncherScreenGrid {
     var appInfo: AppInfo?
 
     customGridAppsApps.forEach {
-        if (it.value in grid.gridBounds) {
-            appInfo = AppManager.getApp(it.key)
-            if (appInfo != null) grid.addShortcut(AppShortcut(context, appInfo!!), it.value)
+        if (it.key in grid.gridBounds) {
+            appInfo = AppManager.getApp(it.value)
+            if (appInfo != null) grid.addShortcut(AppShortcut(context, appInfo!!), it.key)
         }
     }
 

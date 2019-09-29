@@ -6,6 +6,7 @@ import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.DragEvent
 import android.widget.GridLayout
+import androidx.core.view.forEach
 import androidx.core.view.iterator
 import com.example.launchertest.AppManager
 import com.example.launchertest.LauncherException
@@ -115,14 +116,18 @@ class LauncherScreenGrid : GridLayout {
     }
 
     fun dragEnded() {
-        saveState()
         flipDirection = 0
         isWaitingForFlip = false
         handler.removeCallbacks(flipPageRunnable)
     }
 
     fun saveState() {
-        AppManager.applyCustomGridChanges(context, )
+        val customGridApps = mutableMapOf<Int, String>()
+        forEach{
+            it as DummyCell
+            customGridApps[it.position] = it.shortcut!!.appInfo.id
+        }
+        AppManager.applyCustomGridChanges(context, customGridApps)
     }
 
     fun clearGrid() {

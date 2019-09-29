@@ -88,7 +88,9 @@ class DragCustomGrid: View.OnDragListener  {
                 }
                 if (dragCell != null) {
                     // will be called only once
-                    (cell.parent as LauncherScreenGrid).dragEnded()
+                    val grid = (cell.parent as LauncherScreenGrid)
+                    grid.dragEnded()
+                    grid.saveState()
                     dragCell = null
                 }
                 cell.defaultState()

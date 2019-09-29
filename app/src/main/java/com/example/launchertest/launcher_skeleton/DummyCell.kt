@@ -62,7 +62,7 @@ class DummyCell : LinearLayout {
         if (shortcutTemp != null) {
             this.removeAllViews()
             newCell.shortcut = shortcutTemp
-            AppManager.applyCustomGridChanges(context, shortcutTemp.appInfo.id, newCell.position)
+            AppManager.applyCustomGridChanges(context, newCell.position, shortcutTemp.appInfo.id)
         }
     }
 
@@ -70,7 +70,7 @@ class DummyCell : LinearLayout {
         val shortcutTemp = reservedShortcut
         if (shortcutTemp != null) {
             newCell.shortcut = shortcutTemp
-            AppManager.applyCustomGridChanges(context, shortcutTemp.appInfo.id, newCell.position)
+            AppManager.applyCustomGridChanges(context, newCell.position, shortcutTemp.appInfo.id)
         }
         reservedShortcut = null
     }
@@ -78,7 +78,7 @@ class DummyCell : LinearLayout {
     fun applyRemoveShortcut() {
         val shortcutTemp = shortcut
         if (shortcutTemp != null) {
-            AppManager.applyCustomGridChanges(context, shortcutTemp.appInfo.id, -1)
+            AppManager.applyCustomGridChanges(context, -1, shortcutTemp.appInfo.id)
             removeAllViews()
         }
     }

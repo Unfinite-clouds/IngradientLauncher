@@ -13,18 +13,22 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main)
 
+//        Storable.deleteFile(this, Storable.CUSTOM_GRID_APPS)
         AppManager.loadAllApps(this)
 
         if (getPrefs(this).getBoolean(Preferences.FIRST_LOAD, true))
             loadDefaultPreferences()
 
-/*        val allApps = AppManager.allApps
+
+/*
+        val allApps = AppManager.allApps
         var i = 0
         for (app in allApps) {
             if (i > 12) break
-            AppManager.applyCustomGridChanges(this, app.key, i)
+            AppManager.applyCustomGridChanges(this, i, app.key)
             i++
-        }*/
+        }
+*/
 
 
         val stages = findViewById<ViewPager2>(R.id.root_viewpager)

@@ -37,7 +37,11 @@ object Storable {
         return if (a is T) a else null
     }
 
-    inline fun <reified T> dumpAuto(context: Context, what: Any, how: FileInfo<T>) {
+    inline fun <reified T> dumpAuto(context: Context, what: Any, how: FileInfo <T>) {
         ObjectOutputStream(context.openFileOutput(how.fileName, Context.MODE_PRIVATE)).use { it.writeObject(what) }
+    }
+
+    fun <T> deleteFile(context: Context, file: FileInfo <T>) {
+        context.deleteFile(file.fileName)
     }
 }
