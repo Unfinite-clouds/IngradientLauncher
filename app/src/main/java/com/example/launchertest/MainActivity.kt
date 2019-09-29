@@ -19,7 +19,6 @@ class MainActivity : AppCompatActivity() {
         if (getPrefs(this).getBoolean(Preferences.FIRST_LOAD, true))
             loadDefaultPreferences()
 
-
 /*
         val allApps = AppManager.allApps
         var i = 0
@@ -29,7 +28,6 @@ class MainActivity : AppCompatActivity() {
             i++
         }
 */
-
 
         val stages = findViewById<ViewPager2>(R.id.root_viewpager)
         stages.adapter = StageAdapter(this)
