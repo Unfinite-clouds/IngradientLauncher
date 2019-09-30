@@ -16,6 +16,7 @@ import kotlin.math.floor
 
 class LauncherScreenGrid : GridLayout {
     var page = -1
+        private set
     val size: Int
         get() = rowCount*columnCount
     lateinit var positions: IntArray  // global cell positions within whole stage
@@ -26,6 +27,7 @@ class LauncherScreenGrid : GridLayout {
         get() = size*page until size*(page+1)
     private var isWaitingForFlip = false
     private var flipDirection = 0
+    private var intrinsicPadding: Rect
 
     init {
         clipChildren = false
@@ -34,11 +36,13 @@ class LauncherScreenGrid : GridLayout {
     constructor(context: Context, nrows: Int, ncols: Int, page: Int = -1) : super(context) {
         this.page = page
         setGridSize(nrows, ncols)
+        intrinsicPadding = Rect(0,0,0,0)
     }
 
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
         page = 0
         setGridSize(rowCount, columnCount)
+        intrinsicPadding = Rect(paddingLeft, paddingTop, paddingRight, paddingBottom)
     }
 
     public fun setGridSize(nrows: Int, ncols: Int, fill: Boolean = true) {
@@ -79,10 +83,10 @@ class LauncherScreenGrid : GridLayout {
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        setPadding(paddingLeft + decimalPadding.left,
-            paddingTop + decimalPadding.top,
-            paddingRight + decimalPadding.right,
-            paddingBottom + decimalPadding.bottom)
+        setPadding(intrinsicPadding.left + decimalPadding.left,
+            intrinsicPadding.top + decimalPadding.top,
+            intrinsicPadding.right + decimalPadding.right,
+            intrinsicPadding.bottom + decimalPadding.bottom)
         super.onLayout(changed, left, top, right, bottom)
     }
 

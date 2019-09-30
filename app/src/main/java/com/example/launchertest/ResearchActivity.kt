@@ -10,14 +10,14 @@ import com.example.launchertest.launcher_skeleton.CustomGridAdapter
 import com.example.launchertest.launcher_skeleton.DummyCell
 import com.example.launchertest.launcher_skeleton.LauncherScreenGrid
 import com.example.launchertest.launcher_skeleton.createCustomGrid
-import kotlinx.android.synthetic.main.grid_test.*
+import kotlinx.android.synthetic.main.research_layout.*
 
 class ResearchActivity : AppCompatActivity() {
 
     lateinit var iter: Iterator<View>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.grid_test)
+        setContentView(R.layout.research_layout)
 //        Storable.deleteFile(this, Storable.CUSTOM_GRID_APPS)
         AppManager.loadAllApps(this)
 
