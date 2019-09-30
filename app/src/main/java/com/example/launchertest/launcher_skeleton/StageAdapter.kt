@@ -91,7 +91,7 @@ fun createCustomGrid(context: Context, page: Int): LauncherScreenGrid {
     customGridAppsApps.forEach {
         if (it.key in grid.gridBounds) {
             appInfo = AppManager.getApp(it.value)
-            if (appInfo != null) grid.addShortcut(AppShortcut(context, appInfo!!), it.key)
+            if (appInfo != null) grid.addShortcut(AppShortcut(context, appInfo!!).apply { setOnLongClickListener(this) }, it.key)
         }
     }
 
@@ -116,7 +116,7 @@ fun createAllAppsGrid(context: Context, page: Int): LauncherScreenGrid {
 
         val appInfo = AppManager.getApp(allApps[position])
         if (appInfo != null)
-            grid.addShortcut(AppShortcut(context, appInfo), position)
+            grid.addShortcut(AppShortcut(context, appInfo).apply { setOnLongClickListener(context as MainActivity) }, position)
     }
 
     return grid

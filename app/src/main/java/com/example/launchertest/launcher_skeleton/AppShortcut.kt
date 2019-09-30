@@ -45,7 +45,6 @@ companion object {
         maxLines = 1
         setTextColor(Color.WHITE)
         setOnClickListener(this)
-        setOnLongClickListener(this)
     }
 
     constructor(context: Context, appInfo: AppInfo) : super(context) {
@@ -70,31 +69,28 @@ companion object {
     }
 
     override fun onLongClick(view: View): Boolean {
-        createPopupMenu(view)
-        startDrag(view as AppShortcut)
+        createPopupMenu()
+        val dragShadow = createDragShadow()
+        val cell = (this.parent as DummyCell)
+        val data = ClipData.newPlainText("", "")
+        this.startDrag(data, dragShadow, Pair(cell, this), 0)
         return true
     }
 
-    private fun startDrag(shortcut: AppShortcut) {
-//        shortcut.visibility = View.INVISIBLE
-        shortcut.icon?.setColorFilter(Color.rgb(181, 232, 255), PorterDuff.Mode.MULTIPLY)
-
-        val cell = (shortcut.parent as DummyCell)
-
-        val data = ClipData.newPlainText("", "")
-        val shadowBuilder = View.DragShadowBuilder(shortcut)
-        shortcut.startDrag(data, shadowBuilder, Pair(cell, shortcut), 0)
-        (shortcut.parent as DummyCell).removeAllViews()
+    fun createDragShadow(): DragShadowBuilder {
+//        this.visibility = View.INVISIBLE
+        this.icon?.setColorFilter(Color.rgb(181, 232, 255), PorterDuff.Mode.MULTIPLY)
+        return DragShadowBuilder(this)
     }
 
-    private fun createPopupMenu(view: View) {
-        val builder = MenuBuilder(view.context)
-        val inflater = MenuInflater(view.context)
+    fun createPopupMenu() {
+        val builder = MenuBuilder(this.context)
+        val inflater = MenuInflater(this.context)
         inflater.inflate(R.menu.shortcut_popup_menu, builder)
         for (item in builder.iterator()) {
             item.setOnMenuItemClickListener(this)
         }
-        menuHelper = MenuPopupHelper(view.context, builder, view)
+        menuHelper = MenuPopupHelper(this.context, builder, this)
         menuHelper?.setForceShowIcon(true)
         menuHelper?.show()
     }

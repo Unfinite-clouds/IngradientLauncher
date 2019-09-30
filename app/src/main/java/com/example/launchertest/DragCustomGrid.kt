@@ -29,6 +29,7 @@ class DragCustomGrid: View.OnDragListener  {
                     val state = (event.localState as Pair<DummyCell, AppShortcut>)
                     dragCell = state.first
                     dragShortcut = state.second
+                    dragCell?.removeAllViews()
                 }
             }
 
