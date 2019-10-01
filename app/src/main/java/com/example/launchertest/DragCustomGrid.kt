@@ -11,10 +11,12 @@ import kotlin.math.abs
 
 class DragCustomGrid: View.OnDragListener  {
     companion object {
+        // can we have two drag events at one moment?
         private var touchStartPoint: PointF? = null
         private var dragSide = Point()
         private var dragCell: DummyCell? = null
         private var dragShortcut: AppShortcut? = null
+        private var isEnded = false
     }
 
     override fun onDrag(cell: View?, event: DragEvent): Boolean {
@@ -25,11 +27,12 @@ class DragCustomGrid: View.OnDragListener  {
 
             DragEvent.ACTION_DRAG_STARTED -> {
                 if (dragShortcut == null) {
-                    // will be called only once
-                    val state = (event.localState as Pair<DummyCell, AppShortcut>)
+                    // will be called only once per drag event
+                    val state = (event.localState as Pair<DummyCell?, AppShortcut>)
                     dragCell = state.first
                     dragShortcut = state.second
                     dragCell?.removeAllViews()
+                    isEnded = false
                 }
             }
 
@@ -83,17 +86,18 @@ class DragCustomGrid: View.OnDragListener  {
 
             DragEvent.ACTION_DRAG_ENDED -> {
                 if (dragShortcut != null) {
-                    // drag canceled
+                    // drag has been canceled
                     dragShortcut?.icon?.clearColorFilter()
                     if (dragShortcut?.goingToRemove == false) {
                         dragCell?.shortcut = dragShortcut
                     } else {
-                        // do nothing to let this shortcut to be removed
+                        // do nothing to let this shortcut to stay null and then deleted
                     }
                     dragShortcut = null
                 }
-                if (dragCell != null) {
-                    // will be called only once
+                if (!isEnded) {
+                    // will be called only once per drag event
+                    isEnded = true
                     val grid = (cell.parent as LauncherScreenGrid)
                     grid.dragEnded()
                     grid.saveState()

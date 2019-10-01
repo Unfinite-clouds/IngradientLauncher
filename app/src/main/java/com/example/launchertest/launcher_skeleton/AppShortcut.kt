@@ -54,13 +54,16 @@ companion object {
         this.appInfo = AppInfo("test", "test")
     }
 
-
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+    fun applyIcon(w: Int, h: Int) {
         val iconSize = kotlin.math.min(w,(h-textSize).toInt())
         val x = 0
         val y = (h-textSize-iconSize).toInt()/2
         appInfo.icon?.bounds = Rect(x, y, x+iconSize, y+iconSize)
         setCompoundDrawables(null, appInfo.icon, null, null)
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        applyIcon(w,h)
         super.onSizeChanged(w, h, oldw, oldh)
     }
 
