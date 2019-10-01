@@ -125,4 +125,8 @@ companion object {
         canvas.setBitmap(bitmap)
         drawable.draw(canvas)
     }
+
+    override fun toString(): String {
+        return "${this.hashCode().toString(16)} - ${appInfo.label}, ${appInfo.id}, ${icon?.javaClass?.simpleName}, $parent"
+    }
 }

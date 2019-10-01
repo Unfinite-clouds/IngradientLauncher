@@ -53,14 +53,15 @@ class MainActivity : AppCompatActivity(), View.OnLongClickListener {
 
     override fun onLongClick(v: View?): Boolean {
         if (v is AppShortcut) {
-            stages.currentItem = 1
+//            stages.currentItem = 1
             val newShortcut = AppShortcut(this, v.appInfo)
-            newShortcut.applyIcon(200,200)
+//            newShortcut.applyIcon(200,200)
             newShortcut.layoutParams = v.layoutParams
             newShortcut.width = v.width
             newShortcut.height = v.height
-            val dragShadow = newShortcut.createDragShadow()
-            newShortcut.startDrag(ClipData.newPlainText("",""), dragShadow, Pair(null, newShortcut), 0)
+            newShortcut.setOnLongClickListener(newShortcut)
+            val dragShadow = v.createDragShadow()
+            v.startDrag(ClipData.newPlainText("",""), dragShadow, Pair(null, newShortcut), 0)
         }
         return true
     }
