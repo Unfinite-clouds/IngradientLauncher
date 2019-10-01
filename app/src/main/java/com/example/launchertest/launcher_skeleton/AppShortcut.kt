@@ -29,11 +29,11 @@ companion object {
         set(value) {
             field = value
             text = field.label
-            field.icon?.bounds = Rect(0,0,width,height)
         }
 
-    val icon: Drawable?
-        get() = compoundDrawables[1]
+    var icon: Drawable?
+        get() = compoundDrawables[1] // get Clone
+        set(value) = setCompoundDrawables(null, value, null, null)
 
     var menuHelper: MenuPopupHelper? = null
     var goingToRemove = false
@@ -49,6 +49,7 @@ companion object {
 
     constructor(context: Context, appInfo: AppInfo) : super(context) {
         this.appInfo = appInfo
+        this.icon = appInfo.icon
     }
     constructor(context: Context, attributeSet: AttributeSet) : super(context, attributeSet) {
         this.appInfo = AppInfo("test", "test")
@@ -58,8 +59,8 @@ companion object {
         val iconSize = kotlin.math.min(w,(h-textSize).toInt())
         val x = 0
         val y = (h-textSize-iconSize).toInt()/2
-        appInfo.icon?.bounds = Rect(x, y, x+iconSize, y+iconSize)
-        setCompoundDrawables(null, appInfo.icon, null, null)
+        icon?.bounds = Rect(x, y, x+iconSize, y+iconSize)
+        setCompoundDrawables(null, icon, null, null)
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -81,9 +82,15 @@ companion object {
     }
 
     fun createDragShadow(): DragShadowBuilder {
-//        this.visibility = View.INVISIBLE
-        this.icon?.setColorFilter(Color.rgb(181, 232, 255), PorterDuff.Mode.MULTIPLY)
-        return DragShadowBuilder(this)
+        return object : DragShadowBuilder(this) {
+            val paint = Paint().apply { colorFilter = PorterDuffColorFilter(Color.rgb(181, 232, 255), PorterDuff.Mode.MULTIPLY) }
+            override fun onDrawShadow(canvas: Canvas?) {
+                val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+                val c = Canvas(bitmap)
+                view.draw(c)
+                canvas?.drawBitmap(bitmap, 0f,0f, paint)
+            }
+        }
     }
 
     fun createPopupMenu() {
@@ -127,6 +134,6 @@ companion object {
     }
 
     override fun toString(): String {
-        return "${this.hashCode().toString(16)} - ${appInfo.label}, ${appInfo.id}, ${icon?.javaClass?.simpleName}, $parent"
+        return "${this.hashCode().toString(16)} - ${appInfo.label}, icon_bounds: ${icon?.bounds}, parent: $parent"
     }
 }

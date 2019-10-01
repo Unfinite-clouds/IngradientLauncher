@@ -2,6 +2,8 @@ package com.example.launchertest
 
 import android.graphics.Point
 import android.graphics.PointF
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.view.DragEvent
 import android.view.View
 import com.example.launchertest.launcher_skeleton.AppShortcut
@@ -17,6 +19,12 @@ class DragCustomGrid: View.OnDragListener  {
         private var dragCell: DummyCell? = null
         private var dragShortcut: AppShortcut? = null
         private var isEnded = false
+        private var hasDrop = false
+        private var shortcuts_ = mutableListOf<AppShortcut>()
+        private var drawables_ = mutableListOf<BitmapDrawable>()
+        private var drawables_app_info = mutableListOf<BitmapDrawable>()
+        private var states_ = mutableListOf<Drawable.ConstantState>()
+        private var states_app_info = mutableListOf<Drawable.ConstantState>()
     }
 
     override fun onDrag(cell: View?, event: DragEvent): Boolean {
@@ -33,6 +41,7 @@ class DragCustomGrid: View.OnDragListener  {
                     dragShortcut = state.second
                     dragCell?.removeAllViews()
                     isEnded = false
+                    hasDrop = false
                 }
             }
 
@@ -78,22 +87,20 @@ class DragCustomGrid: View.OnDragListener  {
                     cell.doTranslateBy(-dragSide.x, -dragSide.y, 0f) // back translating - just for prevent blinking
                     cell.doMoveBy(-dragSide.x, -dragSide.y)
                     cell.shortcut = dragShortcut
-                    dragShortcut = null
+                    hasDrop = true
                 } else {
                     return false
                 }
             }
 
             DragEvent.ACTION_DRAG_ENDED -> {
-                if (dragShortcut != null) {
+                if (!hasDrop) {
                     // drag has been canceled
-                    dragShortcut?.icon?.clearColorFilter()
                     if (dragShortcut?.goingToRemove == false) {
                         dragCell?.shortcut = dragShortcut
                     } else {
                         // do nothing to let this shortcut to stay null and then deleted
                     }
-                    dragShortcut = null
                 }
                 if (!isEnded) {
                     // will be called only once per drag event
@@ -101,7 +108,9 @@ class DragCustomGrid: View.OnDragListener  {
                     val grid = (cell.parent as LauncherScreenGrid)
                     grid.dragEnded()
                     grid.saveState()
+                    dragShortcut?.icon?.clearColorFilter()
                     dragCell = null
+                    dragShortcut = null
                 }
                 cell.defaultState()
             }
