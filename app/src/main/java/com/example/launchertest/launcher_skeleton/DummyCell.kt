@@ -14,6 +14,8 @@ import com.example.launchertest.LauncherException
 
 class DummyCell : LinearLayout {
 
+    val parentGrid
+        get() = parent as LauncherScreenGrid
     lateinit var relativePosition: Point // the position within one ScreenGrid (not considering page number)
     var position: Int = -1
     private val bgcolor = Color.argb(40,0,0,0)
@@ -64,6 +66,7 @@ class DummyCell : LinearLayout {
         }
     }
 
+    // TODO: move those shits to DragCustomGrid [start]
     private fun doRecursionPass(directionX: Int, directionY: Int, action: (thisCell: DummyCell, nextCell: DummyCell) -> Unit): Boolean {
         if (isEmptyCell()) {
             return true
@@ -97,6 +100,7 @@ class DummyCell : LinearLayout {
             thisCell.shortcut?.translationY = value*directionY
         }
     }
+    // TODO: move those shits to DragCustomGrid [end]
 
     fun isEmptyCell(): Boolean {
         if (childCount == 0)

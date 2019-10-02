@@ -73,7 +73,7 @@ companion object {
     }
 
     override fun onLongClick(view: View): Boolean {
-        createPopupMenu()
+        showPopupMenu()
         val dragShadow = createDragShadow()
         val cell = (this.parent as DummyCell)
         val data = ClipData.newPlainText("", "")
@@ -93,7 +93,7 @@ companion object {
         }
     }
 
-    fun createPopupMenu() {
+    fun showPopupMenu() {
         val builder = MenuBuilder(this.context)
         val inflater = MenuInflater(this.context)
         inflater.inflate(R.menu.shortcut_popup_menu, builder)

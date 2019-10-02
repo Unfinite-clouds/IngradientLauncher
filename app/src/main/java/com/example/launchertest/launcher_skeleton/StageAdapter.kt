@@ -3,7 +3,6 @@ package com.example.launchertest.launcher_skeleton
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.core.view.forEach
 import androidx.recyclerview.widget.RecyclerView
 import com.example.launchertest.*
 
@@ -53,7 +52,7 @@ class StageAdapter(val context: Context) : RecyclerView.Adapter<BoundViewHolder>
                     }
                 }
                 (context as MainActivity).stageCustomGrid = rootStage.custom_grid_vp*/
-                stage = AllAppsStage(context)
+                stage = CustomGridStage(context)
             }
             2 -> {
                 // AllApps stage
@@ -66,29 +65,4 @@ class StageAdapter(val context: Context) : RecyclerView.Adapter<BoundViewHolder>
         }
         return stage
     }
-}
-
-fun createCustomGrid(context: Context, page: Int): LauncherScreenGrid {
-    val grid = LauncherScreenGrid(context, 5, 4, page).apply {
-        layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-    }
-
-    grid.forEach {
-        it.setOnDragListener(DragCustomGrid())
-    }
-
-    val customGridAppsApps = AppManager.customGridApps
-    var appInfo: AppInfo?
-
-    customGridAppsApps.forEach {
-        if (it.key in grid.gridBounds) {
-            appInfo = AppManager.getApp(it.value)
-            if (appInfo != null) grid.addShortcut(AppShortcut(context, appInfo!!).apply { setOnLongClickListener(this) }, it.key)
-        }
-    }
-
-    return grid
 }

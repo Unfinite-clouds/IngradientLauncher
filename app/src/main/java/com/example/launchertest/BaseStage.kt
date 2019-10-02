@@ -9,10 +9,10 @@ import androidx.viewpager2.widget.ViewPager2
 import com.example.launchertest.launcher_skeleton.LauncherScreenGrid
 
 abstract class BaseStage(val context: Context) {
-    protected val launcherViewPager = (context as MainActivity).launcherViewPager
-    protected lateinit var stageViewPager: ViewPager2
+    val launcherViewPager = (context as MainActivity).launcherViewPager
+    lateinit var stageViewPager: ViewPager2
     protected abstract val stageAdapter: StageAdapter
-    public abstract val stageLayoutId: Int
+    protected abstract val stageLayoutId: Int
     protected abstract val viewPagerId: Int
 
     fun inflateAndAttach(rootLayout: ViewGroup) {

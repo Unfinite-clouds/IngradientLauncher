@@ -10,8 +10,8 @@ import android.widget.GridLayout
 import androidx.core.view.forEach
 import androidx.core.view.iterator
 import com.example.launchertest.AppManager
+import com.example.launchertest.BaseStage
 import com.example.launchertest.LauncherException
-import com.example.launchertest.MainActivity
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -20,22 +20,24 @@ class LauncherScreenGrid : GridLayout {
         private set
     val size: Int
         get() = rowCount*columnCount
+    val gridBounds: IntRange
+        get() = size*page until size*(page+1)
+    var stage: BaseStage? = null
     lateinit var positions: IntArray  // global cell positions within whole stage
     private var widthCell = -1
     private var heightCell = -1
+    private var intrinsicPadding: Rect
     private val decimalPadding = Rect()
-    val gridBounds: IntRange
-        get() = size*page until size*(page+1)
     private var isWaitingForFlip = false
     private var flipDirection = 0
-    private var intrinsicPadding: Rect
 
     init {
         clipChildren = false
     }
 
-    constructor(context: Context, nrows: Int, ncols: Int, page: Int = -1) : super(context) {
+    constructor(context: Context, nrows: Int, ncols: Int, page: Int, stage: BaseStage) : super(context) {
         this.page = page
+        this.stage = stage
         setGridSize(nrows, ncols)
         intrinsicPadding = Rect(0,0,0,0)
         layoutParams = ViewGroup.LayoutParams(
@@ -44,6 +46,7 @@ class LauncherScreenGrid : GridLayout {
         )
     }
 
+    // you should not to use it
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
         page = 0
         setGridSize(rowCount, columnCount)
@@ -103,18 +106,19 @@ class LauncherScreenGrid : GridLayout {
     }
 
     private val flipPageRunnable = Runnable {
-        if (flipDirection != 0) (context as MainActivity).stageCustomGrid.currentItem += flipDirection
+        if (stage != null && flipDirection != 0)
+            stage!!.stageViewPager.currentItem += flipDirection
         isWaitingForFlip = false
     }
 
     fun tryFlipPage(cell: DummyCell, event: DragEvent) {
         if (cell.relativePosition.x == columnCount - 1 && event.x + cell.left > right - 50) {
             flipDirection = 1
-            // TODO: start suspending scroll animation
+            // start suspending scroll animation here
         }
         else if (cell.relativePosition.x == 0 && event.x < 50) {
             flipDirection = -1
-            // TODO: start suspending scroll animation
+            // start suspending scroll animation here
         }
         else
             dragEnded()
