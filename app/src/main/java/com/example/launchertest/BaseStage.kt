@@ -6,90 +6,44 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
-import com.example.launchertest.launcher_skeleton.AppShortcut
 import com.example.launchertest.launcher_skeleton.LauncherScreenGrid
 
-abstract class BaseStage(val context: Context) : View.OnLongClickListener {
-    protected val mainRoot = (context as MainActivity).stages
+abstract class BaseStage(val context: Context) {
+    protected val launcherViewPager = (context as MainActivity).launcherViewPager
     protected lateinit var stageViewPager: ViewPager2
-    protected lateinit var stageAdapter: RecyclerView.Adapter<*>
+    protected abstract val stageAdapter: StageAdapter
+    public abstract val stageLayoutId: Int
+    protected abstract val viewPagerId: Int
 
-    init {
-
+    fun inflateAndAttach(rootLayout: ViewGroup) {
+        View.inflate(context, stageLayoutId, rootLayout)
+        stageViewPager = rootLayout.findViewById<ViewPager2>(viewPagerId)
+        stageViewPager.adapter = stageAdapter
     }
 
-    fun inflate(stageRoot: ViewGroup, stageLayout: Int, viewPagerId: Int) {
-        val stage = View.inflate(context, stageLayout, stageRoot)
-        stageViewPager = stage.findViewById<ViewPager2>(viewPagerId)
+    // lazy creating pages
+    abstract class StageAdapter(val context: Context) : RecyclerView.Adapter<BoundViewHolder>() {
+        val pages = mutableListOf<LauncherScreenGrid>()
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BoundViewHolder {
+            return BoundViewHolder(LinearLayout(context).apply {
+                layoutParams =
+                    ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+            })
+        }
+
+        override fun onBindViewHolder(holder: BoundViewHolder, page: Int) {
+            if (pages.lastIndex <= page)
+                pages.add(page, createPage(context, page))
+            val VHRootView = (holder.itemView as ViewGroup)
+            (pages[page].parent as? ViewGroup)?.removeAllViews()
+            holder.itemView.removeAllViews()
+            VHRootView.addView(pages[page])
+        }
+
+        abstract fun createPage(context: Context, page: Int): LauncherScreenGrid
     }
-
-    abstract override fun onLongClick(v: View?): Boolean
-
-    fun loadData() {
-
-    }
-
-    fun saveData() {
-
-    }
-
-    // fun onDrag...
-
-}
-
-
-abstract class StageAdapter(val context: Context) : RecyclerView.Adapter<BoundViewHolder>() {
-    val grids = mutableListOf<LauncherScreenGrid>()
-
-    override fun getItemCount(): Int = 3
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BoundViewHolder {
-        return BoundViewHolder(LinearLayout(context).apply {
-            layoutParams =
-                ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                )
-        })
-    }
-
-    override fun onBindViewHolder(holder: BoundViewHolder, page: Int) {
-        if (grids.lastIndex <= page)
-            grids.add(page, createGrid(context, page))
-        val VHRootView = (holder.itemView as ViewGroup)
-        (grids[page].parent as? ViewGroup)?.removeAllViews()
-        holder.itemView.removeAllViews()
-        VHRootView.addView(grids[page])
-    }
-
-    abstract fun createGrid(context: Context, page: Int): LauncherScreenGrid
-}
-
-
-fun createAllAppsGrid(context: Context, page: Int): LauncherScreenGrid {
-    val grid = LauncherScreenGrid(context, 5, 4, page).apply {
-        layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-    }
-
-    val allApps = AppManager.getSortedApps()
-    var position: Int
-
-    for (i in 0 until grid.size) {
-        position = i+grid.size*page
-        if (position > allApps.size - 1)
-            break
-
-        val appInfo = AppManager.getApp(allApps[position])
-        if (appInfo != null)
-            grid.addShortcut(AppShortcut(context, appInfo).apply { setOnLongClickListener(context as MainActivity) }, position)
-    }
-
-    return grid
-}
-
-class BoundViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    var boundPosition = -1
 }

@@ -2,13 +2,10 @@ package com.example.launchertest.launcher_skeleton
 
 import android.content.Context
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.forEach
 import androidx.recyclerview.widget.RecyclerView
 import com.example.launchertest.*
-import kotlinx.android.synthetic.main.stage_0_main_screen.view.*
-import kotlinx.android.synthetic.main.stage_1_custom_grid.view.*
 
 class StageAdapter(val context: Context) : RecyclerView.Adapter<BoundViewHolder>() {
     val stages = mutableListOf<ViewGroup>()
@@ -22,49 +19,53 @@ class StageAdapter(val context: Context) : RecyclerView.Adapter<BoundViewHolder>
     override fun onBindViewHolder(holder: BoundViewHolder, position: Int) {
         if (holder.boundPosition != position) {
             println("binding position $position")
-            val stage = holder.itemView as ViewGroup
-            stage.removeAllViews()
-            bindStage(context, stage, position)
+            val rootLayout = holder.itemView as ViewGroup
+            rootLayout.removeAllViews()
+            val stage = createStage(context, position)
+            stage.inflateAndAttach(rootLayout)
             holder.boundPosition = position
         }
     }
 
-    private fun bindStage(context: Context, stageRoot: ViewGroup, position: Int) {
+    private fun createStage(context: Context, position: Int) : BaseStage {
+        val stage: BaseStage
         when (position) {
             0 -> {
                 // Scroll stage
-                View.inflate(context, R.layout.stage_0_main_screen, stageRoot)
+/*                View.inflateAndAttach(context, R.layout.stage_0_main_screen, rootStage)
                 for (i in 0..10) {
                     //fill first 10 apps
-                    stageRoot.iconContainer.addView(
+                    rootStage.iconContainer.addView(
                         IconFactory(
                             context,
                             getPrefs(context).getInt(Preferences.MAIN_SCREEN_ICONS_COUNT, -1))
                             .createIcon(AppManager.getApp(AppManager.getSortedApps()[i])!!)
                     )
-                }
+                }*/
+                stage = AllAppsStage(context)
             }
             1 -> {
                 // Custom stage
-                View.inflate(context, R.layout.stage_1_custom_grid, stageRoot)
-                stageRoot.custom_grid_vp.adapter = object : CustomGridAdapter(context) {
+/*                View.inflateAndAttach(context, R.layout.stage_1_custom_grid, rootStage)
+                rootStage.custom_grid_vp.adapter = object : CustomGridAdapter(context) {
                     override fun createGrid(context: Context, page: Int): LauncherScreenGrid {
                         return createCustomGrid(context, page)
                     }
                 }
-                (context as MainActivity).stageCustomGrid = stageRoot.custom_grid_vp
+                (context as MainActivity).stageCustomGrid = rootStage.custom_grid_vp*/
+                stage = AllAppsStage(context)
             }
             2 -> {
                 // AllApps stage
-                AllAppsStage(context, stageRoot)
+                stage = AllAppsStage(context)
             }
+            3 -> {
+                stage = AllAppsStage(context)
+            }
+            else -> throw LauncherException("position must be in range 0..${itemCount - 1}")
         }
-        stageRoot.setBackgroundResource(R.color.Vignette)
+        return stage
     }
-}
-
-class BoundViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    var boundPosition = -1
 }
 
 fun createCustomGrid(context: Context, page: Int): LauncherScreenGrid {
@@ -87,30 +88,6 @@ fun createCustomGrid(context: Context, page: Int): LauncherScreenGrid {
             appInfo = AppManager.getApp(it.value)
             if (appInfo != null) grid.addShortcut(AppShortcut(context, appInfo!!).apply { setOnLongClickListener(this) }, it.key)
         }
-    }
-
-    return grid
-}
-
-fun createAllAppsGrid(context: Context, page: Int): LauncherScreenGrid {
-    val grid = LauncherScreenGrid(context, 5, 4, page).apply {
-        layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-    }
-
-    val allApps = AppManager.getSortedApps()
-    var position: Int
-
-    for (i in 0 until grid.size) {
-        position = i+grid.size*page
-        if (position > allApps.size - 1)
-            break
-
-        val appInfo = AppManager.getApp(allApps[position])
-        if (appInfo != null)
-            grid.addShortcut(AppShortcut(context, appInfo).apply { setOnLongClickListener(context as MainActivity) }, position)
     }
 
     return grid

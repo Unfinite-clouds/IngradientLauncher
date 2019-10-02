@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.recyclerview.widget.RecyclerView
+import com.example.launchertest.BoundViewHolder
 
 abstract class CustomGridAdapter(val context: Context) : RecyclerView.Adapter<BoundViewHolder>() {
     val grids = mutableListOf<LauncherScreenGrid>()

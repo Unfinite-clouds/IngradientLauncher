@@ -1,17 +1,13 @@
 package com.example.launchertest
 
-import android.content.ClipData
 import android.os.Bundle
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.edit
 import androidx.viewpager2.widget.ViewPager2
-import com.example.launchertest.launcher_skeleton.AppShortcut
 import com.example.launchertest.launcher_skeleton.StageAdapter
 
-class MainActivity : AppCompatActivity(), View.OnLongClickListener {
+class MainActivity : AppCompatActivity() {
     lateinit var stageCustomGrid: ViewPager2
-    lateinit var stages: ViewPager2
+    lateinit var launcherViewPager: ViewPager2
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,7 +17,7 @@ class MainActivity : AppCompatActivity(), View.OnLongClickListener {
         AppManager.loadAllApps(this)
 
         if (getPrefs(this).getBoolean(Preferences.FIRST_LOAD, true))
-            loadDefaultPreferences()
+            Preferences.loadDefaultPreferences(this)
 
 /*
         val allApps = AppManager.allApps
@@ -33,32 +29,10 @@ class MainActivity : AppCompatActivity(), View.OnLongClickListener {
         }
 */
 
-        stages = findViewById<ViewPager2>(R.id.root_viewpager)
-        stages.adapter = StageAdapter(this)
-        stages.orientation = ViewPager2.ORIENTATION_VERTICAL
+        launcherViewPager = findViewById<ViewPager2>(R.id.root_viewpager)
+        launcherViewPager.adapter = StageAdapter(this)
+        launcherViewPager.orientation = ViewPager2.ORIENTATION_VERTICAL
     }
 
-    override fun onBackPressed() {
-
-    }
-
-    fun loadDefaultPreferences() {
-        getPrefs(this).edit {
-            putBoolean(Preferences.FIRST_LOAD, false)
-            putInt(Preferences.MAIN_SCREEN_ICONS_COUNT, 5)
-            putInt(Preferences.ALLAPPS_COLUMN_COUNT, 5)
-            putInt(Preferences.ALLAPPS_ROW_COUNT, 7)
-        }
-    }
-
-    override fun onLongClick(v: View?): Boolean {
-        if (v is AppShortcut) {
-            stages.currentItem = 1
-            val newShortcut = AppShortcut(this, v.appInfo)
-            newShortcut.setOnLongClickListener(newShortcut)
-            val dragShadow = v.createDragShadow()
-            v.startDrag(ClipData.newPlainText("",""), dragShadow, Pair(null, newShortcut), 0)
-        }
-        return true
-    }
+    override fun onBackPressed() {}
 }

@@ -5,6 +5,7 @@ import android.graphics.Point
 import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.DragEvent
+import android.view.ViewGroup
 import android.widget.GridLayout
 import androidx.core.view.forEach
 import androidx.core.view.iterator
@@ -37,6 +38,10 @@ class LauncherScreenGrid : GridLayout {
         this.page = page
         setGridSize(nrows, ncols)
         intrinsicPadding = Rect(0,0,0,0)
+        layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
     }
 
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
