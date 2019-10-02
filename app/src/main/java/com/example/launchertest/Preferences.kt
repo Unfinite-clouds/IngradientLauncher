@@ -17,8 +17,8 @@ object Preferences {
         getPrefs(context).edit {
             putBoolean(FIRST_LOAD, false)
             putInt(MAIN_SCREEN_ICONS_COUNT, 5)
-            putInt(ALLAPPS_COLUMN_COUNT, 5)
-            putInt(ALLAPPS_ROW_COUNT, 7)
+            putInt(ALLAPPS_ROW_COUNT, 8)
+            putInt(ALLAPPS_COLUMN_COUNT, 4)
             putInt(CUSTOM_GRID_ROW_COUNT, 5)
             putInt(CUSTOM_GRID_COLUMN_COUNT, 7)
             putInt(CUSTOM_GRID_PAGE_COUNT, 3)

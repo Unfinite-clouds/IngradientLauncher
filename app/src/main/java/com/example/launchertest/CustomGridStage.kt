@@ -13,7 +13,7 @@ import com.example.launchertest.launcher_skeleton.DummyCell
 import com.example.launchertest.launcher_skeleton.LauncherScreenGrid
 import kotlin.math.abs
 
-class CustomGridStage(context: Context) : BaseStage(context), View.OnLongClickListener {
+class CustomGridStage(context: Context) : BaseStage(context) {
     var apps = AppManager.customGridApps
     var rowCount = getPrefs(context).getInt(Preferences.CUSTOM_GRID_ROW_COUNT, -1)
     var columnCount = getPrefs(context).getInt(Preferences.CUSTOM_GRID_COLUMN_COUNT, -1)
@@ -37,7 +37,7 @@ class CustomGridStage(context: Context) : BaseStage(context), View.OnLongClickLi
                 if (it.key in grid.gridBounds) {
                     appInfo = AppManager.getApp(it.value)
                     if (appInfo != null)
-                        grid.addShortcut(AppShortcut(context, appInfo!!).apply { setOnLongClickListener(this@CustomGridStage) }, it.key)
+                        grid.addShortcut(AppShortcut(context, appInfo!!).apply { setOnLongClickListener(CustomGridStage) }, it.key)
                 }
             }
             return grid
@@ -45,17 +45,17 @@ class CustomGridStage(context: Context) : BaseStage(context), View.OnLongClickLi
 
     }
 
-    override fun onLongClick(v: View?): Boolean {
-        if (v is AppShortcut) {
-            v.showPopupMenu()
-            launcherViewPager.currentItem = 1
-            val newShortcut = AppShortcut(context, v.appInfo)
-            newShortcut.setOnLongClickListener(newShortcut)
-            val dragShadow = v.createDragShadow()
-            v.startDrag(ClipData.newPlainText("",""), dragShadow, Pair(null, newShortcut), 0)
+    // think about it
+    companion object : View.OnLongClickListener{
+        override fun onLongClick(v: View?): Boolean {
+            if (v is AppShortcut) {
+                v.showPopupMenu()
+                v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), Pair(v.parent as DummyCell, v), 0)
+            }
+            return true
         }
-        return true
     }
+
 
     class DragCustomGrid: View.OnDragListener  {
         companion object {

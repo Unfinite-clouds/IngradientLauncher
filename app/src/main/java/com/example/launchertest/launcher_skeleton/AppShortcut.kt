@@ -1,6 +1,5 @@
 package com.example.launchertest.launcher_skeleton
 
-import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.graphics.*
@@ -17,10 +16,13 @@ import android.widget.TextView
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.view.menu.MenuPopupHelper
 import androidx.core.view.iterator
+import androidx.core.view.setPadding
 import com.example.launchertest.R
+import com.example.launchertest.toPx
+import kotlin.math.min
 
 
-class AppShortcut : TextView, View.OnLongClickListener, MenuItem.OnMenuItemClickListener, View.OnClickListener {
+class AppShortcut : TextView, MenuItem.OnMenuItemClickListener, View.OnClickListener {
 companion object {
     const val DISMISS_RADIUS = 20
 }
@@ -35,50 +37,55 @@ companion object {
         get() = compoundDrawables[1] // get Clone
         set(value) = setCompoundDrawables(null, value, null, null)
 
+    var desiredIconSize = 120
+    var iconPaddingBottom = toPx(5).toInt()
+    var padding = toPx(6).toInt()
+
     var menuHelper: MenuPopupHelper? = null
     var goingToRemove = false
 
     init {
+        setPadding(padding)
         layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
         gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
         includeFontPadding = false
-        maxLines = 1
+//        maxLines = 1
+        setLines(1)
         setTextColor(Color.WHITE)
         setOnClickListener(this)
     }
 
     constructor(context: Context, appInfo: AppInfo) : super(context) {
         this.appInfo = appInfo
-        this.icon = appInfo.icon
+        this.icon = appInfo.icon?.constantState?.newDrawable(context.resources)
     }
     constructor(context: Context, attributeSet: AttributeSet) : super(context, attributeSet) {
         this.appInfo = AppInfo("test", "test")
     }
 
-    fun applyIcon(w: Int, h: Int) {
-        val iconSize = kotlin.math.min(w,(h-textSize).toInt())
+    fun computeIconBounds(width: Int, height: Int): Rect {
+        val w = width - paddingLeft - paddingRight
+        val h = height - paddingTop - paddingBottom - (textSize).toInt() - iconPaddingBottom
+        val maxSize = min(w, h)
+        val iconSize = if (desiredIconSize != 0) min(desiredIconSize, maxSize) else maxSize
         val x = 0
-        val y = (h-textSize-iconSize).toInt()/2
-        icon?.bounds = Rect(x, y, x+iconSize, y+iconSize)
+        val y = h - iconSize
+        return Rect(x, y, x+iconSize, y+iconSize)
+    }
+
+    fun applyIconBounds(iconBounds: Rect) {
+        icon?.bounds = iconBounds
         setCompoundDrawables(null, icon, null, null)
     }
 
+
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        applyIcon(w,h)
+        applyIconBounds(computeIconBounds(w, h))
         super.onSizeChanged(w, h, oldw, oldh)
     }
 
     override fun onClick(v: View?) {
         context.startActivity(context.packageManager.getLaunchIntentForPackage(appInfo.packageName))
-    }
-
-    override fun onLongClick(view: View): Boolean {
-        showPopupMenu()
-        val dragShadow = createDragShadow()
-        val cell = (this.parent as DummyCell)
-        val data = ClipData.newPlainText("", "")
-        this.startDrag(data, dragShadow, Pair(cell, this), 0)
-        return true
     }
 
     fun createDragShadow(): DragShadowBuilder {

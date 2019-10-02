@@ -41,7 +41,7 @@ class AllAppsStage(context: Context) : BaseStage(context), View.OnLongClickListe
         if (v is AppShortcut) {
             launcherViewPager.currentItem = 1
             val newShortcut = AppShortcut(context, v.appInfo)
-            newShortcut.setOnLongClickListener(newShortcut)
+            newShortcut.setOnLongClickListener(CustomGridStage)
             val dragShadow = v.createDragShadow()
             v.startDrag(ClipData.newPlainText("",""), dragShadow, Pair(null, newShortcut), 0)
         }
