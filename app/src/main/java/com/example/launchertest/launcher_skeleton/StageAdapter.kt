@@ -9,7 +9,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.launchertest.*
 import kotlinx.android.synthetic.main.stage_0_main_screen.view.*
 import kotlinx.android.synthetic.main.stage_1_custom_grid.view.*
-import kotlinx.android.synthetic.main.stage_2_all_apps.view.*
 
 class StageAdapter(val context: Context) : RecyclerView.Adapter<BoundViewHolder>() {
     val stages = mutableListOf<ViewGroup>()
@@ -57,12 +56,7 @@ class StageAdapter(val context: Context) : RecyclerView.Adapter<BoundViewHolder>
             }
             2 -> {
                 // AllApps stage
-                View.inflate(context, R.layout.stage_2_all_apps, stageRoot)
-                stageRoot.all_apps_vp.adapter = object : CustomGridAdapter(context) {
-                    override fun createGrid(context: Context, page: Int): LauncherScreenGrid {
-                        return createAllAppsGrid(context, page)
-                    }
-                }
+                AllAppsStage(context, stageRoot)
             }
         }
         stageRoot.setBackgroundResource(R.color.Vignette)
