@@ -5,8 +5,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.children
-import com.example.launchertest.launcher_skeleton.DummyCell
-import com.example.launchertest.launcher_skeleton.LauncherScreenGrid
 import kotlinx.android.synthetic.main.research_layout.*
 
 class ResearchActivity : AppCompatActivity() {
@@ -29,7 +27,7 @@ class ResearchActivity : AppCompatActivity() {
 
         test_btn.setOnClickListener {
             if (!this::iter.isInitialized)
-                iter = (((test_vp.getChildAt(0) as ViewGroup).getChildAt(0) as ViewGroup).getChildAt(0) as LauncherScreenGrid).children.iterator()
+                iter = (((test_vp.getChildAt(0) as ViewGroup).getChildAt(0) as ViewGroup).getChildAt(0) as LauncherPageGrid).children.iterator()
             (iter.next() as DummyCell).shortcut = null
         }
     }

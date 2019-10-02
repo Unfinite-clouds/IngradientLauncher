@@ -17,15 +17,6 @@
 
         </activity>
         <activity
-                android:name=".launcher_skeleton.SkeletonTestActivity"
-                android:label="@string/title_activity_skeleton_test">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
                 android:name=".MainActivity"
                 android:label="@string/title_activity_main">
             <intent-filter>

@@ -1,12 +1,10 @@
-package com.example.launchertest.launcher_skeleton
+package com.example.launchertest
 
 import android.content.Context
 import android.content.pm.ResolveInfo
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import androidx.core.graphics.drawable.toBitmap
-import com.example.launchertest.decodeBitmap
-import com.example.launchertest.encodeBitmap
 import java.io.Serializable
 
 // Can only store Bitmap icons (Adaptive icons is not supported now)

@@ -1,13 +1,12 @@
 package com.example.launchertest
 
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.viewpager2.widget.ViewPager2
-import com.example.launchertest.launcher_skeleton.StageAdapter
 
 class MainActivity : AppCompatActivity() {
-    lateinit var stageCustomGrid: ViewPager2
     lateinit var launcherViewPager: ViewPager2
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -15,6 +14,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.main)
 
 //        Storable.deleteFile(this, Storable.CUSTOM_GRID_APPS)
+//        Storable.deleteFile(this, Storable.ALL_APPS)
         AppManager.loadAllApps(this)
 
         getPrefs(this).edit {putBoolean(Preferences.FIRST_LOAD, true)}
@@ -37,4 +37,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {}
+
+    class PageTransformer : ViewPager2.PageTransformer {
+        override fun transformPage(view: View, position: Float) {
+//        println("Transfroming: $relativePosition")
+        }
+    }
 }
+

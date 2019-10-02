@@ -7,13 +7,9 @@ import android.graphics.PointF
 import android.view.DragEvent
 import android.view.View
 import androidx.core.view.forEach
-import com.example.launchertest.launcher_skeleton.AppInfo
-import com.example.launchertest.launcher_skeleton.AppShortcut
-import com.example.launchertest.launcher_skeleton.DummyCell
-import com.example.launchertest.launcher_skeleton.LauncherScreenGrid
 import kotlin.math.abs
 
-class CustomGridStage(context: Context) : BaseStage(context) {
+class CustomGridStage(context: Context) : BaseRecyclerStage(context) {
     var apps = AppManager.customGridApps
     var rowCount = getPrefs(context).getInt(Preferences.CUSTOM_GRID_ROW_COUNT, -1)
     var columnCount = getPrefs(context).getInt(Preferences.CUSTOM_GRID_COLUMN_COUNT, -1)
@@ -22,11 +18,11 @@ class CustomGridStage(context: Context) : BaseStage(context) {
     override val viewPagerId = R.id.custom_grid_vp
     override val stageAdapter = CustomGridAdapter(context) as StageAdapter
 
-    inner class CustomGridAdapter(context: Context) : BaseStage.StageAdapter(context) {
+    inner class CustomGridAdapter(context: Context) : BaseRecyclerStage.StageAdapter(context) {
         override fun getItemCount() = pageCount
 
-        override fun createPage(context: Context, page: Int): LauncherScreenGrid {
-            val grid = LauncherScreenGrid(context, rowCount, columnCount, page, this@CustomGridStage)
+        override fun createPage(context: Context, page: Int): LauncherPageGrid {
+            val grid = LauncherPageGrid(context, rowCount, columnCount, page, this@CustomGridStage)
 
             grid.forEach {
                 it.setOnDragListener(DragCustomGrid())

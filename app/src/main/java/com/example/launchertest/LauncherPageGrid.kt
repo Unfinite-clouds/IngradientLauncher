@@ -1,4 +1,4 @@
-package com.example.launchertest.launcher_skeleton
+package com.example.launchertest
 
 import android.content.Context
 import android.graphics.Point
@@ -9,20 +9,17 @@ import android.view.ViewGroup
 import android.widget.GridLayout
 import androidx.core.view.forEach
 import androidx.core.view.iterator
-import com.example.launchertest.AppManager
-import com.example.launchertest.BaseStage
-import com.example.launchertest.LauncherException
 import kotlin.math.ceil
 import kotlin.math.floor
 
-class LauncherScreenGrid : GridLayout {
+class LauncherPageGrid : GridLayout {
     var page = -1
         private set
     val size: Int
         get() = rowCount*columnCount
     val gridBounds: IntRange
         get() = size*page until size*(page+1)
-    var stage: BaseStage? = null
+    var stage: BaseRecyclerStage? = null
     lateinit var positions: IntArray  // global cell positions within whole stage
     private var widthCell = -1
     private var heightCell = -1
@@ -35,7 +32,7 @@ class LauncherScreenGrid : GridLayout {
         clipChildren = false
     }
 
-    constructor(context: Context, nrows: Int, ncols: Int, page: Int, stage: BaseStage) : super(context) {
+    constructor(context: Context, nrows: Int, ncols: Int, page: Int, stage: BaseRecyclerStage) : super(context) {
         this.page = page
         this.stage = stage
         setGridSize(nrows, ncols)

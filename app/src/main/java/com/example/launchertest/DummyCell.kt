@@ -1,4 +1,4 @@
-package com.example.launchertest.launcher_skeleton
+package com.example.launchertest
 
 import android.content.Context
 import android.graphics.Color
@@ -8,14 +8,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.GridLayout
 import android.widget.LinearLayout
-import com.example.launchertest.AppManager
-import com.example.launchertest.LauncherException
 
 
 class DummyCell : LinearLayout {
 
     val parentGrid
-        get() = parent as LauncherScreenGrid
+        get() = parent as LauncherPageGrid
     lateinit var relativePosition: Point // the position within one ScreenGrid (not considering page number)
     var position: Int = -1
     private val bgcolor = Color.argb(40,0,0,0)
@@ -76,7 +74,7 @@ class DummyCell : LinearLayout {
             return true
         }
         val next = Point(relativePosition.x + directionX, relativePosition.y + directionY)
-        val nextCell: DummyCell? = (parent as LauncherScreenGrid).getCellAt(next)
+        val nextCell: DummyCell? = (parent as LauncherPageGrid).getCellAt(next)
         if (nextCell?.doRecursionPass(directionX, directionY, action) == true) {
             action(this, nextCell)
             return true

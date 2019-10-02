@@ -3,8 +3,6 @@ package com.example.launchertest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ResolveInfo
-import com.example.launchertest.launcher_skeleton.AppInfo
-import com.example.launchertest.launcher_skeleton.Storable
 
 object AppManager {
     private lateinit var sortedApps: List<String>

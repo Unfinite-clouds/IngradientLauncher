@@ -1,4 +1,4 @@
-package com.example.launchertest.launcher_skeleton
+package com.example.launchertest
 
 import android.content.Context
 import android.util.AttributeSet
@@ -6,7 +6,6 @@ import android.view.DragEvent
 import android.view.View
 import android.widget.ImageView
 import androidx.core.content.res.ResourcesCompat
-import com.example.launchertest.R
 
 class RemoveZoneView : ImageView, View.OnDragListener{
     init {

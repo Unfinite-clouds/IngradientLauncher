@@ -1,4 +1,4 @@
-package com.example.launchertest.launcher_skeleton
+package com.example.launchertest
 
 import android.content.Context
 import android.content.Intent
@@ -17,8 +17,6 @@ import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.view.menu.MenuPopupHelper
 import androidx.core.view.iterator
 import androidx.core.view.setPadding
-import com.example.launchertest.R
-import com.example.launchertest.toPx
 import kotlin.math.min
 
 

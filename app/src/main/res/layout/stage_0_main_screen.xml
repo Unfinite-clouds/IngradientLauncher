@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.example.launchertest.CustomHScrollView
+<com.example.launchertest.LauncherScrollGrid
+        android:id="@+id/main_stage_scroll"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/scrollView"
+        android:layout_height="wrap_content"
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         tools:context=".MainActivity">
                 <LinearLayout
-                        android:id="@+id/iconContainer"
+                        android:id="@+id/main_stage_app_container"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:layout_gravity="bottom"
                         android:background="@drawable/bot_gradient">
                 </LinearLayout>
-</com.example.launchertest.CustomHScrollView>
+</com.example.launchertest.LauncherScrollGrid>
