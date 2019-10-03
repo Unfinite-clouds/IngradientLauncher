@@ -9,7 +9,7 @@ object Storable {
     val TEST = FileInfo("test", List::class.java)
     val ALL_APPS = FileInfo("ALL_APPS", MutableMap::class.java)
     val CUSTOM_GRID_APPS = FileInfo("CUSTOM_GRID_APPS", MutableMap::class.java)
-    val APP_LOCATIONS_MAIN_SCREEN = FileInfo("APP_LOCATIONS_MAIN_SCREEN", MutableMap::class.java)
+    val MAIN_SCREEN_APPS = FileInfo("MAIN_SCREEN_APPS", MutableMap::class.java)
 
     fun load(inputStream: FileInputStream) : Any? {
         val loaded: Any?

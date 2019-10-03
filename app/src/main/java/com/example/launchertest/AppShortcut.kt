@@ -6,6 +6,7 @@ import android.graphics.*
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.provider.Settings
+import android.text.TextUtils
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.MenuInflater
@@ -51,6 +52,7 @@ companion object {
         setLines(1)
         setTextColor(Color.WHITE)
         setOnClickListener(this)
+        ellipsize = TextUtils.TruncateAt.END
     }
 
     constructor(context: Context, appInfo: AppInfo) : super(context) {

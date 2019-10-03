@@ -11,6 +11,8 @@ object Preferences {
     const val CUSTOM_GRID_ROW_COUNT = "4"
     const val CUSTOM_GRID_COLUMN_COUNT = "5"
     const val CUSTOM_GRID_PAGE_COUNT = "6"
+    const val MAIN_SCREEN_WIDTH_CELL = "7"
+    const val MAIN_SCREEN_HEIGHT_CELL = "8"
 
     // here default values is declared
     fun loadDefaultPreferences(context: Context) {
@@ -22,6 +24,8 @@ object Preferences {
             putInt(CUSTOM_GRID_ROW_COUNT, 5)
             putInt(CUSTOM_GRID_COLUMN_COUNT, 7)
             putInt(CUSTOM_GRID_PAGE_COUNT, 3)
+            putInt(MAIN_SCREEN_WIDTH_CELL, 120)
+            putInt(MAIN_SCREEN_HEIGHT_CELL, 120)
         }
     }
 }
