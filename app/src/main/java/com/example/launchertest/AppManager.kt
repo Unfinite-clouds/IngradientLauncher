@@ -53,6 +53,24 @@ object AppManager {
         Storable.dumpAuto(context, customGridApps, Storable.CUSTOM_GRID_APPS)
     }
 
+    fun applyMainScreenChanges(context: Context, pos: Int, app: String) {
+        if (app == "")
+            mainScreenApps.remove(pos)
+        else
+            mainScreenApps[pos] = app
+        Storable.dumpAuto(context, mainScreenApps, Storable.MAIN_SCREEN_APPS)
+    }
+
+    fun applyMainScreenChanges(context: Context, apps: Map<Int, String?>) {
+        apps.forEach {
+            if (it.value == null)
+                mainScreenApps.remove(it.key)
+            else
+                mainScreenApps[it.key] = it.value!!
+        }
+        Storable.dumpAuto(context, mainScreenApps, Storable.MAIN_SCREEN_APPS)
+    }
+
     private fun getLaunchableApps(context: Context): List<ResolveInfo> {
         val pm = context.packageManager
         val launcherIntent = Intent(Intent.ACTION_MAIN, null)
