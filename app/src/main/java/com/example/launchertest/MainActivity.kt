@@ -13,6 +13,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main)
 
+        Storable.deleteFile(this, Storable.MAIN_SCREEN_APPS)
 //        Storable.deleteFile(this, Storable.CUSTOM_GRID_APPS)
 //        Storable.deleteFile(this, Storable.ALL_APPS)
         AppManager.loadAllApps(this)
@@ -30,6 +31,13 @@ class MainActivity : AppCompatActivity() {
             i++
         }
 */
+        val allApps = AppManager.allApps.iterator()
+        val list = mutableListOf<String>()
+        for (i in 0..12) {
+            list.add(allApps.next().key)
+        }
+        AppManager.applyMainScreenChanges(this, list)
+
 
         launcherViewPager = findViewById<ViewPager2>(R.id.root_viewpager)
         launcherViewPager.adapter = StageAdapter(this)

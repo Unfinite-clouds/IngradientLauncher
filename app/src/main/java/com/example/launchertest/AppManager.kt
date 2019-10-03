@@ -20,7 +20,7 @@ object AppManager {
         private set
         get() { return if (isLoaded) field else throw LauncherException("customGridApps is not loaded") }
 
-    var mainScreenApps: MutableMap<Int, String> = mutableMapOf()
+    var mainScreenApps: MutableList<String> = mutableListOf()
         private set
         get() { return if (isLoaded) field else throw LauncherException("mainScreenApps is not loaded") }
 
@@ -28,7 +28,7 @@ object AppManager {
         println("loading All Apps...")
         allApps = Storable.loadAuto(context, Storable.ALL_APPS) as? MutableMap<String, AppInfo> ?: mutableMapOf()
         customGridApps = Storable.loadAuto(context, Storable.CUSTOM_GRID_APPS) as? MutableMap<Int, String> ?: mutableMapOf()
-        mainScreenApps = Storable.loadAuto(context, Storable.MAIN_SCREEN_APPS) as? MutableMap<Int, String> ?: mutableMapOf()
+        mainScreenApps = Storable.loadAuto(context, Storable.MAIN_SCREEN_APPS) as? MutableList<String> ?: mutableListOf()
 
         isLoaded = true
         checkUpdateAllApps(context)
@@ -53,21 +53,8 @@ object AppManager {
         Storable.dumpAuto(context, customGridApps, Storable.CUSTOM_GRID_APPS)
     }
 
-    fun applyMainScreenChanges(context: Context, pos: Int, app: String) {
-        if (app == "")
-            mainScreenApps.remove(pos)
-        else
-            mainScreenApps[pos] = app
-        Storable.dumpAuto(context, mainScreenApps, Storable.MAIN_SCREEN_APPS)
-    }
-
-    fun applyMainScreenChanges(context: Context, apps: Map<Int, String?>) {
-        apps.forEach {
-            if (it.value == null)
-                mainScreenApps.remove(it.key)
-            else
-                mainScreenApps[it.key] = it.value!!
-        }
+    fun applyMainScreenChanges(context: Context, apps: MutableList<String>) {
+        mainScreenApps = apps
         Storable.dumpAuto(context, mainScreenApps, Storable.MAIN_SCREEN_APPS)
     }
 

@@ -22,7 +22,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         super.inflateAndAttach(rootLayout)
         val container = rootLayout.findViewById<LinearLayout>(app_container)
         apps.forEach {
-            val appInfo = AppManager.getApp(it.value)
+            val appInfo = AppManager.getApp(it)
             if (appInfo != null)
                 container.addView(AppShortcut(context, appInfo).apply {
                     setOnLongClickListener(this@ScrollStage)
@@ -35,14 +35,26 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
 
     override fun onLongClick(v: View?): Boolean {
         if (v is AppShortcut) {
+            v.visibility = View.INVISIBLE
             v.showPopupMenu()
-            v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), v, 0)
+            startDrag(v)
         }
         return true
     }
 
 
+    private fun startDrag(v: AppShortcut) {
+        // will be called only once per drag event
+        startPos = getPosition(v)
+        dragShortcut = v
+        isEnded = false
+        hasDrop = false
+        touchStartPoint = null
+        v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), null, 0)
+    }
+
     private var touchStartPoint: PointF? = null
+    private var startPos: Int = -1
     private var dragDirection = 0
     private var dragShortcut: AppShortcut? = null
     private var isEnded = false
@@ -51,22 +63,12 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
     override fun onDrag(v: View?, event: DragEvent?): Boolean {
         if (v !is AppShortcut)
             return false
-        
+
         when (event?.action) {
 
-            DragEvent.ACTION_DRAG_STARTED -> {
-                if (dragShortcut == null) {
-                    // will be called only once per drag event
-                    dragShortcut = event.localState as AppShortcut?
-                    isEnded = false
-                    hasDrop = false
-                }
-            }
+            DragEvent.ACTION_DRAG_STARTED -> { }
 
-            DragEvent.ACTION_DRAG_ENTERED -> {
-                dragDirection = 0
-                touchStartPoint = null
-            }
+            DragEvent.ACTION_DRAG_ENTERED -> { }
 
             DragEvent.ACTION_DRAG_LOCATION -> {
                 val newDragSide: Int =
@@ -90,45 +92,50 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
             }
 
             DragEvent.ACTION_DRAG_EXITED -> {
-                cell.doTranslateBy(-dragDirection.x, -dragDirection.y, 0f) // back translating
-                cell.defaultState()
+                back translating is need only when view is being outt of container
             }
 
             DragEvent.ACTION_DROP -> {
                 // cell is the cell to drop
-                dragShortcut?.icon?.clearColorFilter()
-                if (cell.canMoveBy(-dragDirection.x, -dragDirection.y)) {
-                    cell.doTranslateBy(-dragDirection.x, -dragDirection.y, 0f) // back translating - just for prevent blinking
-                    cell.doMoveBy(-dragDirection.x, -dragDirection.y)
-                    cell.shortcut = dragShortcut
-                    hasDrop = true
-                } else {
-                    return false
-                }
+                val destPos = getPosition(v)
+                resolvePositions(startPos, destPos)
+                hasDrop = true
             }
 
             DragEvent.ACTION_DRAG_ENDED -> {
                 if (!hasDrop) {
                     // drag has been canceled
-                    if (dragShortcut?.goingToRemove == false) {
-                        dragCell?.shortcut =
-                            dragShortcut
-                    } else {
-                        // do nothing to let this shortcut to stay null and then deleted
-                    }
+
                 }
                 if (!isEnded) {
                     // will be called only once per drag event
                     isEnded = true
-                    cell.parentGrid.dragEnded()
-                    cell.parentGrid.saveState()
-                    dragShortcut?.icon?.clearColorFilter()
-                    dragCell = null
-                    dragShortcut = null
+                    saveData()
+                    updateView()
                 }
-                cell.defaultState()
             }
         }
         return true
+    }
+
+    private fun resolvePositions(startPos: Int, destPos: Int) {
+        val direction = if (startPos < destPos) 1 else -1
+        var pos = startPos
+        while (pos != destPos) {
+            apps[pos] = apps[pos + direction]
+            pos+=direction
+        }
+    }
+
+    private fun saveData() {
+        AppManager.applyMainScreenChanges(context, apps)
+    }
+
+    private fun updateView() {
+
+    }
+
+    fun getPosition(v: View): Int {
+        return -1
     }
 }
