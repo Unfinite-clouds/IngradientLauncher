@@ -30,11 +30,18 @@ companion object {
         set(value) {
             field = value
             text = field.label
+            icon = field.icon
         }
 
     var icon: Drawable?
-        get() = compoundDrawables[1] // get Clone
-        set(value) = setCompoundDrawables(null, value, null, null)
+        get() = compoundDrawables[1] // returns clone
+        set(value) {
+            val drawable = value?.constantState?.newDrawable(context.resources)
+            drawable?.bounds = iconBounds
+            setCompoundDrawables(null, drawable, null, null)
+        }
+
+    private var iconBounds = Rect()
 
     var desiredIconSize = 120
     var iconPaddingBottom = toPx(5).toInt()
@@ -57,30 +64,30 @@ companion object {
 
     constructor(context: Context, appInfo: AppInfo) : super(context) {
         this.appInfo = appInfo
-        this.icon = appInfo.icon?.constantState?.newDrawable(context.resources)
+        this.icon = appInfo.icon
     }
     constructor(context: Context, attributeSet: AttributeSet) : super(context, attributeSet) {
         this.appInfo = AppInfo("test", "test")
     }
 
-    fun computeIconBounds(width: Int, height: Int): Rect {
+    private fun computeIconBounds(width: Int, height: Int) {
         val w = width - paddingLeft - paddingRight
         val h = height - paddingTop - paddingBottom - (textSize).toInt() - iconPaddingBottom
         val maxSize = min(w, h)
         val iconSize = if (desiredIconSize != 0) min(desiredIconSize, maxSize) else maxSize
         val x = 0
         val y = h - iconSize
-        return Rect(x, y, x+iconSize, y+iconSize)
+        iconBounds = Rect(x, y, x+iconSize, y+iconSize)
     }
 
-    fun applyIconBounds(iconBounds: Rect) {
+    private fun updateIconBounds() {
         icon?.bounds = iconBounds
         setCompoundDrawables(null, icon, null, null)
     }
 
-
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        applyIconBounds(computeIconBounds(w, h))
+        computeIconBounds(w, h)
+        updateIconBounds()
         super.onSizeChanged(w, h, oldw, oldh)
     }
 

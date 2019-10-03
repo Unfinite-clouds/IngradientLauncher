@@ -119,7 +119,7 @@ class CustomGridStage(context: Context) : BaseRecyclerStage(context) {
 
                 DragEvent.ACTION_DROP -> {
                     // cell is the cell to drop
-                    dragShortcut?.icon?.clearColorFilter()
+//                    dragShortcut?.icon?.clearColorFilter()
                     if (cell.canMoveBy(-dragSide.x, -dragSide.y)) {
                         cell.doTranslateBy(-dragSide.x, -dragSide.y, 0f) // back translating - just for prevent blinking
                         cell.doMoveBy(-dragSide.x, -dragSide.y)
@@ -131,7 +131,7 @@ class CustomGridStage(context: Context) : BaseRecyclerStage(context) {
                 }
 
                 DragEvent.ACTION_DRAG_ENDED -> {
-                    if (!hasDrop) {
+                    if (!hasDrop) { // TODO: maybe move down?
                         // drag has been canceled
                         if (dragShortcut?.goingToRemove == false) {
                             dragCell?.shortcut = dragShortcut
@@ -144,7 +144,7 @@ class CustomGridStage(context: Context) : BaseRecyclerStage(context) {
                         isEnded = true
                         cell.parentGrid.dragEnded()
                         cell.parentGrid.saveState()
-                        dragShortcut?.icon?.clearColorFilter()
+//                        dragShortcut?.icon?.clearColorFilter()
                         dragCell = null
                         dragShortcut = null
                     }
