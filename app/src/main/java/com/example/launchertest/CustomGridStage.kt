@@ -7,18 +7,20 @@ import android.graphics.PointF
 import android.view.DragEvent
 import android.view.View
 import androidx.core.view.forEach
+import androidx.core.view.setPadding
 import kotlin.math.abs
 
-class CustomGridStage(context: Context) : BaseRecyclerStage(context) {
+class CustomGridStage(context: Context) : BasePagerStage(context) {
     var apps = AppManager.customGridApps
     var rowCount = getPrefs(context).getInt(Preferences.CUSTOM_GRID_ROW_COUNT, -1)
     var columnCount = getPrefs(context).getInt(Preferences.CUSTOM_GRID_COLUMN_COUNT, -1)
     var pageCount = getPrefs(context).getInt(Preferences.CUSTOM_GRID_PAGE_COUNT, -1)
+    var cellPadding = toPx(6).toInt()
     override val stageLayoutId = R.layout.stage_1_custom_grid
     override val viewPagerId = R.id.custom_grid_vp
     override val stageAdapter = CustomGridAdapter(context) as StageAdapter
 
-    inner class CustomGridAdapter(context: Context) : BaseRecyclerStage.StageAdapter(context) {
+    inner class CustomGridAdapter(context: Context) : BasePagerStage.StageAdapter(context) {
         override fun getItemCount() = pageCount
 
         override fun createPage(context: Context, page: Int): LauncherPageGrid {
@@ -33,19 +35,25 @@ class CustomGridStage(context: Context) : BaseRecyclerStage(context) {
                 if (it.key in grid.gridBounds) {
                     appInfo = AppManager.getApp(it.value)
                     if (appInfo != null)
-                        grid.addShortcut(AppShortcut(context, appInfo!!).apply { setOnLongClickListener(CustomGridStage) }, it.key)
+                        grid.addShortcut(createAppShortcut(appInfo!!), it.key)
                 }
             }
             return grid
         }
+    }
 
+    fun createAppShortcut(appInfo: AppInfo): AppShortcut {
+        return AppShortcut(context, appInfo).apply {
+            setOnLongClickListener(CustomGridStage)
+            setPadding(cellPadding)
+        }
     }
 
     // think about it
     companion object : View.OnLongClickListener{
         override fun onLongClick(v: View?): Boolean {
             if (v is AppShortcut) {
-                v.showPopupMenu()
+                v.showMenu()
                 v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), Pair(v.parent as DummyCell, v), 0)
             }
             return true
@@ -106,7 +114,7 @@ class CustomGridStage(context: Context) : BaseRecyclerStage(context) {
                         touchStartPoint = PointF(event.x, event.y)
 
                     if (abs(touchStartPoint!!.x - event.x) > AppShortcut.DISMISS_RADIUS || abs(touchStartPoint!!.y - event.y) > AppShortcut.DISMISS_RADIUS) {
-                        dragShortcut?.menuHelper?.dismiss()
+                        dragShortcut?.dismissMenu()
                     }
 
                     cell.parentGrid.tryFlipPage(cell, event)

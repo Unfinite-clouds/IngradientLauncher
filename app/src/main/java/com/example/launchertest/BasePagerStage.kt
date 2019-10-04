@@ -7,7 +7,7 @@ import android.widget.LinearLayout
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 
-abstract class BaseRecyclerStage(context: Context) : BaseStage(context) {
+abstract class BasePagerStage(context: Context) : BaseStage(context) {
     lateinit var stageViewPager: ViewPager2
     protected abstract val stageAdapter: StageAdapter
     protected abstract val viewPagerId: Int

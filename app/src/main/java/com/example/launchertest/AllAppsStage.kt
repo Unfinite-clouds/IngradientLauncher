@@ -3,18 +3,20 @@ package com.example.launchertest
 import android.content.ClipData
 import android.content.Context
 import android.view.View
+import androidx.core.view.setPadding
 import kotlin.math.ceil
 
-class AllAppsStage(context: Context) : BaseRecyclerStage(context), View.OnLongClickListener {
+class AllAppsStage(context: Context) : BasePagerStage(context), View.OnLongClickListener {
     var allApps = AppManager.getSortedApps()
     var rowCount = getPrefs(context).getInt(Preferences.ALLAPPS_ROW_COUNT, -1)
     var columnCount = getPrefs(context).getInt(Preferences.ALLAPPS_COLUMN_COUNT, -1)
     var pageCount = ceil(allApps.size.toFloat() / (rowCount*columnCount)).toInt()
+    var cellPadding = toPx(6).toInt()
     override val stageLayoutId = R.layout.stage_2_all_apps
     override val viewPagerId = R.id.all_apps_vp
     override val stageAdapter = AllAppsAdapter(context) as StageAdapter
 
-    inner class AllAppsAdapter(context: Context) : BaseRecyclerStage.StageAdapter(context) {
+    inner class AllAppsAdapter(context: Context) : BasePagerStage.StageAdapter(context) {
         override fun getItemCount() = pageCount
 
         override fun createPage(context: Context, page: Int): LauncherPageGrid {
@@ -28,11 +30,18 @@ class AllAppsStage(context: Context) : BaseRecyclerStage(context), View.OnLongCl
 
                 val appInfo = AppManager.getApp(allApps[position])
                 if (appInfo != null)
-                    grid.addShortcut(AppShortcut(context, appInfo).apply { setOnLongClickListener(this@AllAppsStage) }, position)
+                    grid.addShortcut(createAppShortcut(appInfo), position)
             }
             return grid
         }
 
+    }
+
+    fun createAppShortcut(appInfo: AppInfo): AppShortcut {
+        return AppShortcut(context, appInfo).apply {
+            setOnLongClickListener(this@AllAppsStage)
+            setPadding(cellPadding)
+        }
     }
 
     override fun onLongClick(v: View?): Boolean {

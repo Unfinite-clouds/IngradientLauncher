@@ -6,11 +6,11 @@ import android.graphics.Point
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.GridLayout
-import android.widget.LinearLayout
 
 
-class DummyCell : LinearLayout {
+class DummyCell : FrameLayout {
 
     val parentGrid
         get() = parent as LauncherPageGrid

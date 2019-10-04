@@ -6,11 +6,6 @@ import android.util.AttributeSet
 import android.widget.HorizontalScrollView
 
 class LauncherScroll : HorizontalScrollView {
-    val size: Int = -1
-    var stage: BaseStage? = null
-    lateinit var positions: IntArray  // global cell positions within whole stage
-    private var widthCell = -1
-    private var heightCell = -1
     private var maxScrollX: Int = 0
     private var maxOverscroll = 12
 

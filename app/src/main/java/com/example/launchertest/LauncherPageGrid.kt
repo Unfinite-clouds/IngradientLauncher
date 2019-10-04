@@ -19,7 +19,7 @@ class LauncherPageGrid : GridLayout {
         get() = rowCount*columnCount
     val gridBounds: IntRange
         get() = size*page until size*(page+1)
-    var stage: BaseRecyclerStage? = null
+    var stage: BasePagerStage? = null
     lateinit var positions: IntArray  // global cell positions within whole stage
     private var widthCell = -1
     private var heightCell = -1
@@ -32,7 +32,7 @@ class LauncherPageGrid : GridLayout {
         clipChildren = false
     }
 
-    constructor(context: Context, nrows: Int, ncols: Int, page: Int, stage: BaseRecyclerStage) : super(context) {
+    constructor(context: Context, nrows: Int, ncols: Int, page: Int, stage: BasePagerStage) : super(context) {
         this.page = page
         this.stage = stage
         setGridSize(nrows, ncols)

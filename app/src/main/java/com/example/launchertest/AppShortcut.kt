@@ -17,7 +17,6 @@ import android.widget.TextView
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.view.menu.MenuPopupHelper
 import androidx.core.view.iterator
-import androidx.core.view.setPadding
 import kotlin.math.min
 
 
@@ -43,15 +42,13 @@ companion object {
 
     private var iconBounds = Rect()
 
-    var desiredIconSize = 120
-    var iconPaddingBottom = toPx(5).toInt()
-    var padding = toPx(6).toInt()
+    private var iconPaddingBottom = toPx(5).toInt()
+    private var menuHelper: MenuPopupHelper? = null
 
-    var menuHelper: MenuPopupHelper? = null
+    var desiredIconSize = 120
     var goingToRemove = false
 
     init {
-        setPadding(padding)
         layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
         gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
         includeFontPadding = false
@@ -107,7 +104,7 @@ companion object {
         }
     }
 
-    fun showPopupMenu() {
+    fun showMenu() {
         val builder = MenuBuilder(this.context)
         val inflater = MenuInflater(this.context)
         inflater.inflate(R.menu.shortcut_popup_menu, builder)
@@ -117,6 +114,10 @@ companion object {
         menuHelper = MenuPopupHelper(this.context, builder, this)
         menuHelper?.setForceShowIcon(true)
         menuHelper?.show()
+    }
+
+    fun dismissMenu() {
+        menuHelper?.dismiss()
     }
 
     override fun onMenuItemClick(item: MenuItem?): Boolean {
