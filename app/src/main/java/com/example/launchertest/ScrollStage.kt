@@ -13,6 +13,8 @@ import androidx.core.view.setPadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
+val FLIP_ZONE = toPx(40).toInt()
+
 class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListener, View.OnDragListener {
     var apps = AppManager.mainScreenApps
 //    val scrollId = R.id.main_stage_scroll
@@ -30,6 +32,8 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
     }
 
     inner class RecyclerListAdapter : RecyclerView.Adapter<AppShortcutHolder>() {
+        override fun getItemCount() = apps.size
+
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppShortcutHolder {
             val holder = AppShortcutHolder(LayoutInflater.from(context).inflate(R.layout.stage_0_vh, parent, false))
             holder.cell.apply {
@@ -43,13 +47,10 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
             return holder
         }
 
-        override fun getItemCount() = apps.size
-
         override fun onBindViewHolder(holder: AppShortcutHolder, position: Int) {
             holder.cell.shortcut?.appInfo = AppManager.getApp(apps[position])!!
             holder.cell.shortcut?.translationX = 0f
         }
-
     }
 
     class AppShortcutHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -86,6 +87,8 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
     private var isFirstDrag = true
 
     override fun onDrag(v: View?, event: DragEvent?): Boolean {
+        if (v == null)
+            return false
 
         when (event?.action) {
 
@@ -104,8 +107,16 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
             DragEvent.ACTION_DRAG_LOCATION -> {
                 if (isFirstDrag) isFirstDrag = false else dragShortcut?.dismissMenu()
 
-                if (v is FrameLayout)
-                    startScroll(10)
+/*                when {
+                    v !is DummyCell -> when {
+                        // v is root - FrameLayout
+                        event.x > v.width - SCROLL_ZONE -> startScroll(10)
+                        event.x < SCROLL_ZONE -> startScroll(-10)
+                        event.y > v.height - FLIP_ZONE -> { println("DOWN"); stopScroll() }
+                        else -> stopScroll()
+                    }
+                    v is RecyclerView -> v
+                }*/
 //                cell.parentGrid.tryFlipPage(cell, event)
             }
 
@@ -163,28 +174,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         apps[destPos] = temp
     }
 
-    inner class ScrollRunnable(private val dx: Int) : Runnable {
-        override fun run() {
-            recyclerView.scrollBy(dx, 0)
-            recyclerView.handler.post(this)
-        }
-    }
-    private var scrollRunnable: ScrollRunnable? = null
 
-    @Synchronized
-    private fun startScroll(dx: Int) {
-        stopScroll()
-        scrollRunnable = ScrollRunnable(dx)
-        recyclerView.handler.post(scrollRunnable!!)
-    }
-
-    @Synchronized
-    private fun stopScroll() {
-        if (scrollRunnable == null)
-            return
-        recyclerView.handler.removeCallbacks(scrollRunnable!!)
-        scrollRunnable = null
-    }
 
     private fun removeApp(startPos: Int) {
         apps.removeAt(startPos)
