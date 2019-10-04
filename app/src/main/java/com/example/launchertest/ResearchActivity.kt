@@ -2,9 +2,7 @@ package com.example.launchertest
 
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.children
 import kotlinx.android.synthetic.main.research_layout.*
 
 class ResearchActivity : AppCompatActivity() {
@@ -23,12 +21,6 @@ class ResearchActivity : AppCompatActivity() {
             AppManager.applyCustomGridChanges(this, i, app.key)
             i++
         }*/
-
-
-        test_btn.setOnClickListener {
-            if (!this::iter.isInitialized)
-                iter = (((test_vp.getChildAt(0) as ViewGroup).getChildAt(0) as ViewGroup).getChildAt(0) as LauncherPageGrid).children.iterator()
-            (iter.next() as DummyCell).shortcut = null
-        }
+        layoutInflater.inflate(R.layout.research_merge, research_root, true)
     }
 }

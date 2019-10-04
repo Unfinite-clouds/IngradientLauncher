@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
-
         <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/main_stage_app_container"
+                android:id="@+id/stage_0_recycler"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
+                android:layout_gravity="bottom"
                 android:clipChildren="false"
                 />
 </merge>

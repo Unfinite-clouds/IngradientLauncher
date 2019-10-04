@@ -3,7 +3,10 @@ package com.example.launchertest
 import android.content.ClipData
 import android.content.Context
 import android.graphics.PointF
-import android.view.*
+import android.view.DragEvent
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.core.view.setPadding
@@ -14,27 +17,26 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
     var apps = AppManager.mainScreenApps
 //    val scrollId = R.id.main_stage_scroll
     override val stageLayoutId = R.layout.stage_0_main_screen
-    lateinit var container: RecyclerView
+    lateinit var recyclerView: RecyclerView
     var widthCell = getPrefs(context).getInt(Preferences.MAIN_SCREEN_WIDTH_CELL, -1)
     var heightCell = getPrefs(context).getInt(Preferences.MAIN_SCREEN_HEIGHT_CELL, -1)
 
     override fun inflateAndAttach(rootLayout: ViewGroup) {
         super.inflateAndAttach(rootLayout)
-        container = rootLayout.findViewById(R.id.main_stage_app_container)
-        container.adapter = RecyclerListAdapter()
-        container.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
-        (container.layoutParams as LinearLayout.LayoutParams).gravity = Gravity.BOTTOM
+        recyclerView = rootLayout.findViewById(R.id.stage_0_recycler)
+        recyclerView.adapter = RecyclerListAdapter()
+        recyclerView.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
         rootLayout.setOnDragListener(this)
     }
 
     inner class RecyclerListAdapter : RecyclerView.Adapter<AppShortcutHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppShortcutHolder {
             val holder = AppShortcutHolder(LayoutInflater.from(context).inflate(R.layout.stage_0_vh, parent, false))
-            holder.itemView.apply {
+            holder.cell.apply {
                 setOnDragListener(this@ScrollStage)
                 layoutParams = LinearLayout.LayoutParams(widthCell,heightCell)
             }
-            holder.app.apply {
+            holder.cell.shortcut?.apply {
                 setOnLongClickListener(this@ScrollStage)
                 setPadding(0)
             }
@@ -44,14 +46,14 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         override fun getItemCount() = apps.size
 
         override fun onBindViewHolder(holder: AppShortcutHolder, position: Int) {
-            holder.app.appInfo = AppManager.getApp(apps[position])!!
-            holder.app.translationX = 0f
+            holder.cell.shortcut?.appInfo = AppManager.getApp(apps[position])!!
+            holder.cell.shortcut?.translationX = 0f
         }
 
     }
 
     class AppShortcutHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val app = (itemView as ViewGroup).getChildAt(0) as AppShortcut
+        val cell = itemView as DummyCell
     }
 
     override fun onLongClick(v: View?): Boolean {
@@ -90,11 +92,11 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
             DragEvent.ACTION_DRAG_STARTED -> {}
 
             DragEvent.ACTION_DRAG_ENTERED -> {
-                if (v is FrameLayout) {
+                if (v is DummyCell) {
                     translate(startPos, destPos, 0f)
                     destPos = getPosition(v.getChildAt(0) as AppShortcut)
                     translate(startPos, destPos, 100f)
-                } else if (v is LinearLayout) {
+                } else if (v is FrameLayout) {
                     translate(startPos, destPos, 0f)
                 }
             }
@@ -105,18 +107,15 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
 //                cell.parentGrid.tryFlipPage(cell, event)
             }
 
-            DragEvent.ACTION_DRAG_EXITED -> {
-/*                if (v is AppShortcut)
-                    translate(startPos, destPos, 0f)*/
-
-//                back translating is needed only when view is being out of container
-            }
+            DragEvent.ACTION_DRAG_EXITED -> {}
 
             DragEvent.ACTION_DROP -> {
                 // cell is the cell to drop
-                if (v is FrameLayout) {
+                if (v is DummyCell) {
                     resolvePositions(startPos, destPos)
                     hasDrop = true
+                } else if (v is FrameLayout) {
+                    removeApp(startPos)
                 }
 
             }
@@ -124,7 +123,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
             DragEvent.ACTION_DRAG_ENDED -> {
                 if (!hasDrop) {
                     // drag has been canceled
-
+                    translate(startPos, destPos, 0f)
                 }
                 if (!isEnded) {
                     // will be called only once per drag event
@@ -162,20 +161,24 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         apps[destPos] = temp
     }
 
+    private fun removeApp(startPos: Int) {
+        apps.removeAt(startPos)
+    }
+
     private fun saveData() {
         AppManager.applyMainScreenChanges(context, apps)
     }
 
     private fun updateView() {
-        container.adapter?.notifyDataSetChanged()
+        recyclerView.adapter?.notifyDataSetChanged()
     }
 
     private fun getViewAtPosition(position: Int): AppShortcut {
         println(position)
-        return (container.layoutManager?.findViewByPosition(position) as ViewGroup?)?.getChildAt(0) as AppShortcut
+        return (recyclerView.layoutManager?.findViewByPosition(position) as ViewGroup?)?.getChildAt(0) as AppShortcut
     }
 
     private fun getPosition(v: AppShortcut): Int {
-        return container.getChildAdapterPosition(v.parent as View)
+        return recyclerView.getChildAdapterPosition(v.parent as View)
     }
 }
