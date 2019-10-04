@@ -5,7 +5,7 @@
                 android:id="@+id/main_stage_app_container"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="bottom">
-        </androidx.recyclerview.widget.RecyclerView>
-
+                android:layout_centerInParent="true"
+                android:clipChildren="false"
+                />
 </merge>

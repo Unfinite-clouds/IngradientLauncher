@@ -3,10 +3,7 @@ package com.example.launchertest
 import android.content.ClipData
 import android.content.Context
 import android.graphics.PointF
-import android.view.DragEvent
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.core.view.setPadding
@@ -24,24 +21,10 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
     override fun inflateAndAttach(rootLayout: ViewGroup) {
         super.inflateAndAttach(rootLayout)
         container = rootLayout.findViewById(R.id.main_stage_app_container)
-/*        apps.forEach {
-            val appInfo = AppManager.getApp(it)
-            if (appInfo != null)
-                container.addView(createAppShortcut(appInfo))
-        }*/
         container.adapter = RecyclerListAdapter()
         container.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+        (container.layoutParams as LinearLayout.LayoutParams).gravity = Gravity.BOTTOM
         rootLayout.setOnDragListener(this)
-        rootLayout.getChildAt(0).setOnDragListener(this)
-    }
-
-    private fun createAppShortcut(appInfo: AppInfo): AppShortcut {
-        return AppShortcut(context, appInfo).apply {
-            setOnLongClickListener(this@ScrollStage)
-            setOnDragListener(this@ScrollStage)
-            layoutParams = LinearLayout.LayoutParams(widthCell,heightCell)
-            setPadding(0)
-        }
     }
 
     inner class RecyclerListAdapter : RecyclerView.Adapter<AppShortcutHolder>() {
@@ -62,6 +45,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
 
         override fun onBindViewHolder(holder: AppShortcutHolder, position: Int) {
             holder.app.appInfo = AppManager.getApp(apps[position])!!
+            holder.app.translationX = 0f
         }
 
     }
@@ -82,6 +66,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         // will be called only once per drag event
         v.visibility = View.INVISIBLE
         startPos = getPosition(v)
+        destPos = -1
         dragShortcut = v
         isEnded = false
         hasDrop = false
@@ -93,7 +78,6 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
     private var touchStartPoint: PointF? = null
     private var startPos: Int = -1
     private var destPos: Int = -1
-    private var dragDirection = 0
     private var dragShortcut: AppShortcut? = null
     private var isEnded = false
     private var hasDrop = false
@@ -108,8 +92,8 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
             DragEvent.ACTION_DRAG_ENTERED -> {
                 if (v is FrameLayout) {
                     translate(startPos, destPos, 0f)
-//                    destPos = getPosition(v)
-                    translate(startPos, destPos, 50f)
+                    destPos = getPosition(v.getChildAt(0) as AppShortcut)
+                    translate(startPos, destPos, 100f)
                 } else if (v is LinearLayout) {
                     translate(startPos, destPos, 0f)
                 }
@@ -130,7 +114,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
 
             DragEvent.ACTION_DROP -> {
                 // cell is the cell to drop
-                if (v is AppShortcut) {
+                if (v is FrameLayout) {
                     resolvePositions(startPos, destPos)
                     hasDrop = true
                 }
@@ -144,15 +128,11 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
                 }
                 if (!isEnded) {
                     // will be called only once per drag event
-                    dragShortcut?.setOnDragListener(null)
                     dragShortcut?.visibility = View.VISIBLE
-                    dragShortcut?.setOnDragListener(this)
                     isEnded = true
                     saveData()
                     updateView()
                 }
-                v?.translationX = 0f
-
             }
         }
         return true
@@ -190,11 +170,12 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         container.adapter?.notifyDataSetChanged()
     }
 
-    fun getViewAtPosition(position: Int): AppShortcut {
-        return container.layoutManager?.findViewByPosition(position) as AppShortcut
+    private fun getViewAtPosition(position: Int): AppShortcut {
+        println(position)
+        return (container.layoutManager?.findViewByPosition(position) as ViewGroup?)?.getChildAt(0) as AppShortcut
     }
 
-    fun getPosition(v: AppShortcut): Int {
-        return container.getChildAdapterPosition(v)
+    private fun getPosition(v: AppShortcut): Int {
+        return container.getChildAdapterPosition(v.parent as View)
     }
 }
