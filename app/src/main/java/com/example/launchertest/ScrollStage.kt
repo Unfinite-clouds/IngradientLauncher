@@ -104,6 +104,8 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
             DragEvent.ACTION_DRAG_LOCATION -> {
                 if (isFirstDrag) isFirstDrag = false else dragShortcut?.dismissMenu()
 
+                if (v is FrameLayout)
+                    startScroll(10)
 //                cell.parentGrid.tryFlipPage(cell, event)
             }
 
@@ -144,7 +146,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         var pos = startPos
         while (pos != destPos) {
             pos+=direction
-            getViewAtPosition(pos).translationX = value*direction*-1
+            getViewAtPosition(pos)?.translationX = value*direction*-1
         }
     }
 
@@ -161,6 +163,29 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         apps[destPos] = temp
     }
 
+    inner class ScrollRunnable(private val dx: Int) : Runnable {
+        override fun run() {
+            recyclerView.scrollBy(dx, 0)
+            recyclerView.handler.post(this)
+        }
+    }
+    private var scrollRunnable: ScrollRunnable? = null
+
+    @Synchronized
+    private fun startScroll(dx: Int) {
+        stopScroll()
+        scrollRunnable = ScrollRunnable(dx)
+        recyclerView.handler.post(scrollRunnable!!)
+    }
+
+    @Synchronized
+    private fun stopScroll() {
+        if (scrollRunnable == null)
+            return
+        recyclerView.handler.removeCallbacks(scrollRunnable!!)
+        scrollRunnable = null
+    }
+
     private fun removeApp(startPos: Int) {
         apps.removeAt(startPos)
     }
@@ -173,9 +198,8 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         recyclerView.adapter?.notifyDataSetChanged()
     }
 
-    private fun getViewAtPosition(position: Int): AppShortcut {
-        println(position)
-        return (recyclerView.layoutManager?.findViewByPosition(position) as ViewGroup?)?.getChildAt(0) as AppShortcut
+    private fun getViewAtPosition(position: Int): AppShortcut? {
+        return (recyclerView.findViewHolderForAdapterPosition(position) as? AppShortcutHolder)?.cell?.shortcut
     }
 
     private fun getPosition(v: AppShortcut): Int {
