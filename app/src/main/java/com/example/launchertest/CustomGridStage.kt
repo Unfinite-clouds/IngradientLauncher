@@ -9,6 +9,8 @@ import androidx.core.view.forEach
 import androidx.core.view.setPadding
 
 class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragListener, View.OnLongClickListener {
+    val FLIP_ZONE = toPx(40).toInt()
+
     var apps = AppManager.customGridApps
     var rowCount = getPrefs(context).getInt(Preferences.CUSTOM_GRID_ROW_COUNT, -1)
     var columnCount = getPrefs(context).getInt(Preferences.CUSTOM_GRID_COLUMN_COUNT, -1)
@@ -106,6 +108,10 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
                 if (isFirstDrag) isFirstDrag = false else dragShortcut?.dismissMenu()
 
                 cell.parentGrid.tryFlipPage(cell, event)
+
+                if (event.y > cell.top + FLIP_ZONE) {
+                    flipUp()
+                }
             }
 
             DragEvent.ACTION_DRAG_EXITED -> {
@@ -150,4 +156,15 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
         return true
     }
 
+    private fun endDrag(cell: DummyCell) {
+        cell.parentGrid.dragEnded()
+        cell.parentGrid.saveState()
+//      dragShortcut?.icon?.clearColorFilter()
+        dragCell = null
+        dragShortcut = null
+    }
+
+    private fun flipUp() {
+        launcherViewPager.currentItem = 0
+    }
 }

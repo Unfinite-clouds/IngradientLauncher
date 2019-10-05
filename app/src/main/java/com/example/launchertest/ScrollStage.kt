@@ -13,9 +13,9 @@ import androidx.core.view.setPadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
-val FLIP_ZONE = toPx(40).toInt()
-
 class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListener, View.OnDragListener {
+    val FLIP_ZONE = toPx(40).toInt()
+
     var apps = AppManager.mainScreenApps
     override val stageLayoutId = R.layout.stage_0_main_screen
     lateinit var recyclerView: RecyclerViewScroll
@@ -70,13 +70,17 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
     private var isFirstDrag = true
 
     private fun startDrag(v: AppShortcut) {
+        resetDrag()
         v.visibility = View.INVISIBLE
         recyclerView.dragStarted(v.parent as DummyCell)
         dragShortcut = v
+        v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), Pair(null, v), 0)
+    }
+
+    private fun resetDrag() {
         isEnded = false
         hasDrop = false
         isFirstDrag = true
-        v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), Pair(null, v), 0)
     }
 
     override fun onDrag(v: View?, event: DragEvent?): Boolean {
@@ -85,7 +89,16 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
 
         when (event?.action) {
 
-            DragEvent.ACTION_DRAG_STARTED -> {}
+            DragEvent.ACTION_DRAG_STARTED -> {
+                if (dragShortcut == null) {
+                    resetDrag()
+                    val state = event.localState as Pair<*, *>
+                    dragShortcut = state.second as AppShortcut
+                    apps.add(dragShortcut!!.appInfo.id)
+                    recyclerView.dragStartedWithNew()
+                    updateView()
+                }
+            }
 
             DragEvent.ACTION_DRAG_ENTERED -> {
                 if (v is DummyCell) {
@@ -136,6 +149,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
     private fun endDrag() {
         isEnded = true
         dragShortcut?.visibility = View.VISIBLE
+        dragShortcut = null
         recyclerView.stopDragScroll()
         saveData()
         updateView()

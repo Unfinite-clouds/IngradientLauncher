@@ -27,6 +27,15 @@ class RecyclerViewScroll : RecyclerView, Runnable {
         resetTranslate()
     }
 
+    fun dragStartedWithNew() {
+        startPos = childCount
+        destPos = -1
+        scrollDirection = 0
+        stopPoint = null
+        stopDragScroll()
+        resetTranslate()
+    }
+
     fun checkAndScroll(dragPoint: PointF) {
         when {
             dragPoint.x > width - SCROLL_ZONE -> {
