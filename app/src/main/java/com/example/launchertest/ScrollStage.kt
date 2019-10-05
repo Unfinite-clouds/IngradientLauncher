@@ -68,21 +68,44 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
 
     private var dragShortcut: AppShortcut? = null
     private var isEnded = false
-    private var hasDrop = false
+    private var hasFocus = false
     private var isFirstDrag = true
 
     private fun startDrag(v: AppShortcut) {
-        resetDrag()
         v.visibility = View.INVISIBLE
-        recyclerView.dragStarted(v.parent as DummyCell)
         dragShortcut = v
         v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), Pair(null, v), 0)
     }
 
-    private fun resetDrag() {
+    private fun onFocused(event: DragEvent) {
+        // it's time to handle this drag event
+        hasFocus = true
         isEnded = false
-        hasDrop = false
         isFirstDrag = true
+
+        if (dragShortcut != null) {
+            // we have started the drag event
+            recyclerView.dragStarted(dragShortcut!!.parent as DummyCell)
+        } else {
+            // drag becomes from other
+            val state = event.localState as Pair<*, *>
+            dragShortcut = state.second as AppShortcut
+            recyclerView.dragStartedWithNew(dragShortcut!!.appInfo.id)
+        }
+    }
+
+    private fun onFocusLost() {
+        hasFocus = false
+        recyclerView.resetTranslate()
+        recyclerView.stopDragScroll()
+        dragShortcut?.visibility = View.VISIBLE
+        saveData()
+        updateView()
+    }
+
+    private fun endDrag() {
+        isEnded = true
+        dragShortcut = null
     }
 
     override fun onDrag(v: View?, event: DragEvent?): Boolean {
@@ -91,16 +114,12 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
 
         when (event?.action) {
 
-            DragEvent.ACTION_DRAG_STARTED -> {
-                if (dragShortcut == null) {
-                    resetDrag()
-                    val state = event.localState as Pair<*, *>
-                    dragShortcut = state.second as AppShortcut
-                    recyclerView.dragStartedWithNew(dragShortcut!!.appInfo.id)
-                }
-            }
+            DragEvent.ACTION_DRAG_STARTED -> {}
 
             DragEvent.ACTION_DRAG_ENTERED -> {
+                if (!hasFocus)
+                    onFocused(event)
+
                 if (v is DummyCell) {
                     recyclerView.handleTranslate(v)
                 } else if (v is FrameLayout) {
@@ -119,8 +138,8 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
                         event.x > v.width - SCROLL_ZONE -> recyclerView.startDragScroll(+1)
                         event.x < SCROLL_ZONE -> recyclerView.startDragScroll(-1)
                         event.y > v.height - FLIP_ZONE -> {
-//                            endDrag()
-//                            launcherViewPager.currentItem = 1
+                            onFocusLost()
+                            launcherViewPager.currentItem = 1
                         }
                         else -> recyclerView.stopDragScroll()
                     }
@@ -140,21 +159,12 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
 
             DragEvent.ACTION_DRAG_ENDED -> {
                 if (!isEnded) {
+                    onFocusLost()
                     endDrag()
                 }
             }
         }
         return true
-    }
-
-    private fun endDrag() {
-        isEnded = true
-        recyclerView.resetTranslate()
-        dragShortcut?.visibility = View.VISIBLE
-        dragShortcut = null
-        recyclerView.stopDragScroll()
-        saveData()
-        updateView()
     }
 
     private fun toParentCoords(v: View, event: DragEvent): PointF {
