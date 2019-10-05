@@ -12,6 +12,7 @@ import android.widget.LinearLayout
 import androidx.core.view.setPadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.launchertest.RecyclerViewScroll.Companion.SCROLL_ZONE
 
 class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListener, View.OnDragListener {
     val FLIP_ZONE = toPx(40).toInt()
@@ -27,6 +28,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         recyclerView = rootLayout.findViewById(R.id.stage_0_recycler)
         recyclerView.adapter = RecyclerListAdapter()
         recyclerView.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+        recyclerView.apps = apps
         rootLayout.setOnDragListener(this)
     }
 
@@ -94,9 +96,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
                     resetDrag()
                     val state = event.localState as Pair<*, *>
                     dragShortcut = state.second as AppShortcut
-                    apps.add(dragShortcut!!.appInfo.id)
-                    recyclerView.dragStartedWithNew()
-                    updateView()
+                    recyclerView.dragStartedWithNew(dragShortcut!!.appInfo.id)
                 }
             }
 
@@ -119,8 +119,8 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
                         event.x > v.width - SCROLL_ZONE -> recyclerView.startDragScroll(+1)
                         event.x < SCROLL_ZONE -> recyclerView.startDragScroll(-1)
                         event.y > v.height - FLIP_ZONE -> {
-                            endDrag()
-                            launcherViewPager.currentItem = 1
+//                            endDrag()
+//                            launcherViewPager.currentItem = 1
                         }
                         else -> recyclerView.stopDragScroll()
                     }
@@ -133,7 +133,8 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
                 if (v is DummyCell) {
                     resolvePositions(recyclerView.startPos, recyclerView.destPos)
                 } else if (v is FrameLayout) {
-                    removeApp(recyclerView.startPos)
+                    if (recyclerView.startPos < apps.size)
+                        removeApp(recyclerView.startPos)
                 }
             }
 

@@ -6,17 +6,21 @@ import android.graphics.PointF
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.util.AttributeSet
+import androidx.core.view.children
 import androidx.recyclerview.widget.RecyclerView
 import kotlin.math.abs
 
-val SCROLL_ZONE = toPx(40).toInt()
-val SCROLL_DX = 10
-
 class RecyclerViewScroll : RecyclerView, Runnable {
+    companion object {
+        val SCROLL_ZONE = toPx(40).toInt()
+        val SCROLL_DX = 10
+    }
+
     var startPos: Int = -1
     var destPos: Int = -1
     var scrollDirection = 0
     var stopPoint: PointF? = null
+    var apps: MutableList<String> = mutableListOf()
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
@@ -26,8 +30,10 @@ class RecyclerViewScroll : RecyclerView, Runnable {
         dragStartedReset()
     }
 
-    fun dragStartedWithNew() {
-        startPos = childCount
+    fun dragStartedWithNew(appId: String) {
+        apps.add(appId)
+        startPos = apps.size - 1
+        adapter?.notifyItemInserted(apps.size - 1)
         dragStartedReset()
     }
 
@@ -68,10 +74,8 @@ class RecyclerViewScroll : RecyclerView, Runnable {
             val app = getAppAtPosition(pos)
             app?.translationX = value*direction*-1
             val t = 255 / abs(startPos-destPos) * (abs(pos-startPos)-1)
-            print("$t ")
             app?.icon?.colorFilter = PorterDuffColorFilter(Color.rgb(30,t, 40), PorterDuff.Mode.SRC_IN)
         }
-        println("---")
     }
 
     private fun getAppAtPosition(position: Int): AppShortcut? {
@@ -96,17 +100,13 @@ class RecyclerViewScroll : RecyclerView, Runnable {
     }
 
     fun resetTranslate() {
-        for (i in 0 until this.adapter!!.itemCount) {
-            val app = getAppAtPosition(i)!!
-            app.translationX = 0f
-            app.icon?.clearColorFilter()
-        }
-            /*.forEach {
-            it as DummyCell
+        children.forEach {
+            (it as DummyCell)
             it.shortcut?.translationX = 0f
             it.shortcut?.icon?.clearColorFilter()
-        }*/
+        }
     }
+
     fun startDragScroll(scrollDirection: Int, stopPoint: PointF? = null) {
         stopDragScroll()
         this.scrollDirection = scrollDirection
