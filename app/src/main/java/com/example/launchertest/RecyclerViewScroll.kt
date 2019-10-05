@@ -6,50 +6,52 @@ import android.view.DragEvent
 import androidx.recyclerview.widget.RecyclerView
 
 val SCROLL_ZONE = toPx(40).toInt()
+val SCROLL_DX = 10
 
-class RecyclerViewScroll : RecyclerView {
-    inner class ScrollRunnable(private val dx: Int, private val event: DragEvent) : Runnable {
-        override fun run() {
-            this@RecyclerViewScroll.scrollBy(dx, 0)
-//            this@RecyclerViewScroll.dispatchDragEventChildren(event)
-            this@RecyclerViewScroll.handler.post(this)
-        }
-    }
-    private var scrollRunnable: ScrollRunnable? = null
-
+class RecyclerViewScroll : RecyclerView, Runnable {
+    var startPos: Int = -1
+    var destPos: Int = -1
+    var scrollDirection = 0
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
-    override fun dispatchDragEvent(event: DragEvent?): Boolean {
+    private fun listenDrag(event: DragEvent?) {
         when (event?.action) {
             DragEvent.ACTION_DRAG_LOCATION -> {
                 when {
-                    event.x > width - SCROLL_ZONE -> { startDragScroll(10, event)}
-                    event.x < SCROLL_ZONE -> { startDragScroll(-10, event)}
+                    event.x > width - SCROLL_ZONE -> {
+                        scrollDirection = +1
+                        startDragScroll()
+                    }
+                    event.x < SCROLL_ZONE -> {
+                        scrollDirection = -1
+                        startDragScroll()
+                    }
                     else -> stopDragScroll()
                 }
             }
             DragEvent.ACTION_DRAG_ENDED -> stopDragScroll()
         }
+    }
+
+    override fun dispatchDragEvent(event: DragEvent?): Boolean {
+        listenDrag(event)
         return super.dispatchDragEvent(event)
     }
 
-    private fun dispatchDragEventChildren(event: DragEvent): Boolean {
-        return super.dispatchDragEvent(event)
+    override fun run() {
+        this.scrollBy(SCROLL_DX*scrollDirection, 0)
+        this.handler.post(this)
     }
 
     @Synchronized
-    private fun startDragScroll(dx: Int, event: DragEvent) {
+    private fun startDragScroll() {
         stopDragScroll()
-        scrollRunnable = ScrollRunnable(dx, event)
-        handler.post(scrollRunnable!!)
+        handler.post(this)
     }
 
     @Synchronized
     private fun stopDragScroll() {
-        if (scrollRunnable == null)
-            return
-        handler.removeCallbacks(scrollRunnable!!)
-        scrollRunnable = null
+        handler.removeCallbacks(this)
     }
 }
