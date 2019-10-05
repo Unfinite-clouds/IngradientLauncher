@@ -2,6 +2,7 @@ package com.example.launchertest
 
 import android.content.ClipData
 import android.content.Context
+import android.graphics.PointF
 import android.view.DragEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -67,15 +68,17 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
     private fun startDrag(v: AppShortcut) {
         // will be called only once per drag event
         v.visibility = View.INVISIBLE
+        startPos = getAppPosition(v)
+        destPos = -1
         dragShortcut = v
-        recyclerView.startPos = getPosition(v)
-        recyclerView.destPos = -1
         isEnded = false
         hasDrop = false
         isFirstDrag = true
         v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), null, 0)
     }
 
+    private var startPos: Int = -1
+    private var destPos: Int = -1
     private var dragShortcut: AppShortcut? = null
     private var isEnded = false
     private var hasDrop = false
@@ -91,17 +94,21 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
 
             DragEvent.ACTION_DRAG_ENTERED -> {
                 if (v is DummyCell) {
-                    translate(recyclerView.startPos, recyclerView.destPos, 0f)
-                    recyclerView.destPos = getPosition(v.shortcut!!)
-                    translate(recyclerView.startPos, recyclerView.destPos, 100f)
+                    translate(startPos, destPos, 0f)
+                    destPos = getAppPosition(v.shortcut!!)
+                    translate(startPos, destPos, 100f)
                 } else if (v is FrameLayout) {
-                    translate(recyclerView.startPos, recyclerView.destPos, 0f)
+                    translate(startPos, destPos, 0f)
                 }
             }
 
             DragEvent.ACTION_DRAG_LOCATION -> {
                 if (isFirstDrag) isFirstDrag = false else dragShortcut?.dismissMenu()
 
+                if (v is DummyCell) {
+                    val parentPoint = toParentCoords(v, event)
+                    recyclerView.checkAndScroll(parentPoint.x, parentPoint.y)
+                }
 /*                when {
                     v !is DummyCell -> when {
                         // v is root - FrameLayout
@@ -120,10 +127,10 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
             DragEvent.ACTION_DROP -> {
                 // cell is the cell to drop
                 if (v is DummyCell) {
-                    resolvePositions(recyclerView.startPos, recyclerView.destPos)
+                    resolvePositions(startPos, destPos)
                     hasDrop = true
                 } else if (v is FrameLayout) {
-                    removeApp(recyclerView.startPos)
+                    removeApp(startPos)
                 }
 
             }
@@ -131,7 +138,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
             DragEvent.ACTION_DRAG_ENDED -> {
                 if (!hasDrop) {
                     // drag has been canceled
-                    translate(recyclerView.startPos, recyclerView.destPos, 0f)
+                    translate(startPos, destPos, 0f)
                 }
                 if (!isEnded) {
                     // will be called only once per drag event
@@ -142,7 +149,11 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
                 }
             }
         }
-        return false
+        return true
+    }
+
+    private fun toParentCoords(v: View, event: DragEvent): PointF {
+        return PointF(v.left + event.x, v.top + event.y)
     }
 
     private fun translate(startPos: Int, destPos: Int, value: Float) {
@@ -152,7 +163,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         var pos = startPos
         while (pos != destPos) {
             pos+=direction
-            getViewAtPosition(pos)?.translationX = value*direction*-1
+            findAppAtPosition(pos)?.translationX = value*direction*-1
         }
     }
 
@@ -183,11 +194,11 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         recyclerView.adapter?.notifyDataSetChanged()
     }
 
-    private fun getViewAtPosition(position: Int): AppShortcut? {
+    private fun findAppAtPosition(position: Int): AppShortcut? {
         return (recyclerView.findViewHolderForAdapterPosition(position) as? AppShortcutHolder)?.cell?.shortcut
     }
 
-    private fun getPosition(v: AppShortcut): Int {
+    private fun getAppPosition(v: AppShortcut): Int {
         return recyclerView.getChildAdapterPosition(v.parent as View)
     }
 }

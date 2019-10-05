@@ -107,6 +107,6 @@ class DummyCell : FrameLayout {
     }
 
     override fun toString(): String {
-        return "\"${javaClass.simpleName}: $position empty=${isEmptyCell()}\""
+        return "${javaClass.simpleName}: ${hashCode().toString(16)} $position empty=${isEmptyCell()}"
     }
 }
