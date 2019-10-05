@@ -47,10 +47,7 @@ class AllAppsStage(context: Context) : BasePagerStage(context), View.OnLongClick
     override fun onLongClick(v: View?): Boolean {
         if (v is AppShortcut) {
             launcherViewPager.currentItem = 1
-            val newShortcut = AppShortcut(context, v.appInfo)
-            newShortcut.setOnLongClickListener(CustomGridStage)
-            val dragShadow = v.createDragShadow()
-            v.startDrag(ClipData.newPlainText("",""), dragShadow, Pair(null, newShortcut), 0)
+            v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), Pair(null, v), 0)
         }
         return true
     }

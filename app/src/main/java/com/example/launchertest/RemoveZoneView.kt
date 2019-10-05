@@ -23,7 +23,7 @@ class RemoveZoneView : ImageView, View.OnDragListener{
                 (event.localState as Pair<DummyCell, AppShortcut>).second.goingToRemove = true
             }
             DragEvent.ACTION_DRAG_ENDED -> deactivate()
-        }
+            }
         return true
     }
 
