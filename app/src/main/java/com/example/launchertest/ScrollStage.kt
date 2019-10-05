@@ -142,7 +142,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
                 }
             }
         }
-        return true
+        return false
     }
 
     private fun translate(startPos: Int, destPos: Int, value: Float) {

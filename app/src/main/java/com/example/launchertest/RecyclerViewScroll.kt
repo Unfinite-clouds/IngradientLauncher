@@ -3,6 +3,7 @@ package com.example.launchertest
 import android.content.Context
 import android.util.AttributeSet
 import android.view.DragEvent
+import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 
 val SCROLL_ZONE = toPx(40).toInt()
@@ -15,7 +16,7 @@ class RecyclerViewScroll : RecyclerView, Runnable {
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
-    private fun listenDrag(event: DragEvent?) {
+    override fun onDragEvent(event: DragEvent?): Boolean {
         when (event?.action) {
             DragEvent.ACTION_DRAG_LOCATION -> {
                 when {
@@ -32,16 +33,50 @@ class RecyclerViewScroll : RecyclerView, Runnable {
             }
             DragEvent.ACTION_DRAG_ENDED -> stopDragScroll()
         }
+        return true
+    }
+
+    private fun listenDrag(event: DragEvent?) {
+
     }
 
     override fun dispatchDragEvent(event: DragEvent?): Boolean {
-        listenDrag(event)
         return super.dispatchDragEvent(event)
+    }
+
+    fun translate(value: Float) {
+        translate(startPos, destPos, value)
+    }
+
+    private fun translate(startPos: Int, destPos: Int, value: Float) {
+        if (startPos == destPos || destPos == -1)
+            return
+        val direction = if (startPos < destPos) 1 else -1
+        var pos = startPos
+        while (pos != destPos) {
+            pos+=direction
+            getViewAtPosition(pos)?.translationX = value*direction*-1
+        }
+    }
+
+    private fun getViewAtPosition(position: Int): AppShortcut? {
+        return (findViewHolderForAdapterPosition(position) as? ScrollStage.AppShortcutHolder)?.cell?.shortcut
+    }
+
+    private fun getPosition(v: AppShortcut): Int {
+        return getChildAdapterPosition(v.parent as View)
     }
 
     override fun run() {
         this.scrollBy(SCROLL_DX*scrollDirection, 0)
+        destPos = getChildLayoutPosition(getChildAt(childCount-2))
+        translate(100f*scrollDirection)
         this.handler.post(this)
+    }
+
+    override fun onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {
+        super.onScrollChanged(l, t, oldl, oldt)
+        println("$l $t $oldl $oldt")
     }
 
     @Synchronized
