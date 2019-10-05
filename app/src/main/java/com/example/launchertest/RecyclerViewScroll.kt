@@ -1,10 +1,13 @@
 package com.example.launchertest
 
 import android.content.Context
+import android.graphics.Color
 import android.graphics.PointF
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.util.AttributeSet
-import androidx.core.view.children
 import androidx.recyclerview.widget.RecyclerView
+import kotlin.math.abs
 
 val SCROLL_ZONE = toPx(40).toInt()
 val SCROLL_DX = 10
@@ -20,15 +23,15 @@ class RecyclerViewScroll : RecyclerView, Runnable {
 
     fun dragStarted(cell: DummyCell) {
         startPos = getPosition(cell)
-        destPos = -1
-        scrollDirection = 0
-        stopPoint = null
-        stopDragScroll()
-        resetTranslate()
+        dragStartedReset()
     }
 
     fun dragStartedWithNew() {
         startPos = childCount
+        dragStartedReset()
+    }
+
+    private fun dragStartedReset() {
         destPos = -1
         scrollDirection = 0
         stopPoint = null
@@ -49,7 +52,8 @@ class RecyclerViewScroll : RecyclerView, Runnable {
     }
 
     fun handleTranslate(cell: DummyCell) {
-        translate(0f)
+//        translate(0f)
+        resetTranslate()
         destPos = getPosition(cell)
         translate(100f)
     }
@@ -61,8 +65,13 @@ class RecyclerViewScroll : RecyclerView, Runnable {
         var pos = startPos
         while (pos != destPos) {
             pos+=direction
-            getAppAtPosition(pos)?.translationX = value*direction*-1
+            val app = getAppAtPosition(pos)
+            app?.translationX = value*direction*-1
+            val t = 255 / abs(startPos-destPos) * (abs(pos-startPos)-1)
+            print("$t ")
+            app?.icon?.colorFilter = PorterDuffColorFilter(Color.rgb(30,t, 40), PorterDuff.Mode.SRC_IN)
         }
+        println("---")
     }
 
     private fun getAppAtPosition(position: Int): AppShortcut? {
@@ -72,8 +81,6 @@ class RecyclerViewScroll : RecyclerView, Runnable {
     private fun getPosition(v: DummyCell): Int {
         return getChildAdapterPosition(v)
     }
-
-
 
     override fun run() {
         this.scrollBy(SCROLL_DX*scrollDirection, 0)
@@ -89,10 +96,16 @@ class RecyclerViewScroll : RecyclerView, Runnable {
     }
 
     fun resetTranslate() {
-        children.forEach {
+        for (i in 0 until this.adapter!!.itemCount) {
+            val app = getAppAtPosition(i)!!
+            app.translationX = 0f
+            app.icon?.clearColorFilter()
+        }
+            /*.forEach {
             it as DummyCell
             it.shortcut?.translationX = 0f
-        }
+            it.shortcut?.icon?.clearColorFilter()
+        }*/
     }
     fun startDragScroll(scrollDirection: Int, stopPoint: PointF? = null) {
         stopDragScroll()

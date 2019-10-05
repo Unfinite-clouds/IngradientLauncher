@@ -148,6 +148,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
 
     private fun endDrag() {
         isEnded = true
+        recyclerView.resetTranslate()
         dragShortcut?.visibility = View.VISIBLE
         dragShortcut = null
         recyclerView.stopDragScroll()
