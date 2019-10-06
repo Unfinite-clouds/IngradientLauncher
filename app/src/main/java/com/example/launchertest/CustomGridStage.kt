@@ -24,7 +24,6 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
     override fun inflateAndAttach(rootLayout: ViewGroup) {
         super.inflateAndAttach(rootLayout)
         val trash = rootLayout.findViewById<RemoveZoneView>(R.id.trash_zone)
-        trash.setOnDragListener(this)
     }
 
     inner class CustomGridAdapter(context: Context) : BasePagerStage.StageAdapter(context) {
@@ -79,8 +78,7 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
         }
     }
 
-    override fun onFocused(event: DragEvent) {
-        super.onFocused(event)
+    override fun onFocus(event: DragEvent) {
         // it's time to handle this drag event
         isFirstDrag = true
         direction = Point(0, 0)
@@ -94,17 +92,19 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
             dragShortcut = state.second as AppShortcut
             adaptApp(dragShortcut!!) // we don't create a copy
         }
+
     }
 
-    override fun onFocusLost() {
-        super.onFocusLost()
+    override fun onFocusLost(event: DragEvent) {
         dragShortcut?.visibility = View.VISIBLE
-        dragCell?.shortcut = dragShortcut
         //save state
     }
 
-    override fun endDrag() {
-        super.endDrag()
+    override fun onDragEnded() {
+        if (dragShortcut?.parent == null && dragCell != null) {
+            //drag canceled
+            dragCell?.shortcut = dragShortcut
+        }
 /*        cell.parentGrid.dragEnded()
         cell.parentGrid.saveState()
 //      dragShortcut?.icon?.clearColorFilter()
@@ -141,10 +141,10 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
                         doTranslateBy(v, direction, 100f)
                     }
 
-                    v.parentGrid.tryFlipPage(v, event)
+                    (v.parent as LauncherPageGrid).tryFlipPage(v, event)
 
                     if (event.y > v.top + FLIP_ZONE) {
-                        flipToStage(0)
+                        flipToStage(0, event)
                     }
                 }
             }
@@ -173,14 +173,12 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
                     // will be called only once per drag event
                     isEnded = true
                     // TODO: parentGrid, dragEnded, saveState are shits
-                    v
-                    v.parentGrid.dragEnded()
-                    v.parentGrid.saveState()
-//                        dragShortcut?.icon?.clearColorFilter()
+                    val grid = v.parent as LauncherPageGrid
+                    grid.dragEnded()
+                    grid.saveState()
                     dragCell = null
                     dragShortcut = null
 
-                    onFocusLost()
 //                    endDrag()
                 }
                 if (v is DummyCell)
@@ -238,9 +236,4 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
             thisCell.shortcut?.translationY = value*direction.y
         }
     }
-
-    private fun negative(p: Point): Point {
-        return Point(-p.x, -p.y)
-    }
-
 }

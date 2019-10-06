@@ -79,8 +79,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         }
     }
 
-    override fun onFocused(event: DragEvent) {
-        super.onFocused(event)
+    override fun onFocus(event: DragEvent) {
         // it's time to handle this drag event
         isFirstDrag = true
 
@@ -95,8 +94,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         }
     }
 
-    override fun onFocusLost() {
-        super.onFocusLost()
+    override fun onFocusLost(event: DragEvent) {
         recyclerView.resetTranslate()
         recyclerView.stopDragScroll()
         dragShortcut?.visibility = View.VISIBLE
@@ -104,8 +102,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         updateView()
     }
 
-    override fun endDrag() {
-        super.endDrag()
+    override fun onDragEnded() {
         dragShortcut = null
     }
 
@@ -134,7 +131,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
                     when {
                         event.x > v.width - SCROLL_ZONE -> recyclerView.startDragScroll(+1)
                         event.x < SCROLL_ZONE -> recyclerView.startDragScroll(-1)
-                        event.y > v.height - FLIP_ZONE -> flipToStage(1)
+                        event.y > v.height - FLIP_ZONE -> flipToStage(1, event)
                         else -> recyclerView.stopDragScroll()
                     }
                 }

@@ -2,6 +2,7 @@ package com.example.launchertest
 
 import android.content.ClipData
 import android.content.Context
+import android.view.DragEvent
 import android.view.View
 import androidx.core.view.setPadding
 import kotlin.math.ceil
@@ -49,7 +50,6 @@ class AllAppsStage(context: Context) : BasePagerStage(context), View.OnLongClick
     override fun onLongClick(v: View?): Boolean {
         if (v is AppShortcut) {
             startDrag(v)
-            flipToStage(1)
         }
         return true
     }
@@ -58,6 +58,16 @@ class AllAppsStage(context: Context) : BasePagerStage(context), View.OnLongClick
         if (v is AppShortcut) {
             v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), Pair(null, v), 0)
         }
+    }
+
+    override fun onFocus(event: DragEvent) {
+        flipToStage(1, event)
+    }
+
+    override fun onFocusLost(event: DragEvent) {
+    }
+
+    override fun onDragEnded() {
     }
 
 }

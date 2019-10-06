@@ -14,8 +14,8 @@ abstract class BaseStage(val context: Context) : View.OnDragListener {
         LayoutInflater.from(context).inflate(stageLayoutId, rootLayout, true)
     }
 
-    fun flipToStage(number: Int) {
-        onFocusLost()
+    fun flipToStage(number: Int, event: DragEvent) {
+        setFocus(false, event)
         launcherViewPager.currentItem = number
     }
 
@@ -23,20 +23,26 @@ abstract class BaseStage(val context: Context) : View.OnDragListener {
 
     protected var isEnded = false
     protected var hasFocus = false
+        private set
+
+    private fun setFocus(value: Boolean, event: DragEvent) {
+        if (hasFocus != value) {
+            hasFocus = value
+            if (hasFocus) onFocus(event) else onFocusLost(event)
+        }
+    }
 
     abstract fun startDrag(v: View)
 
-    open fun onFocused(event: DragEvent) {
-        hasFocus = true
-        isEnded = false
-    }
+    abstract fun onFocus(event: DragEvent)
 
-    open fun onFocusLost() {
-        hasFocus = false
-    }
+    abstract fun onFocusLost(event: DragEvent)
 
-    open fun endDrag() {
+    abstract fun onDragEnded()
+
+    private fun endDrag() {
         isEnded = true
+        onDragEnded()
     }
 
     override fun onDrag(v: View?, event: DragEvent?): Boolean {
@@ -45,11 +51,13 @@ abstract class BaseStage(val context: Context) : View.OnDragListener {
 
         when (event?.action) {
 
-            DragEvent.ACTION_DRAG_STARTED -> {}
+            DragEvent.ACTION_DRAG_STARTED -> {
+                if (isEnded)
+                    isEnded = false
+            }
 
             DragEvent.ACTION_DRAG_ENTERED -> {
-                if (!hasFocus)
-                    onFocused(event)
+                setFocus(true, event)
             }
 
             DragEvent.ACTION_DRAG_LOCATION -> {}
@@ -60,7 +68,7 @@ abstract class BaseStage(val context: Context) : View.OnDragListener {
 
             DragEvent.ACTION_DRAG_ENDED -> {
                 if (!isEnded) {
-                    onFocusLost()
+                    setFocus(false, event)
                     endDrag()
                 }
             }
