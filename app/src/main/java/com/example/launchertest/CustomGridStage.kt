@@ -83,7 +83,7 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
         isFirstDrag = true
         direction = Point(0, 0)
 
-        dragApp = getParcelApp(event)
+        dragApp = if (isMyEvent(event)) getParcelApp(event) else createAppShortcut(getParcelApp(event).appInfo)
         dragCell = if (isMyEvent(event)) dragApp!!.parent as DummyCell else null
 
         if (isMyEvent(event)) {
@@ -97,17 +97,17 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
 
     }
 
-    override fun onFocusLost(event: DragEvent) {
+    override fun onFocusLost(event: DragEvent) {}
+
+    override fun onDragEnded(event: DragEvent) {
         if (dragApp != null && dragApp!!.parent == null && isMyEvent(event)) {
             //drag canceled
+            println("canceled Custom")
             putApp(dragApp!!, dragCell!!)
         }
         dragCell = null
         dragApp = null
         trashView.deactivate()
-    }
-
-    override fun onDragEnded(event: DragEvent) {
         saveState()
 /*        cell.parentGrid.dragEnded()
         cell.parentGrid.saveState()

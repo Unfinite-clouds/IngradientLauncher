@@ -81,6 +81,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
     override fun onFocus(event: DragEvent) {
         // it's time to handle this drag event
         isFirstDrag = true
+        updateView()
         dragApp = getParcelApp(event)
 
         if (isMyEvent(event)) {
@@ -93,16 +94,22 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
     }
 
     override fun onFocusLost(event: DragEvent) {
+        recyclerView.resetTranslate()
+        recyclerView.stopDragScroll()
+    }
+
+    override fun onDragEnded(event: DragEvent) {
+        println("end Scroll")
         if (isMyEvent(event)) {
-            dragApp?.visibility = View.VISIBLE
+            if (hasFocus)
+                dragApp?.visibility = View.VISIBLE
+            else
+                removeApp()
         }
         recyclerView.resetTranslate()
         recyclerView.stopDragScroll()
         saveData()
         updateView()
-    }
-
-    override fun onDragEnded(event: DragEvent) {
         dragApp = null
     }
 
@@ -141,10 +148,10 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
 
             DragEvent.ACTION_DROP -> {
                 if (v is DummyCell) {
-                    resolvePositions(recyclerView.startPos, recyclerView.destPos)
+                    resolvePositions()
                 } else if (v is FrameLayout) {
                     if (recyclerView.startPos < apps.size)
-                        removeApp(recyclerView.startPos)
+                        removeApp()
                 }
             }
 
@@ -157,7 +164,10 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         return PointF(v.left + event.x, v.top + event.y)
     }
 
-    private fun resolvePositions(startPos: Int, destPos: Int) {
+    private fun resolvePositions() {
+        val startPos = recyclerView.startPos
+        val destPos = recyclerView.destPos
+
         if (startPos == destPos || destPos == -1)
             return
         val direction = if (startPos < destPos) 1 else -1
@@ -170,8 +180,8 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         apps[destPos] = temp
     }
 
-    private fun removeApp(startPos: Int) {
-        apps.removeAt(startPos)
+    private fun removeApp() {
+        apps.removeAt(recyclerView.startPos)
     }
 
     private fun saveData() {

@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.graphics.PointF
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
+import android.os.Handler
 import android.util.AttributeSet
 import androidx.core.view.children
 import androidx.recyclerview.widget.RecyclerView
@@ -86,6 +87,7 @@ class RecyclerViewScroll : RecyclerView, Runnable {
         return getChildAdapterPosition(v)
     }
 
+    private val scrollHandler = Handler()
     override fun run() {
         this.scrollBy(SCROLL_DX*scrollDirection, 0)
         synchronized(this) {
@@ -96,7 +98,7 @@ class RecyclerViewScroll : RecyclerView, Runnable {
                 }
             }
         }
-        this.handler.post(this)
+        this.scrollHandler.post(this)
     }
 
     fun resetTranslate() {
@@ -111,10 +113,10 @@ class RecyclerViewScroll : RecyclerView, Runnable {
         stopDragScroll()
         this.scrollDirection = scrollDirection
         this.stopPoint = stopPoint
-        handler.post(this)
+        scrollHandler.post(this)
     }
 
     fun stopDragScroll() {
-        handler.removeCallbacks(this)
+        scrollHandler.removeCallbacks(this)
     }
 }

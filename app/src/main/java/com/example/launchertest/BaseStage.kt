@@ -68,8 +68,11 @@ abstract class BaseStage(val context: Context) : View.OnDragListener {
 
             DragEvent.ACTION_DRAG_ENDED -> {
                 if (!isEnded) {
-                    setFocus(false, event)
+                    val owner = getOwner(event)
+                    if (owner != this)
+                        owner.endDrag(event)
                     endDrag(event)
+                    setFocus(false, event)
                 }
             }
         }
