@@ -38,18 +38,26 @@ class AllAppsStage(context: Context) : BasePagerStage(context), View.OnLongClick
     }
 
     fun createAppShortcut(appInfo: AppInfo): AppShortcut {
-        return AppShortcut(context, appInfo).apply {
-            setOnLongClickListener(this@AllAppsStage)
-            setPadding(cellPadding)
-        }
+        return AppShortcut(context, appInfo).apply { adaptApp(this) }
+    }
+
+    override fun adaptApp(app: AppShortcut) {
+        app.setOnLongClickListener(this@AllAppsStage)
+        app.setPadding(cellPadding)
     }
 
     override fun onLongClick(v: View?): Boolean {
         if (v is AppShortcut) {
-            launcherViewPager.currentItem = 1
-            v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), Pair(null, v), 0)
+            startDrag(v)
+            flipToStage(1)
         }
         return true
+    }
+
+    override fun startDrag(v: View) {
+        if (v is AppShortcut) {
+            v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), Pair(null, v), 0)
+        }
     }
 
 }

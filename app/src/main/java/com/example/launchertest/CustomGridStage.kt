@@ -50,22 +50,18 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
     }
 
     fun createAppShortcut(appInfo: AppInfo): AppShortcut {
-        return AppShortcut(context, appInfo).apply {
-            adaptApp(this)
-        }
+        return AppShortcut(context, appInfo).apply { adaptApp(this) }
     }
 
-    fun adaptApp(shortcut: AppShortcut) {
-        shortcut.setOnLongClickListener(this@CustomGridStage)
-        shortcut.setPadding(cellPadding)
+    override fun adaptApp(app: AppShortcut) {
+        app.setOnLongClickListener(this@CustomGridStage)
+        app.setPadding(cellPadding)
     }
 
     override fun onLongClick(v: View?): Boolean {
         if (v is AppShortcut) {
             v.showMenu()
-            dragShortcut = v
-            dragCell = v.parent as DummyCell
-            v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), Pair(dragCell, dragShortcut), 0)
+            startDrag(v)
         }
         return true
     }
@@ -73,14 +69,19 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
     private var dragSide = Point()
     private var dragCell: DummyCell? = null
     private var dragShortcut: AppShortcut? = null
-    private var isEnded = false
-    private var hasFocus = false
     private var isFirstDrag = true
 
-    private fun onFocused(event: DragEvent) {
+    override fun startDrag(v: View) {
+        if (v is AppShortcut) {
+            dragShortcut = v
+            dragCell = v.parent as DummyCell
+            v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), Pair(dragCell, dragShortcut), 0)
+        }
+    }
+
+    override fun onFocused(event: DragEvent) {
+        super.onFocused(event)
         // it's time to handle this drag event
-        hasFocus = true
-        isEnded = false
         isFirstDrag = true
         dragSide = Point(0, 0)
 
@@ -92,31 +93,33 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
             val state = event.localState as Pair<*, *>
             dragShortcut = state.second as AppShortcut
             adaptApp(dragShortcut!!) // we don't create a copy
-//            dragShortcut = createAppShortcut(state.second.appInfo)
         }
     }
 
-    private fun onFocusLost() {
-        hasFocus = false
-
+    override fun onFocusLost() {
+        super.onFocusLost()
         dragShortcut?.visibility = View.VISIBLE
         dragCell?.shortcut = dragShortcut
         //save state
     }
 
-    override fun onDrag(v: View?, event: DragEvent): Boolean {
-        // v is the view under finger
-        if (v == null)
-            return false
+    override fun endDrag() {
+        super.endDrag()
+/*        cell.parentGrid.dragEnded()
+        cell.parentGrid.saveState()
+//      dragShortcut?.icon?.clearColorFilter()
+        dragCell = null
+        dragShortcut = null*/
+    }
 
-        when (event.action) {
+    override fun onDrag(v: View?, event: DragEvent?): Boolean {
+        super.onDrag(v, event)
+
+        when (event?.action) {
 
             DragEvent.ACTION_DRAG_STARTED -> {}
 
             DragEvent.ACTION_DRAG_ENTERED -> {
-                if (!hasFocus)
-                    onFocused(event)
-
                 if (v is DummyCell)
                     v.setBackgroundResource(R.drawable.bot_gradient)
             }
@@ -124,25 +127,25 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
             DragEvent.ACTION_DRAG_LOCATION -> {
                 if (isFirstDrag) isFirstDrag = false else dragShortcut?.dismissMenu()
 
-                val newDragSide: Point =
-                    if (event.y > event.x)
-                        if (event.y > v.height - event.x) Point(0, 1) else Point(-1, 0)
-                    else
-                        if (event.y > v.height - event.x) Point(1, 0) else Point(0, -1)
-
                 if (v is DummyCell) {
+                    val newDragSide: Point =
+                        if (event.y > event.x)
+                            if (event.y > v.height - event.x) Point(0, 1) else Point(-1, 0)
+                        else
+                            if (event.y > v.height - event.x) Point(1, 0) else Point(0, -1)
+
                     if (dragSide != newDragSide) {
                         // TODO: doTranslateBy is shit
                         v.doTranslateBy(-dragSide.x, -dragSide.y, 0f) // back translating
                         dragSide = newDragSide
                         v.doTranslateBy(-dragSide.x, -dragSide.y, 100f)
                     }
-                    v.parentGrid.tryFlipPage(v, event)
-                }
 
-                if (event.y > v.top + FLIP_ZONE) {
-                    onFocusLost()
-                    flipUp()
+                    v.parentGrid.tryFlipPage(v, event)
+
+                    if (event.y > v.top + FLIP_ZONE) {
+                        flipToStage(0)
+                    }
                 }
             }
 
@@ -154,8 +157,7 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
             }
 
             DragEvent.ACTION_DROP -> {
-                // v is the v to drop
-//                    dragShortcut?.icon?.clearColorFilter()
+                // v is the view to drop
                 if (v is RemoveZoneView) {
                     dragShortcut = null
                 }
@@ -186,17 +188,5 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
             }
         }
         return true
-    }
-
-    private fun endDrag(cell: DummyCell) {
-/*        cell.parentGrid.dragEnded()
-        cell.parentGrid.saveState()
-//      dragShortcut?.icon?.clearColorFilter()
-        dragCell = null
-        dragShortcut = null*/
-    }
-
-    private fun flipUp() {
-        launcherViewPager.currentItem = 0
     }
 }

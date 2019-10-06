@@ -41,10 +41,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
                 setOnDragListener(this@ScrollStage)
                 layoutParams = LinearLayout.LayoutParams(widthCell,heightCell)
             }
-            holder.cell.shortcut?.apply {
-                setOnLongClickListener(this@ScrollStage)
-                setPadding(0)
-            }
+            adaptApp(holder.cell.shortcut!!)
             return holder
         }
 
@@ -58,6 +55,11 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         val cell = itemView as DummyCell
     }
 
+    override fun adaptApp(app: AppShortcut) {
+        app.setOnLongClickListener(this@ScrollStage)
+        app.setPadding(0)
+    }
+
     override fun onLongClick(v: View?): Boolean {
         if (v is AppShortcut) {
             v.showMenu()
@@ -67,20 +69,19 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
     }
 
     private var dragShortcut: AppShortcut? = null
-    private var isEnded = false
-    private var hasFocus = false
     private var isFirstDrag = true
 
-    private fun startDrag(v: AppShortcut) {
-        v.visibility = View.INVISIBLE
-        dragShortcut = v
-        v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), Pair(null, v), 0)
+    override fun startDrag(v: View) {
+        if (v is AppShortcut) {
+            v.visibility = View.INVISIBLE
+            dragShortcut = v
+            v.startDrag(ClipData.newPlainText("", ""), v.createDragShadow(), Pair(null, v), 0)
+        }
     }
 
-    private fun onFocused(event: DragEvent) {
+    override fun onFocused(event: DragEvent) {
+        super.onFocused(event)
         // it's time to handle this drag event
-        hasFocus = true
-        isEnded = false
         isFirstDrag = true
 
         if (dragShortcut != null) {
@@ -94,8 +95,8 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         }
     }
 
-    private fun onFocusLost() {
-        hasFocus = false
+    override fun onFocusLost() {
+        super.onFocusLost()
         recyclerView.resetTranslate()
         recyclerView.stopDragScroll()
         dragShortcut?.visibility = View.VISIBLE
@@ -103,23 +104,19 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         updateView()
     }
 
-    private fun endDrag() {
-        isEnded = true
+    override fun endDrag() {
+        super.endDrag()
         dragShortcut = null
     }
 
     override fun onDrag(v: View?, event: DragEvent?): Boolean {
-        if (v == null)
-            return false
+        super.onDrag(v, event)
 
         when (event?.action) {
 
             DragEvent.ACTION_DRAG_STARTED -> {}
 
             DragEvent.ACTION_DRAG_ENTERED -> {
-                if (!hasFocus)
-                    onFocused(event)
-
                 if (v is DummyCell) {
                     recyclerView.handleTranslate(v)
                 } else if (v is FrameLayout) {
@@ -137,10 +134,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
                     when {
                         event.x > v.width - SCROLL_ZONE -> recyclerView.startDragScroll(+1)
                         event.x < SCROLL_ZONE -> recyclerView.startDragScroll(-1)
-                        event.y > v.height - FLIP_ZONE -> {
-                            onFocusLost()
-                            launcherViewPager.currentItem = 1
-                        }
+                        event.y > v.height - FLIP_ZONE -> flipToStage(1)
                         else -> recyclerView.stopDragScroll()
                     }
                 }
@@ -157,12 +151,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
                 }
             }
 
-            DragEvent.ACTION_DRAG_ENDED -> {
-                if (!isEnded) {
-                    onFocusLost()
-                    endDrag()
-                }
-            }
+            DragEvent.ACTION_DRAG_ENDED -> {}
         }
         return true
     }
