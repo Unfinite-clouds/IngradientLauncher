@@ -81,7 +81,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
     override fun onFocus(event: DragEvent) {
         // it's time to handle this drag event
         isFirstDrag = true
-        dragApp = getApp(event)
+        dragApp = getParcelApp(event)
 
         if (isMyEvent(event)) {
             // we have started the drag event

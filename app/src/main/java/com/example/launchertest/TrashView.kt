@@ -2,22 +2,15 @@ package com.example.launchertest
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.DragEvent
-import android.view.View
 import android.widget.ImageView
 import androidx.core.content.res.ResourcesCompat
 
-class TrashView : ImageView, View.OnDragListener{
+class TrashView : ImageView{
     init {
-        setOnDragListener(this)
         deactivate()
     }
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
-
-    override fun onDrag(v: View?, event: DragEvent?): Boolean {
-        return false
-    }
 
     fun activate() {
         setBackgroundResource(R.color.TransparentWhite)

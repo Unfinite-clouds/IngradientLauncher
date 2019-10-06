@@ -24,7 +24,7 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
 
     override fun inflateAndAttach(rootLayout: ViewGroup) {
         super.inflateAndAttach(rootLayout)
-        trashView = rootLayout.findViewById(R.id.trash_zone)
+        trashView = rootLayout.findViewById(R.id.trash_view)
         trashView.setOnDragListener(this)
     }
 
@@ -43,7 +43,7 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
                 if (it.key in grid.gridBounds) {
                     appInfo = AppManager.getApp(it.value)
                     if (appInfo != null)
-                        grid.addShortcut(createAppShortcut(appInfo!!), it.key)
+                        grid.putApp(createAppShortcut(appInfo!!), it.key)
                 }
             }
             return grid
@@ -83,12 +83,12 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
         isFirstDrag = true
         direction = Point(0, 0)
 
-        dragApp = getApp(event)
+        dragApp = getParcelApp(event)
         dragCell = if (isMyEvent(event)) dragApp!!.parent as DummyCell else null
 
         if (isMyEvent(event)) {
             // we have started the drag event
-            dragCell!!.app = null
+            removeApp(dragCell!!)
         } else {
             // drag becomes from other stage
             adaptApp(dragApp!!) // we don't create a copy
@@ -100,16 +100,15 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
     override fun onFocusLost(event: DragEvent) {
         if (dragApp != null && dragApp!!.parent == null && isMyEvent(event)) {
             //drag canceled
-            dragCell!!.app = dragApp
+            putApp(dragApp!!, dragCell!!)
         }
         dragCell = null
         dragApp = null
-        //save state
         trashView.deactivate()
     }
 
     override fun onDragEnded(event: DragEvent) {
-
+        saveState()
 /*        cell.parentGrid.dragEnded()
         cell.parentGrid.saveState()
 //      dragApp?.icon?.clearColorFilter()
@@ -169,7 +168,7 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
                 else if (v is DummyCell && canMoveBy(v, direction)) {
                     doTranslateBy(v, direction, 0f) // back translating - just for prevent blinking
                     doMoveBy(v, direction)
-                    v.app = dragApp
+                    putApp(dragApp!!, v)
                 }
             }
 
@@ -180,7 +179,6 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
                     // TODO: parentGrid, dragEnded, saveState are shits
                     val grid = v.parent as LauncherPageGrid
                     grid.dragEnded()
-                    grid.saveState()
 
 //                    endDrag()
                 }
@@ -191,8 +189,21 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
         return true
     }
 
+    private fun saveState() {
+        AppManager.applyCustomGridChanges(context, apps)
+    }
+
+    private fun putApp(app: AppView, to: DummyCell) {
+        to.app = app
+        apps[to.position] = app.appInfo.id
+    }
+
+    private fun removeApp(cell: DummyCell) {
+        cell.app = null
+        apps.remove(cell.position)
+    }
     
-    fun moveApp(from: DummyCell, to: DummyCell) {
+    private fun moveApp(from: DummyCell, to: DummyCell) {
         if (!to.isEmptyCell())
             throw LauncherException("trying to move app into occupied cell")
         else if (from.isEmptyCell())
@@ -202,7 +213,9 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
         if (shortcutTemp != null) {
             from.removeAllViews()
             to.app = shortcutTemp
-            AppManager.applyCustomGridChanges(context, to.position, shortcutTemp.appInfo.id)
+
+            apps[to.position] = apps[from.position]!!
+            apps.remove(from.position)
         }
     }
 
@@ -223,17 +236,17 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
         return false
     }
 
-    fun canMoveBy(cell: DummyCell, direction: Point): Boolean {
+    private fun canMoveBy(cell: DummyCell, direction: Point): Boolean {
         return doRecursionPass(cell, direction) { thisCell, nextCell -> }
     }
 
-    fun doMoveBy(cell: DummyCell,direction: Point): Boolean {
+    private fun doMoveBy(cell: DummyCell, direction: Point): Boolean {
         return doRecursionPass(cell, direction) { thisCell, nextCell ->
             moveApp(thisCell, nextCell)
         }
     }
 
-    fun doTranslateBy(cell: DummyCell,direction: Point, value: Float): Boolean {
+    private fun doTranslateBy(cell: DummyCell, direction: Point, value: Float): Boolean {
         return doRecursionPass(cell, direction) { thisCell, nextCell ->
             thisCell.app?.translationX = value*direction.x
             thisCell.app?.translationY = value*direction.y

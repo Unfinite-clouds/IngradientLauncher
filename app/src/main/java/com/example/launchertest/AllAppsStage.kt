@@ -31,7 +31,7 @@ class AllAppsStage(context: Context) : BasePagerStage(context), View.OnLongClick
 
                 val appInfo = AppManager.getApp(allApps[position])
                 if (appInfo != null)
-                    grid.addShortcut(createAppShortcut(appInfo), position)
+                    grid.putApp(createAppShortcut(appInfo), position)
             }
             return grid
         }

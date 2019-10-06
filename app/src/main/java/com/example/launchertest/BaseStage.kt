@@ -78,7 +78,7 @@ abstract class BaseStage(val context: Context) : View.OnDragListener {
 
     data class DragState(val app: AppView, val owner: BaseStage)
 
-    fun getApp(event: DragEvent): AppView {
+    fun getParcelApp(event: DragEvent): AppView {
         return (event.localState as DragState).app
     }
     fun getOwner(event: DragEvent): BaseStage {

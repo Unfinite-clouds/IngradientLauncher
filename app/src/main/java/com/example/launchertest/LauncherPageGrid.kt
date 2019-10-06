@@ -132,18 +132,9 @@ class LauncherPageGrid : GridLayout {
         handler.removeCallbacks(flipPageRunnable)
     }
 
-    fun saveState() {
-        val customGridApps = mutableMapOf<Int, String?>()
-        forEach{
-            it as DummyCell
-            customGridApps[it.position] = it.app?.appInfo?.id
-        }
-        AppManager.applyCustomGridChanges(context, customGridApps)
-    }
-
     fun clearGrid() {
-        for (cell in iterator()) {
-            (cell as DummyCell).removeAllViews()
+        forEach {
+            (it as DummyCell).removeAllViews()
         }
     }
 
@@ -151,7 +142,7 @@ class LauncherPageGrid : GridLayout {
         return super.getChildAt(index) as DummyCell
     }
 
-    fun addShortcut(appView: AppView, pos: Int) {
+    fun putApp(appView: AppView, pos: Int) {
         val cell = getCellAt(pos) ?: throw LauncherException("can't add app $appView to position $pos; the position is out of gridBounds $gridBounds")
         cell.app = appView
     }
