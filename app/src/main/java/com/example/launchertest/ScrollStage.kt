@@ -87,7 +87,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
             // we have started the drag event
             recyclerView.dragStarted(dragShortcut!!.parent as DummyCell)
         } else {
-            // drag becomes from other
+            // drag becomes from other stage
             val state = event.localState as Pair<*, *>
             dragShortcut = state.second as AppShortcut
             recyclerView.dragStartedWithNew(dragShortcut!!.appInfo.id)

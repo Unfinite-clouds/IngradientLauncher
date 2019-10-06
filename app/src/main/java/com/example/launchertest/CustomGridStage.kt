@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Point
 import android.view.DragEvent
 import android.view.View
+import android.view.ViewGroup
 import androidx.core.view.forEach
 import androidx.core.view.setPadding
 
@@ -19,6 +20,12 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
     override val stageLayoutId = R.layout.stage_1_custom_grid
     override val viewPagerId = R.id.custom_grid_vp
     override val stageAdapter = CustomGridAdapter(context) as StageAdapter
+
+    override fun inflateAndAttach(rootLayout: ViewGroup) {
+        super.inflateAndAttach(rootLayout)
+        val trash = rootLayout.findViewById<RemoveZoneView>(R.id.trash_zone)
+        trash.setOnDragListener(this)
+    }
 
     inner class CustomGridAdapter(context: Context) : BasePagerStage.StageAdapter(context) {
         override fun getItemCount() = pageCount
@@ -44,15 +51,21 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
 
     fun createAppShortcut(appInfo: AppInfo): AppShortcut {
         return AppShortcut(context, appInfo).apply {
-            setOnLongClickListener(this@CustomGridStage)
-            setPadding(cellPadding)
+            adaptApp(this)
         }
+    }
+
+    fun adaptApp(shortcut: AppShortcut) {
+        shortcut.setOnLongClickListener(this@CustomGridStage)
+        shortcut.setPadding(cellPadding)
     }
 
     override fun onLongClick(v: View?): Boolean {
         if (v is AppShortcut) {
             v.showMenu()
-            v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), Pair(v.parent as DummyCell, v), 0)
+            dragShortcut = v
+            dragCell = v.parent as DummyCell
+            v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), Pair(dragCell, dragShortcut), 0)
         }
         return true
     }
@@ -61,107 +74,126 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
     private var dragCell: DummyCell? = null
     private var dragShortcut: AppShortcut? = null
     private var isEnded = false
-    private var hasDrop = false
+    private var hasFocus = false
     private var isFirstDrag = true
 
-    override fun onDrag(cell: View?, event: DragEvent): Boolean {
-        // cell is the cell under finger
-        if (cell !is DummyCell) return false
+    private fun onFocused(event: DragEvent) {
+        // it's time to handle this drag event
+        hasFocus = true
+        isEnded = false
+        isFirstDrag = true
+        dragSide = Point(0, 0)
+
+        if (dragShortcut != null && dragCell != null) {
+            // we have started the drag event
+            dragCell!!.shortcut = null
+        } else {
+            // drag becomes from other stage
+            val state = event.localState as Pair<*, *>
+            dragShortcut = state.second as AppShortcut
+            adaptApp(dragShortcut!!) // we don't create a copy
+//            dragShortcut = createAppShortcut(state.second.appInfo)
+        }
+    }
+
+    private fun onFocusLost() {
+        hasFocus = false
+
+        dragShortcut?.visibility = View.VISIBLE
+        dragCell?.shortcut = dragShortcut
+        //save state
+    }
+
+    override fun onDrag(v: View?, event: DragEvent): Boolean {
+        // v is the view under finger
+        if (v == null)
+            return false
 
         when (event.action) {
 
-            DragEvent.ACTION_DRAG_STARTED -> {
-                if (dragShortcut == null) {
-                    // will be called only once per drag event
-                    val state = (event.localState as Pair<DummyCell?, AppShortcut>)
-                    dragCell = state.first
-                    if (dragCell == null){
-                        dragShortcut = createAppShortcut(state.second.appInfo)
-                    } else {
-                        dragCell?.removeAllViews()
-                        dragShortcut = state.second
-                    }
-                    isEnded = false
-                    hasDrop = false
-                }
-            }
+            DragEvent.ACTION_DRAG_STARTED -> {}
 
             DragEvent.ACTION_DRAG_ENTERED -> {
-                cell.setBackgroundResource(R.drawable.bot_gradient)
-                dragSide = Point(0, 0)
+                if (!hasFocus)
+                    onFocused(event)
+
+                if (v is DummyCell)
+                    v.setBackgroundResource(R.drawable.bot_gradient)
             }
 
             DragEvent.ACTION_DRAG_LOCATION -> {
-                // remember the origin of coordinate system is [left, top]
-                val newDragSide: Point =
-                    if (event.y > event.x)
-                        if (event.y > cell.height - event.x) Point(0, 1) else Point(-1, 0)
-                    else
-                        if (event.y > cell.height - event.x) Point(1, 0) else Point(0, -1)
-
-                if (dragSide != newDragSide) {
-                    cell.doTranslateBy(-dragSide.x, -dragSide.y, 0f) // back translating
-                    dragSide = newDragSide
-                    cell.doTranslateBy(-dragSide.x, -dragSide.y, 100f)
-                }
-
                 if (isFirstDrag) isFirstDrag = false else dragShortcut?.dismissMenu()
 
-                cell.parentGrid.tryFlipPage(cell, event)
+                val newDragSide: Point =
+                    if (event.y > event.x)
+                        if (event.y > v.height - event.x) Point(0, 1) else Point(-1, 0)
+                    else
+                        if (event.y > v.height - event.x) Point(1, 0) else Point(0, -1)
 
-                if (event.y > cell.top + FLIP_ZONE) {
+                if (v is DummyCell) {
+                    if (dragSide != newDragSide) {
+                        // TODO: doTranslateBy is shit
+                        v.doTranslateBy(-dragSide.x, -dragSide.y, 0f) // back translating
+                        dragSide = newDragSide
+                        v.doTranslateBy(-dragSide.x, -dragSide.y, 100f)
+                    }
+                    v.parentGrid.tryFlipPage(v, event)
+                }
+
+                if (event.y > v.top + FLIP_ZONE) {
+                    onFocusLost()
                     flipUp()
                 }
             }
 
             DragEvent.ACTION_DRAG_EXITED -> {
-                cell.doTranslateBy(-dragSide.x, -dragSide.y, 0f) // back translating
-                cell.defaultState()
+                if (v is DummyCell) {
+                    v.doTranslateBy(-dragSide.x, -dragSide.y, 0f) // back translating
+                    v.defaultState()
+                }
             }
 
             DragEvent.ACTION_DROP -> {
-                // cell is the cell to drop
+                // v is the v to drop
 //                    dragShortcut?.icon?.clearColorFilter()
-                if (cell.canMoveBy(-dragSide.x, -dragSide.y)) {
-                    cell.doTranslateBy(-dragSide.x, -dragSide.y, 0f) // back translating - just for prevent blinking
-                    cell.doMoveBy(-dragSide.x, -dragSide.y)
-                    cell.shortcut = dragShortcut
-                    hasDrop = true
-                } else {
-                    return false
+                if (v is RemoveZoneView) {
+                    dragShortcut = null
+                }
+                else if (v is DummyCell && v.canMoveBy(-dragSide.x, -dragSide.y)) {
+                    v.doTranslateBy(-dragSide.x, -dragSide.y, 0f) // back translating - just for prevent blinking
+                    v.doMoveBy(-dragSide.x, -dragSide.y)
+                    v.shortcut = dragShortcut
                 }
             }
 
             DragEvent.ACTION_DRAG_ENDED -> {
-                if (!hasDrop) { // TODO: maybe move down?
-                    // drag has been canceled
-                    if (dragShortcut?.goingToRemove == false) {
-                        dragCell?.shortcut = dragShortcut
-                    } else {
-                        // do nothing to let this shortcut to stay null and then deleted
-                    }
-                }
-                if (!isEnded) {
+                if (v is DummyCell && !isEnded) {
                     // will be called only once per drag event
                     isEnded = true
-                    cell.parentGrid.dragEnded()
-                    cell.parentGrid.saveState()
+                    // TODO: parentGrid, dragEnded, saveState are shits
+                    v as DummyCell
+                    v.parentGrid.dragEnded()
+                    v.parentGrid.saveState()
 //                        dragShortcut?.icon?.clearColorFilter()
                     dragCell = null
                     dragShortcut = null
+
+                    onFocusLost()
+//                    endDrag()
                 }
-                cell.defaultState()
+                if (v is DummyCell)
+                    v.defaultState()
             }
         }
         return true
     }
 
     private fun endDrag(cell: DummyCell) {
-        cell.parentGrid.dragEnded()
+/*        cell.parentGrid.dragEnded()
         cell.parentGrid.saveState()
 //      dragShortcut?.icon?.clearColorFilter()
         dragCell = null
-        dragShortcut = null
+        dragShortcut = null*/
     }
 
     private fun flipUp() {
