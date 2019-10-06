@@ -19,7 +19,7 @@ abstract class BaseStage(val context: Context) : View.OnDragListener {
         launcherViewPager.currentItem = number
     }
 
-    abstract fun adaptApp(app: AppShortcut)
+    abstract fun adaptApp(app: AppView)
 
     protected var isEnded = false
     protected var hasFocus = false
@@ -38,11 +38,11 @@ abstract class BaseStage(val context: Context) : View.OnDragListener {
 
     abstract fun onFocusLost(event: DragEvent)
 
-    abstract fun onDragEnded()
+    abstract fun onDragEnded(event: DragEvent)
 
-    private fun endDrag() {
+    private fun endDrag(event: DragEvent) {
         isEnded = true
-        onDragEnded()
+        onDragEnded(event)
     }
 
     override fun onDrag(v: View?, event: DragEvent?): Boolean {
@@ -69,10 +69,23 @@ abstract class BaseStage(val context: Context) : View.OnDragListener {
             DragEvent.ACTION_DRAG_ENDED -> {
                 if (!isEnded) {
                     setFocus(false, event)
-                    endDrag()
+                    endDrag(event)
                 }
             }
         }
         return true
+    }
+
+    data class DragState(val app: AppView, val owner: BaseStage)
+
+    fun getApp(event: DragEvent): AppView {
+        return (event.localState as DragState).app
+    }
+    fun getOwner(event: DragEvent): BaseStage {
+        return (event.localState as DragState).owner
+    }
+
+    fun isMyEvent(event: DragEvent): Boolean {
+        return getOwner(event) == this
     }
 }

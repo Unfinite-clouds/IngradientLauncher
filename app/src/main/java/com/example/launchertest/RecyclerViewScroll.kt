@@ -78,8 +78,8 @@ class RecyclerViewScroll : RecyclerView, Runnable {
         }
     }
 
-    private fun getAppAtPosition(position: Int): AppShortcut? {
-        return (findViewHolderForAdapterPosition(position) as? ScrollStage.AppShortcutHolder)?.cell?.shortcut
+    private fun getAppAtPosition(position: Int): AppView? {
+        return (findViewHolderForAdapterPosition(position) as? ScrollStage.AppShortcutHolder)?.cell?.app
     }
 
     private fun getPosition(v: DummyCell): Int {
@@ -102,8 +102,8 @@ class RecyclerViewScroll : RecyclerView, Runnable {
     fun resetTranslate() {
         children.forEach {
             (it as DummyCell)
-            it.shortcut?.translationX = 0f
-            it.shortcut?.icon?.clearColorFilter()
+            it.app?.translationX = 0f
+            it.app?.icon?.clearColorFilter()
         }
     }
 

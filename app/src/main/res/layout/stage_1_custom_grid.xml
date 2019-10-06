@@ -13,7 +13,7 @@
             android:scrollbars="horizontal"
             />
 
-    <com.example.launchertest.RemoveZoneView
+    <com.example.launchertest.TrashView
             android:id="@+id/trash_zone"
             android:layout_width="match_parent"
             android:layout_height="60dp"

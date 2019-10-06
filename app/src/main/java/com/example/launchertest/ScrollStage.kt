@@ -41,13 +41,13 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
                 setOnDragListener(this@ScrollStage)
                 layoutParams = LinearLayout.LayoutParams(widthCell,heightCell)
             }
-            adaptApp(holder.cell.shortcut!!)
+            adaptApp(holder.cell.app!!)
             return holder
         }
 
         override fun onBindViewHolder(holder: AppShortcutHolder, position: Int) {
-            holder.cell.shortcut?.appInfo = AppManager.getApp(apps[position])!!
-            holder.cell.shortcut?.translationX = 0f
+            holder.cell.app?.appInfo = AppManager.getApp(apps[position])!!
+            holder.cell.app?.translationX = 0f
         }
     }
 
@@ -55,55 +55,55 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         val cell = itemView as DummyCell
     }
 
-    override fun adaptApp(app: AppShortcut) {
+    override fun adaptApp(app: AppView) {
         app.setOnLongClickListener(this@ScrollStage)
         app.setPadding(0)
     }
 
     override fun onLongClick(v: View?): Boolean {
-        if (v is AppShortcut) {
+        if (v is AppView) {
             v.showMenu()
             startDrag(v)
         }
         return true
     }
 
-    private var dragShortcut: AppShortcut? = null
+    private var dragApp: AppView? = null
     private var isFirstDrag = true
 
     override fun startDrag(v: View) {
-        if (v is AppShortcut) {
+        if (v is AppView) {
             v.visibility = View.INVISIBLE
-            dragShortcut = v
-            v.startDrag(ClipData.newPlainText("", ""), v.createDragShadow(), Pair(null, v), 0)
+            v.startDrag(ClipData.newPlainText("", ""), v.createDragShadow(), DragState(v, this), 0)
         }
     }
 
     override fun onFocus(event: DragEvent) {
         // it's time to handle this drag event
         isFirstDrag = true
+        dragApp = getApp(event)
 
-        if (dragShortcut != null) {
+        if (isMyEvent(event)) {
             // we have started the drag event
-            recyclerView.dragStarted(dragShortcut!!.parent as DummyCell)
+            recyclerView.dragStarted(dragApp!!.parent as DummyCell)
         } else {
             // drag becomes from other stage
-            val state = event.localState as Pair<*, *>
-            dragShortcut = state.second as AppShortcut
-            recyclerView.dragStartedWithNew(dragShortcut!!.appInfo.id)
+            recyclerView.dragStartedWithNew(dragApp!!.appInfo.id)
         }
     }
 
     override fun onFocusLost(event: DragEvent) {
+        if (isMyEvent(event)) {
+            dragApp?.visibility = View.VISIBLE
+        }
         recyclerView.resetTranslate()
         recyclerView.stopDragScroll()
-        dragShortcut?.visibility = View.VISIBLE
         saveData()
         updateView()
     }
 
-    override fun onDragEnded() {
-        dragShortcut = null
+    override fun onDragEnded(event: DragEvent) {
+        dragApp = null
     }
 
     override fun onDrag(v: View?, event: DragEvent?): Boolean {
@@ -122,7 +122,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
             }
 
             DragEvent.ACTION_DRAG_LOCATION -> {
-                if (isFirstDrag) isFirstDrag = false else dragShortcut?.dismissMenu()
+                if (isFirstDrag) isFirstDrag = false else dragApp?.dismissMenu()
 
                 if (v is DummyCell) {
                     recyclerView.checkAndScroll(toParentCoords(v, event))

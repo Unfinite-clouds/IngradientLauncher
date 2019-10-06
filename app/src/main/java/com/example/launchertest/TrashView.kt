@@ -7,7 +7,7 @@ import android.view.View
 import android.widget.ImageView
 import androidx.core.content.res.ResourcesCompat
 
-class RemoveZoneView : ImageView, View.OnDragListener{
+class TrashView : ImageView, View.OnDragListener{
     init {
         setOnDragListener(this)
         deactivate()
@@ -16,23 +16,15 @@ class RemoveZoneView : ImageView, View.OnDragListener{
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
 
     override fun onDrag(v: View?, event: DragEvent?): Boolean {
-        when (event?.action) {
-            DragEvent.ACTION_DRAG_STARTED -> activate()
-            DragEvent.ACTION_DROP -> {
-                // we just cancel this drag event marking the shortcut as "goingToRemove"
-                (event.localState as Pair<DummyCell, AppShortcut>).second.goingToRemove = true
-            }
-            DragEvent.ACTION_DRAG_ENDED -> deactivate()
-            }
-        return true
+        return false
     }
 
-    private fun activate() {
+    fun activate() {
         setBackgroundResource(R.color.TransparentWhite)
         setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.ic_delete, null))
     }
 
-    private fun deactivate() {
+    fun deactivate() {
         setBackgroundResource(R.color.Transparent)
         setImageDrawable(null)
     }

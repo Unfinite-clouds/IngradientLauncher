@@ -14,8 +14,8 @@ class DummyCell : FrameLayout {
     lateinit var relativePosition: Point // the position within one ScreenGrid (not considering page number)
     var position: Int = -1
     private val bgcolor = Color.argb(40,0,0,0)
-    var shortcut: AppShortcut?
-        get() = getChildAt(0) as? AppShortcut
+    var app: AppView?
+        get() = getChildAt(0) as? AppView
         set(value) {if (value != null) addView(value) else removeAllViews()}
 
     init {
@@ -39,8 +39,8 @@ class DummyCell : FrameLayout {
     }
 
     fun defaultState() {
-        shortcut?.translationX = 0f
-        shortcut?.translationY = 0f
+        app?.translationX = 0f
+        app?.translationY = 0f
         setBackgroundColor(bgcolor)
     }
 
@@ -59,6 +59,6 @@ class DummyCell : FrameLayout {
     }
 
     override fun toString(): String {
-        return "${javaClass.simpleName}: ${hashCode().toString(16)} $position ${shortcut?.appInfo?.label}"
+        return "${javaClass.simpleName}: ${hashCode().toString(16)} $position ${app?.appInfo?.label}"
     }
 }

@@ -38,24 +38,24 @@ class AllAppsStage(context: Context) : BasePagerStage(context), View.OnLongClick
 
     }
 
-    fun createAppShortcut(appInfo: AppInfo): AppShortcut {
-        return AppShortcut(context, appInfo).apply { adaptApp(this) }
+    fun createAppShortcut(appInfo: AppInfo): AppView {
+        return AppView(context, appInfo).apply { adaptApp(this) }
     }
 
-    override fun adaptApp(app: AppShortcut) {
+    override fun adaptApp(app: AppView) {
         app.setOnLongClickListener(this@AllAppsStage)
         app.setPadding(cellPadding)
     }
 
     override fun onLongClick(v: View?): Boolean {
-        if (v is AppShortcut) {
+        if (v is AppView) {
             startDrag(v)
         }
         return true
     }
 
     override fun startDrag(v: View) {
-        if (v is AppShortcut) {
+        if (v is AppView) {
             v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), Pair(null, v), 0)
         }
     }
@@ -67,7 +67,7 @@ class AllAppsStage(context: Context) : BasePagerStage(context), View.OnLongClick
     override fun onFocusLost(event: DragEvent) {
     }
 
-    override fun onDragEnded() {
+    override fun onDragEnded(event: DragEvent) {
     }
 
 }

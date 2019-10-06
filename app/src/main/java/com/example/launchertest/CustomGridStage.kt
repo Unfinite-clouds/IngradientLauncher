@@ -20,10 +20,12 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
     override val stageLayoutId = R.layout.stage_1_custom_grid
     override val viewPagerId = R.id.custom_grid_vp
     override val stageAdapter = CustomGridAdapter(context) as StageAdapter
+    lateinit var trashView: TrashView
 
     override fun inflateAndAttach(rootLayout: ViewGroup) {
         super.inflateAndAttach(rootLayout)
-        val trash = rootLayout.findViewById<RemoveZoneView>(R.id.trash_zone)
+        trashView = rootLayout.findViewById(R.id.trash_zone)
+        trashView.setOnDragListener(this)
     }
 
     inner class CustomGridAdapter(context: Context) : BasePagerStage.StageAdapter(context) {
@@ -48,17 +50,17 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
         }
     }
 
-    fun createAppShortcut(appInfo: AppInfo): AppShortcut {
-        return AppShortcut(context, appInfo).apply { adaptApp(this) }
+    fun createAppShortcut(appInfo: AppInfo): AppView {
+        return AppView(context, appInfo).apply { adaptApp(this) }
     }
 
-    override fun adaptApp(app: AppShortcut) {
+    override fun adaptApp(app: AppView) {
         app.setOnLongClickListener(this@CustomGridStage)
         app.setPadding(cellPadding)
     }
 
     override fun onLongClick(v: View?): Boolean {
-        if (v is AppShortcut) {
+        if (v is AppView) {
             v.showMenu()
             startDrag(v)
         }
@@ -67,14 +69,12 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
 
     private var direction = Point()
     private var dragCell: DummyCell? = null
-    private var dragShortcut: AppShortcut? = null
+    private var dragApp: AppView? = null
     private var isFirstDrag = true
 
     override fun startDrag(v: View) {
-        if (v is AppShortcut) {
-            dragShortcut = v
-            dragCell = v.parent as DummyCell
-            v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), Pair(dragCell, dragShortcut), 0)
+        if (v is AppView) {
+            v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), DragState(v, this), 0)
         }
     }
 
@@ -83,33 +83,38 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
         isFirstDrag = true
         direction = Point(0, 0)
 
-        if (dragShortcut != null && dragCell != null) {
+        dragApp = getApp(event)
+        dragCell = if (isMyEvent(event)) dragApp!!.parent as DummyCell else null
+
+        if (isMyEvent(event)) {
             // we have started the drag event
-            dragCell!!.shortcut = null
+            dragCell!!.app = null
         } else {
             // drag becomes from other stage
-            val state = event.localState as Pair<*, *>
-            dragShortcut = state.second as AppShortcut
-            adaptApp(dragShortcut!!) // we don't create a copy
+            adaptApp(dragApp!!) // we don't create a copy
         }
+        trashView.activate()
 
     }
 
     override fun onFocusLost(event: DragEvent) {
-        dragShortcut?.visibility = View.VISIBLE
+        if (dragApp != null && dragApp!!.parent == null && isMyEvent(event)) {
+            //drag canceled
+            dragCell!!.app = dragApp
+        }
+        dragCell = null
+        dragApp = null
         //save state
+        trashView.deactivate()
     }
 
-    override fun onDragEnded() {
-        if (dragShortcut?.parent == null && dragCell != null) {
-            //drag canceled
-            dragCell?.shortcut = dragShortcut
-        }
+    override fun onDragEnded(event: DragEvent) {
+
 /*        cell.parentGrid.dragEnded()
         cell.parentGrid.saveState()
-//      dragShortcut?.icon?.clearColorFilter()
+//      dragApp?.icon?.clearColorFilter()
         dragCell = null
-        dragShortcut = null*/
+        dragApp = null*/
     }
 
     override fun onDrag(v: View?, event: DragEvent?): Boolean {
@@ -125,7 +130,7 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
             }
 
             DragEvent.ACTION_DRAG_LOCATION -> {
-                if (isFirstDrag) isFirstDrag = false else dragShortcut?.dismissMenu()
+                if (isFirstDrag) isFirstDrag = false else dragApp?.dismissMenu()
 
                 if (v is DummyCell) {
                     val newDirection: Point =
@@ -158,13 +163,13 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
 
             DragEvent.ACTION_DROP -> {
                 // v is the view to drop
-                if (v is RemoveZoneView) {
-                    dragShortcut = null
+                if (v == trashView) {
+                    dragApp = null
                 }
                 else if (v is DummyCell && canMoveBy(v, direction)) {
                     doTranslateBy(v, direction, 0f) // back translating - just for prevent blinking
                     doMoveBy(v, direction)
-                    v.shortcut = dragShortcut
+                    v.app = dragApp
                 }
             }
 
@@ -176,8 +181,6 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
                     val grid = v.parent as LauncherPageGrid
                     grid.dragEnded()
                     grid.saveState()
-                    dragCell = null
-                    dragShortcut = null
 
 //                    endDrag()
                 }
@@ -195,10 +198,10 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
         else if (from.isEmptyCell())
             throw LauncherException("trying to move app from empty cell")
 
-        val shortcutTemp = from.shortcut
+        val shortcutTemp = from.app
         if (shortcutTemp != null) {
             from.removeAllViews()
-            to.shortcut = shortcutTemp
+            to.app = shortcutTemp
             AppManager.applyCustomGridChanges(context, to.position, shortcutTemp.appInfo.id)
         }
     }
@@ -232,8 +235,8 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
 
     fun doTranslateBy(cell: DummyCell,direction: Point, value: Float): Boolean {
         return doRecursionPass(cell, direction) { thisCell, nextCell ->
-            thisCell.shortcut?.translationX = value*direction.x
-            thisCell.shortcut?.translationY = value*direction.y
+            thisCell.app?.translationX = value*direction.x
+            thisCell.app?.translationY = value*direction.y
         }
     }
 }

@@ -28,19 +28,19 @@ class StageAdapter(val context: Context) : RecyclerView.Adapter<BoundViewHolder>
         val stage: BaseStage
         when (position) {
             0 -> {
-                // Scroll stage
+                // Scroll starter
                 stage = ScrollStage(context)
             }
             1 -> {
-                // Custom stage
+                // Custom starter
                 stage = CustomGridStage(context)
             }
             2 -> {
-                // AllApps stage
+                // AllApps starter
                 stage = AllAppsStage(context)
             }
             3 -> {
-                // Widgets stage
+                // Widgets starter
                 stage = AllAppsStage(context)
             }
             else -> throw LauncherException("position must be in range 0..${itemCount - 1}")

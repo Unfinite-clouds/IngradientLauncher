@@ -136,7 +136,7 @@ class LauncherPageGrid : GridLayout {
         val customGridApps = mutableMapOf<Int, String?>()
         forEach{
             it as DummyCell
-            customGridApps[it.position] = it.shortcut?.appInfo?.id
+            customGridApps[it.position] = it.app?.appInfo?.id
         }
         AppManager.applyCustomGridChanges(context, customGridApps)
     }
@@ -151,9 +151,9 @@ class LauncherPageGrid : GridLayout {
         return super.getChildAt(index) as DummyCell
     }
 
-    fun addShortcut(shortcut: AppShortcut, pos: Int) {
-        val cell = getCellAt(pos) ?: throw LauncherException("can't add shortcut $shortcut to position $pos; the position is out of gridBounds $gridBounds")
-        cell.shortcut = shortcut
+    fun addShortcut(appView: AppView, pos: Int) {
+        val cell = getCellAt(pos) ?: throw LauncherException("can't add app $appView to position $pos; the position is out of gridBounds $gridBounds")
+        cell.app = appView
     }
 
     fun getCellAt(pos: Int): DummyCell? {

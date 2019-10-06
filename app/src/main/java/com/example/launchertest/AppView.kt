@@ -20,11 +20,7 @@ import androidx.core.view.iterator
 import kotlin.math.min
 
 
-class AppShortcut : TextView, MenuItem.OnMenuItemClickListener, View.OnClickListener {
-companion object {
-    const val DISMISS_RADIUS = 20
-}
-
+class AppView : TextView, MenuItem.OnMenuItemClickListener, View.OnClickListener {
     var appInfo: AppInfo
         set(value) {
             field = value
