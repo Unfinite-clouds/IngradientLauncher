@@ -66,7 +66,7 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
         return true
     }
 
-    private var dragSide = Point()
+    private var direction = Point()
     private var dragCell: DummyCell? = null
     private var dragShortcut: AppShortcut? = null
     private var isFirstDrag = true
@@ -83,7 +83,7 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
         super.onFocused(event)
         // it's time to handle this drag event
         isFirstDrag = true
-        dragSide = Point(0, 0)
+        direction = Point(0, 0)
 
         if (dragShortcut != null && dragCell != null) {
             // we have started the drag event
@@ -128,17 +128,17 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
                 if (isFirstDrag) isFirstDrag = false else dragShortcut?.dismissMenu()
 
                 if (v is DummyCell) {
-                    val newDragSide: Point =
+                    val newDirection: Point =
                         if (event.y > event.x)
-                            if (event.y > v.height - event.x) Point(0, 1) else Point(-1, 0)
+                            if (event.y > v.height - event.x) Point(0, -1) else Point(1, 0)
                         else
-                            if (event.y > v.height - event.x) Point(1, 0) else Point(0, -1)
+                            if (event.y > v.height - event.x) Point(-1, 0) else Point(0, 1)
 
-                    if (dragSide != newDragSide) {
+                    if (direction != newDirection) {
                         // TODO: doTranslateBy is shit
-                        v.doTranslateBy(-dragSide.x, -dragSide.y, 0f) // back translating
-                        dragSide = newDragSide
-                        v.doTranslateBy(-dragSide.x, -dragSide.y, 100f)
+                        doTranslateBy(v, direction, 0f) // back translating
+                        direction = newDirection
+                        doTranslateBy(v, direction, 100f)
                     }
 
                     v.parentGrid.tryFlipPage(v, event)
@@ -151,7 +151,7 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
 
             DragEvent.ACTION_DRAG_EXITED -> {
                 if (v is DummyCell) {
-                    v.doTranslateBy(-dragSide.x, -dragSide.y, 0f) // back translating
+                    doTranslateBy(v, direction, 0f) // back translating
                     v.defaultState()
                 }
             }
@@ -161,9 +161,9 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
                 if (v is RemoveZoneView) {
                     dragShortcut = null
                 }
-                else if (v is DummyCell && v.canMoveBy(-dragSide.x, -dragSide.y)) {
-                    v.doTranslateBy(-dragSide.x, -dragSide.y, 0f) // back translating - just for prevent blinking
-                    v.doMoveBy(-dragSide.x, -dragSide.y)
+                else if (v is DummyCell && canMoveBy(v, direction)) {
+                    doTranslateBy(v, direction, 0f) // back translating - just for prevent blinking
+                    doMoveBy(v, direction)
                     v.shortcut = dragShortcut
                 }
             }
@@ -173,7 +173,7 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
                     // will be called only once per drag event
                     isEnded = true
                     // TODO: parentGrid, dragEnded, saveState are shits
-                    v as DummyCell
+                    v
                     v.parentGrid.dragEnded()
                     v.parentGrid.saveState()
 //                        dragShortcut?.icon?.clearColorFilter()
@@ -189,4 +189,58 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
         }
         return true
     }
+
+    
+    fun moveApp(from: DummyCell, to: DummyCell) {
+        if (!to.isEmptyCell())
+            throw LauncherException("trying to move app into occupied cell")
+        else if (from.isEmptyCell())
+            throw LauncherException("trying to move app from empty cell")
+
+        val shortcutTemp = from.shortcut
+        if (shortcutTemp != null) {
+            from.removeAllViews()
+            to.shortcut = shortcutTemp
+            AppManager.applyCustomGridChanges(context, to.position, shortcutTemp.appInfo.id)
+        }
+    }
+
+    private fun doRecursionPass(cell: DummyCell, direction: Point, action: (thisCell: DummyCell, nextCell: DummyCell) -> Unit): Boolean {
+        if (cell.isEmptyCell()) {
+            return true
+        }
+        if (direction.x == 0 && direction.y == 0) {
+            action(cell, cell)
+            return true
+        }
+        val next = Point(cell.relativePosition.x + direction.x, cell.relativePosition.y + direction.y)
+        val nextCell: DummyCell? = (cell.parent as LauncherPageGrid).getCellAt(next)
+        if (nextCell != null && doRecursionPass(nextCell, direction, action)) {
+            action(cell, nextCell)
+            return true
+        }
+        return false
+    }
+
+    fun canMoveBy(cell: DummyCell, direction: Point): Boolean {
+        return doRecursionPass(cell, direction) { thisCell, nextCell -> }
+    }
+
+    fun doMoveBy(cell: DummyCell,direction: Point): Boolean {
+        return doRecursionPass(cell, direction) { thisCell, nextCell ->
+            moveApp(thisCell, nextCell)
+        }
+    }
+
+    fun doTranslateBy(cell: DummyCell,direction: Point, value: Float): Boolean {
+        return doRecursionPass(cell, direction) { thisCell, nextCell ->
+            thisCell.shortcut?.translationX = value*direction.x
+            thisCell.shortcut?.translationY = value*direction.y
+        }
+    }
+
+    private fun negative(p: Point): Point {
+        return Point(-p.x, -p.y)
+    }
+
 }

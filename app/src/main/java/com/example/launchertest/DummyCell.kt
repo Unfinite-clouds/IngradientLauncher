@@ -11,9 +11,6 @@ import android.widget.GridLayout
 
 
 class DummyCell : FrameLayout {
-
-    val parentGrid
-        get() = parent as LauncherPageGrid
     lateinit var relativePosition: Point // the position within one ScreenGrid (not considering page number)
     var position: Int = -1
     private val bgcolor = Color.argb(40,0,0,0)
@@ -54,51 +51,6 @@ class DummyCell : FrameLayout {
         child?.layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         super.onViewAdded(child)
     }
-
-    fun moveShortcutIntoCell(newCell: DummyCell) {
-        val shortcutTemp = shortcut
-        if (shortcutTemp != null) {
-            this.removeAllViews()
-            newCell.shortcut = shortcutTemp
-            AppManager.applyCustomGridChanges(context, newCell.position, shortcutTemp.appInfo.id)
-        }
-    }
-
-    // TODO: move those shits to DragCustomGrid [start]
-    private fun doRecursionPass(directionX: Int, directionY: Int, action: (thisCell: DummyCell, nextCell: DummyCell) -> Unit): Boolean {
-        if (isEmptyCell()) {
-            return true
-        }
-        if (directionX == 0 && directionY == 0) {
-            action(this, this)
-            return true
-        }
-        val next = Point(relativePosition.x + directionX, relativePosition.y + directionY)
-        val nextCell: DummyCell? = (parent as LauncherPageGrid).getCellAt(next)
-        if (nextCell?.doRecursionPass(directionX, directionY, action) == true) {
-            action(this, nextCell)
-            return true
-        }
-        return false
-    }
-
-    fun canMoveBy(directionX: Int, directionY: Int): Boolean {
-        return doRecursionPass(directionX, directionY) { thisCell, nextCell -> }
-    }
-
-    fun doMoveBy(directionX: Int, directionY: Int): Boolean {
-        return doRecursionPass(directionX, directionY) { thisCell, nextCell ->
-            thisCell.moveShortcutIntoCell(nextCell)
-        }
-    }
-
-    fun doTranslateBy(directionX: Int, directionY: Int, value: Float): Boolean {
-        return doRecursionPass(directionX, directionY) { thisCell, nextCell ->
-            thisCell.shortcut?.translationX = value*directionX
-            thisCell.shortcut?.translationY = value*directionY
-        }
-    }
-    // TODO: move those shits to DragCustomGrid [end]
 
     fun isEmptyCell(): Boolean {
         if (childCount == 0)
