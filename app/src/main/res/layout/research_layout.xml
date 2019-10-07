@@ -3,7 +3,15 @@
         android:id="@+id/research_root"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
-
+        android:orientation="vertical"
+        android:paddingTop="30dp">
+    <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/research_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    <Button
+            android:id="@+id/research_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
 
 </LinearLayout>
