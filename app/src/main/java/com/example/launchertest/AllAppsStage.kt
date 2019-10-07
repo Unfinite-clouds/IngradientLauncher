@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.Context
 import android.view.DragEvent
 import android.view.View
+import android.view.ViewGroup
 import androidx.core.view.setPadding
 import kotlin.math.ceil
 
@@ -16,6 +17,11 @@ class AllAppsStage(context: Context) : BasePagerStage(context), View.OnLongClick
     override val stageLayoutId = R.layout.stage_2_all_apps
     override val viewPagerId = R.id.all_apps_vp
     override val stageAdapter = AllAppsAdapter(context) as StageAdapter
+
+    override fun inflateAndAttach(rootLayout: ViewGroup) {
+        super.inflateAndAttach(rootLayout)
+        rootLayout.setOnDragListener(this)
+    }
 
     inner class AllAppsAdapter(context: Context) : BasePagerStage.StageAdapter(context) {
         override fun getItemCount() = pageCount
@@ -49,25 +55,58 @@ class AllAppsStage(context: Context) : BasePagerStage(context), View.OnLongClick
 
     override fun onLongClick(v: View?): Boolean {
         if (v is AppView) {
+            v.showMenu()
             startDrag(v)
         }
         return true
     }
 
+    private var dragApp: AppView? = null
+    private var isFirstDrag = true
+
     override fun startDrag(v: View) {
         if (v is AppView) {
-            v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), Pair(null, v), 0)
+            val vcopy = AppView(context, v.appInfo)
+            dragApp = v
+            v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), DragState(vcopy, this), 0)
         }
     }
 
     override fun onFocus(event: DragEvent) {
-        flipToStage(1, event)
+        isFirstDrag = true
     }
 
     override fun onFocusLost(event: DragEvent) {
     }
 
     override fun onDragEnded(event: DragEvent) {
+    }
+
+    override fun onDrag(v: View?, event: DragEvent?): Boolean {
+        super.onDrag(v, event)
+
+        when (event?.action) {
+
+            DragEvent.ACTION_DRAG_STARTED -> {}
+
+            DragEvent.ACTION_DRAG_ENTERED -> {}
+
+            DragEvent.ACTION_DRAG_LOCATION -> {
+                if (isFirstDrag) isFirstDrag = false else {
+                    dragApp?.dismissMenu()
+                    flipToStage(1, event)
+                }
+            }
+
+            DragEvent.ACTION_DRAG_EXITED -> {}
+
+            DragEvent.ACTION_DROP -> {}
+
+            DragEvent.ACTION_DRAG_ENDED -> {}
+
+            }
+
+        return true
     }
 
 }

@@ -12,10 +12,11 @@ class RecyclerViewScroll : RecyclerView, Runnable {
         val SCROLL_DX = 10
     }
 
-    var dragPos = -1
-    var scrollDirection = 0
-    var stopPoint: PointF? = null
     var apps: MutableList<String> = mutableListOf()
+    private var dragPos = -1
+    private var scrollDirection = 0
+    private var stopPoint: PointF? = null
+    private var isScrolling = false
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
@@ -25,7 +26,6 @@ class RecyclerViewScroll : RecyclerView, Runnable {
     }
 
     fun checkAndScroll(dragPoint: PointF) {
-        println("cas")
         when {
             dragPoint.x > width - SCROLL_ZONE -> {
                 startDragScroll(+1, dragPoint)
@@ -99,9 +99,9 @@ class RecyclerViewScroll : RecyclerView, Runnable {
     }
 
     fun startDragScroll(scrollDirection: Int, stopPoint: PointF? = null) {
-        if (stopPoint == null) {
+        if (!isScrolling) {
+            isScrolling = true
             println("start")
-            stopDragScroll()
             this.scrollDirection = scrollDirection
             this.stopPoint = stopPoint
             scrollHandler.post(this)
@@ -109,7 +109,8 @@ class RecyclerViewScroll : RecyclerView, Runnable {
     }
 
     fun stopDragScroll() {
-        if (stopPoint != null) {
+        if (isScrolling) {
+            isScrolling = false
             println("stop")
             stopPoint = null
             scrollHandler.removeCallbacks(this)
