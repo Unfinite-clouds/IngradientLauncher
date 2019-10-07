@@ -100,11 +100,6 @@ class CustomGridStage(context: Context) : BasePagerStage(context), View.OnDragLi
     override fun onFocusLost(event: DragEvent) {}
 
     override fun onDragEnded(event: DragEvent) {
-        if (dragApp != null && dragApp!!.parent == null && isMyEvent(event)) {
-            //drag canceled
-            println("canceled Custom")
-            putApp(dragApp!!, dragCell!!)
-        }
         dragCell = null
         dragApp = null
         trashView.deactivate()
