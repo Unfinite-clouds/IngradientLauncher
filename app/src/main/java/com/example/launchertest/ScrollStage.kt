@@ -25,6 +25,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
     override fun inflateAndAttach(rootLayout: ViewGroup) {
         super.inflateAndAttach(rootLayout)
         recyclerView = rootLayout.findViewById(R.id.stage_0_recycler)
+        recyclerView.setHasFixedSize(true)
         recyclerView.adapter = RecyclerListAdapter()
         recyclerView.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
         recyclerView.apps = apps
@@ -119,7 +120,6 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
                 if (v is DummyCell) {
 //                    recyclerView.checkAndScroll(toParentCoords(v, event))
                 } else if (v is FrameLayout) {
-                    println("root")
                     // v is root - FrameLayout
                     when {
 /*                        event.x > v.width - SCROLL_ZONE -> recyclerView.startDragScroll(+1)

@@ -56,6 +56,12 @@ class RecyclerViewScroll : RecyclerView, Runnable {
         val t = apps.removeAt(from)
         apps.add(to, t)
         adapter?.notifyItemMoved(from, to)
+        if (from + to == 1) {
+            scrollToPosition(0)
+        }
+//        println(findViewHolderForAdapterPosition(from)?.adapterPosition)
+//        if (findViewHolderForAdapterPosition(from)?.adapterPosition == 0)
+//        adapter?.notifyDataSetChanged()
     }
 
     private fun remove(position: Int) {
@@ -71,14 +77,20 @@ class RecyclerViewScroll : RecyclerView, Runnable {
     fun moveOrInsertDragged(toCell: DummyCell, appInfo: AppInfo?) {
         if (isScrolling)
             return
+
+        val from = dragPos
         val to = getPosition(toCell)
-        if (to == -1)
+
+
+        if (from == to || to == -1)
             return
+
         if (dragPos != -1) {
-            val from = dragPos
+//            println("moving $from -> $to: ${getAppAtPosition(from)?.appInfo?.label} -> ${getAppAtPosition(to)?.appInfo?.label}")
             move(from, to)
         } else {
             if (appInfo == null) throw LauncherException("trying to insert to cell $toCell with null appInfo")
+//            println("inserting to $to")
             insert(appInfo.id, to)
         }
         dragPos = to
@@ -92,7 +104,7 @@ class RecyclerViewScroll : RecyclerView, Runnable {
     }
 
     override fun dispatchDragEvent(event: DragEvent): Boolean {
-        checkAndScroll(PointF(event.x, event.y))
+//        checkAndScroll(PointF(event.x, event.y))
         return super.dispatchDragEvent(event)
     }
 
