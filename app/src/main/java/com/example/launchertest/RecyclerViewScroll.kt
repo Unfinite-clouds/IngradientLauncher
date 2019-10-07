@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.PointF
 import android.os.Handler
 import android.util.AttributeSet
+import android.view.DragEvent
 import androidx.recyclerview.widget.RecyclerView
 
 class RecyclerViewScroll : RecyclerView, Runnable {
@@ -23,6 +24,10 @@ class RecyclerViewScroll : RecyclerView, Runnable {
 
     fun startDragWith(cell: DummyCell) {
         dragPos = getPosition(cell)
+    }
+
+    fun startDrag() {
+        dragPos = -1
     }
 
     fun checkAndScroll(dragPoint: PointF) {
@@ -47,23 +52,25 @@ class RecyclerViewScroll : RecyclerView, Runnable {
 //        return if (pos != -1) pos else throw LauncherException("can't get position. adapter pos == $pos for $v")
     }
 
-    fun move(from: Int, to: Int) {
+    private fun move(from: Int, to: Int) {
         val t = apps.removeAt(from)
         apps.add(to, t)
         adapter?.notifyItemMoved(from, to)
     }
 
-    fun remove(position: Int) {
+    private fun remove(position: Int) {
         apps.removeAt(position)
         adapter?.notifyItemRemoved(position)
     }
 
-    fun insert(appId: String, position: Int) {
+    private fun insert(appId: String, position: Int) {
         apps.add(position, appId)
         adapter?.notifyItemInserted(position)
     }
 
-    fun moveOrInsertDragged(toCell: DummyCell, appInfo: AppInfo) {
+    fun moveOrInsertDragged(toCell: DummyCell, appInfo: AppInfo?) {
+        if (isScrolling)
+            return
         val to = getPosition(toCell)
         if (to == -1)
             return
@@ -71,6 +78,7 @@ class RecyclerViewScroll : RecyclerView, Runnable {
             val from = dragPos
             move(from, to)
         } else {
+            if (appInfo == null) throw LauncherException("trying to insert to cell $toCell with null appInfo")
             insert(appInfo.id, to)
         }
         dragPos = to
@@ -83,15 +91,20 @@ class RecyclerViewScroll : RecyclerView, Runnable {
         }
     }
 
+    override fun dispatchDragEvent(event: DragEvent): Boolean {
+        checkAndScroll(PointF(event.x, event.y))
+        return super.dispatchDragEvent(event)
+    }
+
     private val scrollHandler = Handler()
     override fun run() {
-        println("scroll")
+        println("$stopPoint, $scrollDirection")
         this.scrollBy(SCROLL_DX*scrollDirection, 0)
 /*        synchronized(this) {
             if (stopPoint != null) {
                 val t = findChildViewUnder(stopPoint!!.x, stopPoint!!.y)
                 if (t != null) {
-                    moveOrInsertDragged(t as DummyCell)
+                    moveOrInsertDragged(t as DummyCell, null)
                 }
             }
         }*/

@@ -28,6 +28,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
         recyclerView.adapter = RecyclerListAdapter()
         recyclerView.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
         recyclerView.apps = apps
+        recyclerView.setOnDragListener(this)
         rootLayout.setOnDragListener(this)
     }
 
@@ -77,15 +78,13 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
     }
 
     override fun onFocus(event: DragEvent) {
-        // it's time to handle this drag event
         isFirstDrag = true
         dragApp = getParcelApp(event)
 
         if (isMyEvent(event)) {
-            // we have started the drag event
             recyclerView.startDragWith(dragApp!!.parent as DummyCell)
         } else {
-            // drag becomes from other stage
+            recyclerView.startDrag()
         }
     }
 
@@ -109,6 +108,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
                 if (v is DummyCell) {
                     recyclerView.moveOrInsertDragged(v, dragApp!!.appInfo)
                 } else if (v is FrameLayout) {
+                    println("remove")
                     recyclerView.removeDragged()
                 }
             }
@@ -117,7 +117,7 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
                 if (isFirstDrag) isFirstDrag = false else dragApp?.dismissMenu()
 
                 if (v is DummyCell) {
-                    recyclerView.checkAndScroll(toParentCoords(v, event))
+//                    recyclerView.checkAndScroll(toParentCoords(v, event))
                 } else if (v is FrameLayout) {
                     println("root")
                     // v is root - FrameLayout
@@ -145,9 +145,5 @@ class ScrollStage(context: Context) : BaseStage(context), View.OnLongClickListen
 
     private fun saveData() {
         AppManager.applyMainScreenChanges(context, apps)
-    }
-
-    private fun updateView() {
-        recyclerView.adapter?.notifyDataSetChanged()
     }
 }
