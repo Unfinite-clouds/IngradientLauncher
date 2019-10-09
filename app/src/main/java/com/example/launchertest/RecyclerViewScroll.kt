@@ -42,6 +42,18 @@ class RecyclerViewScroll : RecyclerView, Runnable {
         }
     }
 
+    private fun getLocalPosition(position: Int): Int {
+/*        var pos = -1
+        for (i in 0 until childCount) {
+            if (getChildAt(i) == child) {
+                pos = i
+                break
+            }
+        }
+        return if (pos != -1) pos else throw LauncherException("child $child out of RecyclerView; childCount = $childCount")*/
+        return indexOfChild(findViewHolderForAdapterPosition(position)!!.itemView)
+    }
+
     private fun getAppAtPosition(position: Int): AppView? {
         return (findViewHolderForAdapterPosition(position) as? ScrollStage.AppShortcutHolder)?.cell?.app
     }
@@ -55,11 +67,27 @@ class RecyclerViewScroll : RecyclerView, Runnable {
     private fun move(from: Int, to: Int) {
         val t = apps.removeAt(from)
         apps.add(to, t)
-        adapter?.notifyItemMoved(from, to)
-        if (from + to == 1) {
-            scrollToPosition(0)
+
+        val fromLocal = getLocalPosition(from)
+        val toLocal = getLocalPosition(to)
+        println("$fromLocal -> $toLocal")
+        if (fromLocal + toLocal == 1) {
+            val scr = from-1
+            println(scr)
+            scrollHandler.post({ scrollToPosition(scr) })
         }
-//        println(findViewHolderForAdapterPosition(from)?.adapterPosition)
+/*        RecyclerView::offsetChildrenHorizontal
+        RecyclerView::setRecyclerListener
+
+        RecyclerView.Adapter::bindViewHolder
+
+        RecyclerView.RecycledViewPool::setMaxRecycledViews
+        RecyclerView.Recycler::bindViewToPosition*/
+
+        scrollHandler.postDelayed({adapter?.notifyItemMoved(from, to)}, 1000)
+
+
+
 //        if (findViewHolderForAdapterPosition(from)?.adapterPosition == 0)
 //        adapter?.notifyDataSetChanged()
     }

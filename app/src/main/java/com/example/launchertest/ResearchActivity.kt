@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.research_layout.*
 
+
 class ResearchActivity : AppCompatActivity() {
 
     lateinit var recyclerView: RecyclerView
@@ -49,15 +50,28 @@ class ResearchActivity : AppCompatActivity() {
 
         }
 
-        recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-
+        val layoutManager =
+            object : LinearLayoutManager(this, HORIZONTAL, false) {
+                override fun computeVerticalScrollOffset(state: RecyclerView.State): Int {
+                    return if (findFirstCompletelyVisibleItemPosition() == 0) {
+                        // Force scrollbar to top of range. When scrolling down, the scrollbar
+                        // will jump since RecyclerView seems to assume the same height for
+                        // all items.
+                        0
+                    } else {
+                        super.computeVerticalScrollOffset(state)
+                    }
+                }
+            }
+//        recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        recyclerView.layoutManager = layoutManager
 
 
         val btn = findViewById<Button>(R.id.research_btn)
         btn.setOnClickListener {
 //            list.removeAt(0)
             recyclerView.adapter?.notifyItemMoved(0,1)
-            recyclerView.scrollToPosition(0)//-120,0, AccelerateDecelerateInterpolator(), duration )
+//            recyclerView.scrollToPosition(0)//-120,0, AccelerateDecelerateInterpolator(), duration )
 //            recyclerView.smoothScrollBy(-120,0, null, 250 )
 //            recyclerView.adapter?.notifyItemInserted(0)
 
