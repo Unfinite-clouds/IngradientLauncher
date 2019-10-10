@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.secretingradient.ingradientlauncher.element.AppInfo
 import com.secretingradient.ingradientlauncher.element.AppView
 import kotlinx.android.synthetic.main.research_layout.*
@@ -62,7 +63,11 @@ class ResearchActivity : AppCompatActivity() {
         recyclerView.adapter = MyAdapter()
         recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         recyclerView.setRecyclerListener {println("${(it.itemView as AppView).appInfo.label} Recycled") }
-        ItemTouchHelper(DragHelperCallback()).attachToRecyclerView(recyclerView)
+        itemTouchHelper = ItemTouchHelper(DragHelperCallback())
+        itemTouchHelper.attachToRecyclerView(recyclerView)
+        recyclerView.itemAnimator?.moveDuration = 100
+
+
 
         checkHandler.post(checkRunnable)
 
@@ -98,11 +103,20 @@ class ResearchActivity : AppCompatActivity() {
         imm.hideSoftInputFromWindow(currentFocus?.windowToken, 0)
     }
 
+    inner class DragStarter : View.OnLongClickListener {
+        override fun onLongClick(v: View?): Boolean {
+                println("ACTION_DOWN")
+                itemTouchHelper.startDrag(recyclerView.getChildViewHolder(v!!))
+            return false
+        }
+    }
+
     inner class MyAdapter : RecyclerView.Adapter<BaseViewHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
             return BaseViewHolder(AppView(this@ResearchActivity, AppInfo("","")).apply {
                 layoutParams = ViewGroup.LayoutParams(120,120)
                 println("Create VH")
+                setOnLongClickListener(DragStarter())
             }).apply { holders.add(WeakReference(this)) }
         }
 
@@ -110,7 +124,7 @@ class ResearchActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
             (holder.itemView as AppView).appInfo = list[position]
-            println("Bind VH $position, ${holder.itemView.id}")
+            println("Bind VH $position, ${(holder.itemView.parent as? ViewGroup)?.indexOfChild(holder.itemView)}")
         }
 
     }
@@ -120,7 +134,7 @@ class ResearchActivity : AppCompatActivity() {
             recyclerView: RecyclerView,
             viewHolder: RecyclerView.ViewHolder
         ): Int {
-            return makeMovementFlags(ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT, ItemTouchHelper.UP or ItemTouchHelper.DOWN)
+            return makeMovementFlags(ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT or ItemTouchHelper.UP or ItemTouchHelper.DOWN, ItemTouchHelper.UP or ItemTouchHelper.DOWN)
         }
 
         override fun onMove(
@@ -128,6 +142,7 @@ class ResearchActivity : AppCompatActivity() {
             viewHolder: RecyclerView.ViewHolder,
             target: RecyclerView.ViewHolder
         ): Boolean {
+            println("onMove")
             Collections.swap(list, viewHolder.adapterPosition, target.adapterPosition)
             recyclerView.adapter?.notifyItemMoved(viewHolder.adapterPosition, target.adapterPosition)
             return true
@@ -138,6 +153,26 @@ class ResearchActivity : AppCompatActivity() {
         }
 
     }
+
+    var itemTouchHelper = ItemTouchHelper(
+        object : ItemTouchHelper.SimpleCallback(
+            ItemTouchHelper.UP or ItemTouchHelper.DOWN,
+            ItemTouchHelper.LEFT
+        ) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: ViewHolder, target: ViewHolder
+            ): Boolean {
+                val fromPos = viewHolder.adapterPosition
+                val toPos = target.adapterPosition
+                // move item in `fromPos` to `toPos` in adapter.
+                return true// true if moved, false otherwise
+            }
+
+            override fun onSwiped(viewHolder: ViewHolder, direction: Int) {
+                // remove from adapter
+            }
+        })
 }
 
 class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
