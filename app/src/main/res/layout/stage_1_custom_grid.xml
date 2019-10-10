@@ -13,7 +13,7 @@
             android:scrollbars="horizontal"
             />
 
-    <com.example.launchertest.TrashView
+    <com.secretingradient.ingradientlauncher.element.TrashView
             android:id="@+id/trash_view"
             android:layout_width="match_parent"
             android:layout_height="60dp"
