@@ -63,12 +63,23 @@ class ResearchActivity : AppCompatActivity() {
 
         recyclerView.adapter = MyAdapter()
         recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        recyclerView.setRecyclerListener { println("${(it as BaseViewHolder).app.appInfo.label} Recycled") }
         itemTouchHelper = ItemTouchHelper(TouchHelper())
         itemTouchHelper.attachToRecyclerView(recyclerView)
         recyclerView.itemAnimator?.moveDuration = 150
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                println(dx)
+            }
+
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+            }
+        })
 
         checkHandler.post(checkRunnable)
+
+
 
         research_btn.setOnClickListener {
             Collections.swap(list, 0, 1)
@@ -125,6 +136,11 @@ class ResearchActivity : AppCompatActivity() {
             println("Bind VH $position, ${(holder.itemView.parent as? ViewGroup)?.indexOfChild(holder.itemView)}")
         }
 
+        override fun onViewAttachedToWindow(holder: BaseViewHolder) {
+            holder.app.animatorScale.start()
+            super.onViewAttachedToWindow(holder)
+        }
+
     }
 
     class BaseViewHolder(itemView: ViewGroup) : RecyclerView.ViewHolder(itemView) {
@@ -151,7 +167,10 @@ class ResearchActivity : AppCompatActivity() {
         }
 
         override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
-            viewHolder?.itemView?.setBackgroundColor(Color.GRAY)
+            if (viewHolder is BaseViewHolder) {
+                viewHolder.itemView.setBackgroundColor(Color.GRAY)
+            }
+
             super.onSelectedChanged(viewHolder, actionState)
         }
     }

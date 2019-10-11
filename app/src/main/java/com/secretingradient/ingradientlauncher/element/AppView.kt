@@ -1,5 +1,8 @@
 package com.secretingradient.ingradientlauncher.element
 
+import android.animation.Animator
+import android.animation.AnimatorInflater
+import android.animation.ObjectAnimator
 import android.content.Context
 import android.content.Intent
 import android.graphics.*
@@ -45,7 +48,27 @@ class AppView : TextView, MenuItem.OnMenuItemClickListener, View.OnClickListener
     private var menuHelper: MenuPopupHelper? = null
 
     var desiredIconSize = Int.MAX_VALUE
-    var goingToRemove = false
+    var animator: ObjectAnimator
+    var animatorScale: Animator
+
+    val colorMatrix = intArrayOf(
+        1, 0, 0, 1, 0,  // = R
+        0, 1, 0, 1, 0,  // = G
+        0, 0, 1, 1, 0,  // = B
+        0, 0, 0, 1, 0   // = A
+    ).map { it.toFloat() }.toFloatArray()
+
+    var testa = 0f
+    set(value) {
+        field = value
+        colorMatrix[3] =  testa
+        colorMatrix[8] = testa
+        colorMatrix[13] = testa
+        colorMatrix[0] = 1f-testa
+        colorMatrix[6] = 1f-testa
+        colorMatrix[12] = 1f-testa
+        icon?.colorFilter = ColorMatrixColorFilter(colorMatrix)
+    }
 
     init {
         layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
@@ -56,6 +79,11 @@ class AppView : TextView, MenuItem.OnMenuItemClickListener, View.OnClickListener
         setTextColor(Color.WHITE)
         setOnClickListener(this)
         ellipsize = TextUtils.TruncateAt.END
+        animator = ObjectAnimator.ofFloat(this, "alpha", 0f, 1f).apply {
+            duration = 2000
+        }
+        animatorScale = AnimatorInflater.loadAnimator(context, R.animator.icon_touch)
+        animatorScale.setTarget(this)
     }
 
     constructor(context: Context, appInfo: AppInfo) : super(context) {
