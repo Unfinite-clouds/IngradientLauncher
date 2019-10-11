@@ -16,6 +16,7 @@ import android.view.ViewGroup.LayoutParams
 import android.widget.TextView
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.view.menu.MenuPopupHelper
+import androidx.core.content.ContextCompat
 import androidx.core.view.iterator
 import com.secretingradient.ingradientlauncher.R
 import com.secretingradient.ingradientlauncher.toPx
@@ -43,7 +44,7 @@ class AppView : TextView, MenuItem.OnMenuItemClickListener, View.OnClickListener
     private var iconPaddingBottom = toPx(5).toInt()
     private var menuHelper: MenuPopupHelper? = null
 
-    var desiredIconSize = 120
+    var desiredIconSize = Int.MAX_VALUE
     var goingToRemove = false
 
     init {
@@ -62,7 +63,10 @@ class AppView : TextView, MenuItem.OnMenuItemClickListener, View.OnClickListener
         this.icon = appInfo.icon
     }
     constructor(context: Context, attributeSet: AttributeSet) : super(context, attributeSet) {
-        this.appInfo = AppInfo("test", "test")
+        val iconId = attributeSet.getAttributeValue(null, "drawableTop")
+        this.appInfo = AppInfo("package", "name",
+            attributeSet.getAttributeValue(null, "text") ?: "label",
+            ContextCompat.getDrawable(context, iconId?.toInt() ?: R.mipmap.ic_launcher_round))
     }
 
     private fun computeIconBounds(width: Int, height: Int) {
