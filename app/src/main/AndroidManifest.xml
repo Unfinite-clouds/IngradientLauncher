@@ -13,9 +13,12 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
         <activity android:name=".ResearchActivity"
-            android:theme="@style/Theme.AppCompat"
-                android:exported="true">
+            android:theme="@style/Theme.AppCompat">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
 
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
         <activity
                 android:name="com.secretingradient.ingradientlauncher.MainActivity"

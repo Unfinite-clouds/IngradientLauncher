@@ -3,21 +3,21 @@ package com.secretingradient.ingradientlauncher
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
-import android.os.Handler
-import android.view.View
 import android.view.ViewGroup
+import android.view.animation.DecelerateInterpolator
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.children
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.secretingradient.ingradientlauncher.element.AppInfo
 import com.secretingradient.ingradientlauncher.element.AppView
 import kotlinx.android.synthetic.main.research_layout.*
-import java.lang.ref.WeakReference
 import java.util.*
+import kotlin.math.abs
 
 
 class ResearchActivity : AppCompatActivity() {
@@ -33,19 +33,6 @@ class ResearchActivity : AppCompatActivity() {
             recyclerView.itemAnimator?.moveDuration = field.toLong()
         }
 
-    val holders = mutableListOf<WeakReference<BaseViewHolder>>()
-    val checkHandler = Handler()
-    val checkRunnable = object : Runnable {
-        override fun run() {
-            holders.forEach {
-                if (it.get() == null) {
-                    println("removing VH")
-                    holders.remove(it)
-                }
-                checkHandler.post(this)
-            }
-        }
-    }
     lateinit var itemTouchHelper: ItemTouchHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,18 +56,13 @@ class ResearchActivity : AppCompatActivity() {
         recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
-                println(dx)
-            }
-
-            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                super.onScrollStateChanged(recyclerView, newState)
+                recyclerView.children.forEachIndexed { i, view ->
+                    val x = view.left + view.width / 2
+                    val a = 1f - (abs(recyclerView.width / 2f - x) / recyclerView.width * 2f)
+                    view.alpha = DecelerateInterpolator().getInterpolation(a)
+                }
             }
         })
-
-        checkHandler.post(checkRunnable)
-
-
-
         research_btn.setOnClickListener {
             Collections.swap(list, 0, 1)
             recyclerView.adapter?.notifyItemMoved(0, 1)
@@ -113,27 +95,18 @@ class ResearchActivity : AppCompatActivity() {
         imm.hideSoftInputFromWindow(currentFocus?.windowToken, 0)
     }
 
-    inner class DragStarter : View.OnLongClickListener {
-        override fun onLongClick(v: View?): Boolean {
-            println("ACTION_DOWN")
-            itemTouchHelper.startDrag(recyclerView.getChildViewHolder(v!!))
-            return false
-        }
-    }
-
     inner class MyAdapter : RecyclerView.Adapter<BaseViewHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
             val frame = layoutInflater.inflate(R.layout.research_item, parent, false) as ViewGroup
             frame.getChildAt(0).apply {
             }
-            return BaseViewHolder(frame).apply { holders.add(WeakReference(this)) }
+            return BaseViewHolder(frame)
         }
 
         override fun getItemCount() = list.size
 
         override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
             holder.app.appInfo = list[position]
-            println("Bind VH $position, ${(holder.itemView.parent as? ViewGroup)?.indexOfChild(holder.itemView)}")
         }
 
         override fun onViewAttachedToWindow(holder: BaseViewHolder) {

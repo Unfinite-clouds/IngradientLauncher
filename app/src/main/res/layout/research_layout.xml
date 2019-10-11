@@ -6,8 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:layout_gravity="center_vertical"
-    android:background="@android:color/background_light">
+    android:layout_gravity="center_vertical">
     <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/research_recycler_view"
             android:layout_width="match_parent"
