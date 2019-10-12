@@ -7,8 +7,8 @@ import android.graphics.Color
 import android.graphics.Rect
 import android.os.Bundle
 import android.util.AttributeSet
+import android.view.LayoutInflater
 import android.view.MotionEvent
-import android.view.View
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
 import android.view.inputmethod.InputMethodManager
@@ -31,8 +31,7 @@ import kotlin.math.abs
 
 class ResearchActivity : AppCompatActivity() {
 
-    lateinit var recyclerView: RecyclerView
-    val list = mutableListOf<AppInfo>()
+    lateinit var recyclerView: MyRecyclerView
     val maxValue = 400
     var value = 0
         set(value) {
@@ -42,41 +41,17 @@ class ResearchActivity : AppCompatActivity() {
             recyclerView.itemAnimator?.moveDuration = field.toLong()
         }
 
-    lateinit var itemTouchHelper: ItemTouchHelper
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.research_layout)
 
         AppManager.loadAllApps(this)
 
-        val apps = AppManager.allApps.values.toList()
-        for (i in 0..15) {
-            list.add(i, apps[i])
-        }
-
         recyclerView = research_recycler_view
 
-        recyclerView.adapter = MyAdapter()
-        recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        itemTouchHelper = ItemTouchHelper(TouchHelper())
-        itemTouchHelper.attachToRecyclerView(recyclerView)
-        recyclerView.itemAnimator?.moveDuration = 150
-        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                recyclerView.children.forEachIndexed { i, view ->
-                    val x = view.left + view.width / 2
-                    val a = 1f - (abs(recyclerView.width / 2f - x) / recyclerView.width * 2f)
-                    view.alpha = DecelerateInterpolator().getInterpolation(a)
-                }
-            }
-        })
-
-
-        research_btn.setOnClickListener {
-            Collections.swap(list, 0, 1)
-            recyclerView.adapter?.notifyItemMoved(0, 1)
+        val apps = AppManager.allApps.values.toList()
+        for (i in 0..15) {
+            recyclerView.list.add(i, apps[i])
         }
 
         seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -106,9 +81,103 @@ class ResearchActivity : AppCompatActivity() {
         imm.hideSoftInputFromWindow(currentFocus?.windowToken, 0)
     }
 
+}
+
+class MyRoot : FrameLayout {
+    constructor(context: Context) : super(context)
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
+
+    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+        val recyclerBounds = Rect()
+        research_recycler_view.getHitRect(recyclerBounds)
+        return false
+    }
+
+    override fun onTouchEvent(e: MotionEvent?): Boolean {
+        println("${javaClass.simpleName}")
+        return super.onTouchEvent(e)
+    }
+}
+
+
+class MyLinearLayout : LinearLayout {
+    constructor(context: Context?) : super(context)
+    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
+
+    override fun onTouchEvent(e: MotionEvent?): Boolean {
+        println("${javaClass.simpleName}")
+        return super.onTouchEvent(e)
+    }
+}
+
+
+class MyRecyclerView : RecyclerView {
+    val list = mutableListOf<AppInfo>()
+    var itemTouchHelper: ItemTouchHelper
+    var selectedVH: BaseViewHolder? = null
+    init {
+        this.adapter = MyAdapter()
+        layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+        itemTouchHelper = ItemTouchHelper(TouchHelper())
+        itemTouchHelper.attachToRecyclerView(this)
+        itemAnimator?.moveDuration = 150
+        addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                children.forEach { view ->
+                    val x = view.left + view.width / 2
+                    val a = 1f - (abs(width / 2f - x) / width * 2f)
+                    view.alpha = DecelerateInterpolator().getInterpolation(a)
+                }
+            }
+        })
+    }
+
+    constructor(context: Context) : super(context)
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        val r = Rect(0,0,width,height)
+
+        if (ev.action == MotionEvent.ACTION_DOWN) {
+            println("DOWN")
+            clipChildren = false
+            (parent as ViewGroup).clipChildren = false
+            return super.dispatchTouchEvent(ev)
+        } else if (ev.action == MotionEvent.ACTION_UP || ev.action == MotionEvent.ACTION_CANCEL) {
+            println("UP or CANCEL")
+            clipChildren = true
+            (parent as ViewGroup).clipChildren = true // but child animation clipped :(
+        }
+
+
+        if (ev.action == MotionEvent.ACTION_UP && !r.contains(ev.x.toInt(), ev.y.toInt())){
+            if (selectedVH != null) {
+                adapter?.notifyItemRemoved(selectedVH!!.adapterPosition)
+            }
+            return true
+        }
+        return super.dispatchTouchEvent(ev)
+    }
+
+    override fun onTouchEvent(e: MotionEvent?): Boolean {
+        if (e == null)
+            return false
+/*        if (e.action == MotionEvent.ACTION_DOWN) {
+            println("DOWN")
+            clipChildren = false
+        } else if (e.action == MotionEvent.ACTION_UP || e.action == MotionEvent.ACTION_CANCEL) {
+            println("UP or CANCEL")
+            clipChildren = true
+        }*/
+        println("${javaClass.simpleName}")
+        return super.onTouchEvent(e)
+    }
+
+
     inner class MyAdapter : RecyclerView.Adapter<BaseViewHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
-            val frame = layoutInflater.inflate(R.layout.research_item, parent, false) as ViewGroup
+            val frame = LayoutInflater.from(context).inflate(R.layout.research_item, parent, false) as ViewGroup
             frame.getChildAt(0).apply {
             }
             return BaseViewHolder(frame)
@@ -127,9 +196,6 @@ class ResearchActivity : AppCompatActivity() {
 
     }
 
-    class BaseViewHolder(itemView: ViewGroup) : RecyclerView.ViewHolder(itemView) {
-        val app = itemView.getChildAt(0) as AppView
-    }
 
     inner class TouchHelper : ItemTouchHelper.Callback() {
         override fun isItemViewSwipeEnabled(): Boolean {
@@ -153,62 +219,14 @@ class ResearchActivity : AppCompatActivity() {
             if (viewHolder is BaseViewHolder) {
                 viewHolder.itemView.setBackgroundColor(Color.GRAY)
             }
+            selectedVH = viewHolder as? BaseViewHolder
 
             super.onSelectedChanged(viewHolder, actionState)
         }
-    }
-
-    inner class ItemDragListener() : View.OnTouchListener {
-        override fun onTouch(v: View?, event: MotionEvent?): Boolean {
-            println(v)
-            if (v is RecyclerView)
-                return false
-            return true
-        }
 
     }
-}
 
-class MyRoot : FrameLayout {
-    constructor(context: Context) : super(context)
-    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
-
-    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
-        val recyclerBounds = Rect()
-        research_recycler_view.getHitRect(recyclerBounds)
-        return false
-    }
-
-    override fun onTouchEvent(e: MotionEvent?): Boolean {
-        println("${javaClass.simpleName}")
-        return super.onTouchEvent(e)
-    }
-}
-
-class MyLinearLayout : LinearLayout {
-    constructor(context: Context?) : super(context)
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
-
-    override fun onTouchEvent(e: MotionEvent?): Boolean {
-        println("${javaClass.simpleName}")
-        return super.onTouchEvent(e)
-    }
-}
-
-class MyRecyclerView : RecyclerView {
-    constructor(context: Context) : super(context)
-    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
-
-    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        val r = Rect(0,0,width,height)
-
-        if (r.contains(ev.x.toInt(), ev.y.toInt())){
-        }
-        return super.dispatchTouchEvent(ev)
-    }
-
-    override fun onTouchEvent(e: MotionEvent?): Boolean {
-        println("${javaClass.simpleName}")
-        return super.onTouchEvent(e)
+    class BaseViewHolder(itemView: ViewGroup) : RecyclerView.ViewHolder(itemView) {
+        val app = itemView.getChildAt(0) as AppView
     }
 }
