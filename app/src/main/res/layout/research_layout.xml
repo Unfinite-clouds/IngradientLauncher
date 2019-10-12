@@ -4,7 +4,7 @@
     android:id="@+id/research_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <LinearLayout
+    <com.secretingradient.ingradientlauncher.MyLinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -26,11 +26,11 @@
             android:id="@+id/seekBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
-        <androidx.recyclerview.widget.RecyclerView
+        <com.secretingradient.ingradientlauncher.MyRecyclerView
             android:id="@+id/research_recycler_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
-    </LinearLayout>
+    </com.secretingradient.ingradientlauncher.MyLinearLayout>
 </com.secretingradient.ingradientlauncher.MyRoot>
 

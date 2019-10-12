@@ -1,3 +1,5 @@
+@file:Suppress("RemoveSingleExpressionStringTemplate")
+
 package com.secretingradient.ingradientlauncher
 
 import android.content.Context
@@ -12,6 +14,7 @@ import android.view.animation.DecelerateInterpolator
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.LinearLayout
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.children
@@ -173,7 +176,39 @@ class MyRoot : FrameLayout {
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
         val recyclerBounds = Rect()
         research_recycler_view.getHitRect(recyclerBounds)
-        println(recyclerBounds)
         return false
+    }
+
+    override fun onTouchEvent(e: MotionEvent?): Boolean {
+        println("${javaClass.simpleName}")
+        return super.onTouchEvent(e)
+    }
+}
+
+class MyLinearLayout : LinearLayout {
+    constructor(context: Context?) : super(context)
+    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
+
+    override fun onTouchEvent(e: MotionEvent?): Boolean {
+        println("${javaClass.simpleName}")
+        return super.onTouchEvent(e)
+    }
+}
+
+class MyRecyclerView : RecyclerView {
+    constructor(context: Context) : super(context)
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        val r = Rect(0,0,width,height)
+
+        if (r.contains(ev.x.toInt(), ev.y.toInt())){
+        }
+        return super.dispatchTouchEvent(ev)
+    }
+
+    override fun onTouchEvent(e: MotionEvent?): Boolean {
+        println("${javaClass.simpleName}")
+        return super.onTouchEvent(e)
     }
 }
