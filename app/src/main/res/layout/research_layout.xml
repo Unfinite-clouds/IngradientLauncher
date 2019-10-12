@@ -1,31 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<LinearLayout
+<com.secretingradient.ingradientlauncher.MyRoot
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/research_root"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:layout_gravity="center_vertical">
-    <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/research_recycler_view"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-    <Button
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="center_vertical">
+
+        <Button
             android:id="@+id/research_btn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Start"/>
 
-    <EditText
+        <EditText
             android:id="@+id/editText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
             android:inputType="numberDecimal"/>
-    <SeekBar
+        <SeekBar
             android:id="@+id/seekBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/research_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
 
-</LinearLayout>
+    </LinearLayout>
+</com.secretingradient.ingradientlauncher.MyRoot>
+

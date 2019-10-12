@@ -2,11 +2,16 @@ package com.secretingradient.ingradientlauncher
 
 import android.content.Context
 import android.graphics.Color
+import android.graphics.Rect
 import android.os.Bundle
+import android.util.AttributeSet
+import android.view.MotionEvent
+import android.view.View
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.children
@@ -16,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.secretingradient.ingradientlauncher.element.AppInfo
 import com.secretingradient.ingradientlauncher.element.AppView
 import kotlinx.android.synthetic.main.research_layout.*
+import kotlinx.android.synthetic.main.research_layout.view.*
 import java.util.*
 import kotlin.math.abs
 
@@ -63,6 +69,8 @@ class ResearchActivity : AppCompatActivity() {
                 }
             }
         })
+
+
         research_btn.setOnClickListener {
             Collections.swap(list, 0, 1)
             recyclerView.adapter?.notifyItemMoved(0, 1)
@@ -121,23 +129,22 @@ class ResearchActivity : AppCompatActivity() {
     }
 
     inner class TouchHelper : ItemTouchHelper.Callback() {
+        override fun isItemViewSwipeEnabled(): Boolean {
+            return false
+        }
         override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
             return makeMovementFlags(
-                ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT or ItemTouchHelper.UP or ItemTouchHelper.DOWN,
-                ItemTouchHelper.UP or ItemTouchHelper.DOWN
+                ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT or ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0
             )
         }
 
         override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
-            println("onMove")
             Collections.swap(list, viewHolder.adapterPosition, target.adapterPosition)
             recyclerView.adapter?.notifyItemMoved(viewHolder.adapterPosition, target.adapterPosition)
             return true
         }
 
-        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-            println("onSwiped")
-        }
+        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {}
 
         override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
             if (viewHolder is BaseViewHolder) {
@@ -148,5 +155,25 @@ class ResearchActivity : AppCompatActivity() {
         }
     }
 
+    inner class ItemDragListener() : View.OnTouchListener {
+        override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+            println(v)
+            if (v is RecyclerView)
+                return false
+            return true
+        }
+
+    }
 }
 
+class MyRoot : FrameLayout {
+    constructor(context: Context) : super(context)
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
+
+    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+        val recyclerBounds = Rect()
+        research_recycler_view.getHitRect(recyclerBounds)
+        println(recyclerBounds)
+        return false
+    }
+}
