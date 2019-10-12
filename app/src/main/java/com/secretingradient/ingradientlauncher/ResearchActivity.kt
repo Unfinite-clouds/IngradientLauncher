@@ -2,17 +2,15 @@
 
 package com.secretingradient.ingradientlauncher
 
-import android.animation.LayoutTransition
 import android.content.Context
+import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Rect
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.MotionEvent
-import android.view.View
 import android.view.ViewGroup
-import android.view.animation.Animation
 import android.view.animation.DecelerateInterpolator
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
@@ -21,6 +19,7 @@ import android.widget.LinearLayout
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.children
+import androidx.core.view.postDelayed
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -118,6 +117,7 @@ class MyRecyclerView : RecyclerView {
     val list = mutableListOf<AppInfo>()
     var itemTouchHelper: ItemTouchHelper
     var selectedVH: BaseViewHolder? = null
+
     lateinit var tmpVH: BaseViewHolder
     init {
         this.adapter = MyAdapter()
@@ -145,13 +145,12 @@ class MyRecyclerView : RecyclerView {
 
         if (ev.action == MotionEvent.ACTION_DOWN) {
             println("DOWN")
-            clipChildren = false
+//            clipChildren = false
             (parent as ViewGroup).clipChildren = false
             return super.dispatchTouchEvent(ev)
         } else if (ev.action == MotionEvent.ACTION_UP || ev.action == MotionEvent.ACTION_CANCEL) {
             println("UP or CANCEL")
-            clipChildren = true
-            (parent as ViewGroup).clipChildren = true // but child animation clipped :(
+//            clipChildren = true
         }
 
 
@@ -161,31 +160,7 @@ class MyRecyclerView : RecyclerView {
                 return true
             } else {
                 tmpVH = selectedVH!!
-                val t = tmpVH.itemView as ViewGroup
-                t.layoutAnimationListener = object : Animation.AnimationListener {
-                    override fun onAnimationRepeat(animation: Animation?) {
-
-                    }
-
-                    override fun onAnimationEnd(animation: Animation?) {
-                        println("end layout")
-                    }
-
-                    override fun onAnimationStart(animation: Animation?) {
-                        println("start layout")
-                    }
-                }
-                postOnAnimation {
-                    t.layoutTransition.addTransitionListener(object : LayoutTransition.TransitionListener {
-                        override fun startTransition(transition: LayoutTransition?, container: ViewGroup?, view: View?, transitionType: Int) {
-                            println("start tran")
-                        }
-
-                        override fun endTransition(transition: LayoutTransition?, container: ViewGroup?, view: View?, transitionType: Int) {
-                            println("end tran")
-                        }
-                    })
-                }
+                val t = tmpVH.itemView.parent as ViewGroup
             }
         }
         return super.dispatchTouchEvent(ev)
@@ -221,6 +196,9 @@ class MyRecyclerView : RecyclerView {
         }
 
         override fun onViewAttachedToWindow(holder: BaseViewHolder) {
+            // restore translations, cause of Google's ItemTouchHelper.RecoverAnimation doesn't do it sometimes
+            holder.itemView.translationX = 0f
+            holder.itemView.translationY = 0f
             holder.app.animatorScale.start()
             super.onViewAttachedToWindow(holder)
         }
@@ -229,6 +207,7 @@ class MyRecyclerView : RecyclerView {
 
 
     inner class TouchHelper : ItemTouchHelper.Callback() {
+        private val duration = 1000L
         override fun isItemViewSwipeEnabled(): Boolean {
             return false
         }
@@ -249,12 +228,37 @@ class MyRecyclerView : RecyclerView {
         override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
             if (viewHolder is BaseViewHolder) {
                 viewHolder.itemView.setBackgroundColor(Color.GRAY)
+                println("stop clipChildren")
+                this@MyRecyclerView.clipChildren = false
+                (this@MyRecyclerView.parent as ViewGroup).clipChildren = false
             }
             selectedVH = viewHolder as? BaseViewHolder
 
             super.onSelectedChanged(viewHolder, actionState)
         }
 
+        override fun onChildDraw(c: Canvas, recyclerView: RecyclerView, viewHolder: ViewHolder, dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean) {
+            super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+        }
+
+        override fun clearView(recyclerView: RecyclerView, viewHolder: ViewHolder) {
+            // we need to wait until the RecoverAnimation ends
+            postDelayed(duration) {
+                println("clipChildren")
+                this@MyRecyclerView.clipChildren = true
+                (this@MyRecyclerView.parent as ViewGroup).clipChildren = true
+            }
+        }
+
+        override fun getAnimationDuration(recyclerView: RecyclerView, animationType: Int, animateDx: Float, animateDy: Float): Long {
+            return duration
+        }
+    }
+
+    class Uitem(c: ItemTouchHelper.Callback) : ItemTouchHelper(c) {
+        override fun onDraw(c: Canvas, parent: RecyclerView, state: State) {
+            super.onDraw(c, parent, state)
+        }
     }
 
     class BaseViewHolder(itemView: ViewGroup) : RecyclerView.ViewHolder(itemView) {
