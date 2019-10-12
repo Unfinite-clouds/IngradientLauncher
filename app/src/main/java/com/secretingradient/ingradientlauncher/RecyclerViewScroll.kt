@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.secretingradient.ingradientlauncher.element.AppInfo
 import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.element.DummyCell
-import com.secretingradient.ingradientlauncher.stage.MainStage
+import com.secretingradient.ingradientlauncher.stage.MainStageRecycler
 
 class RecyclerViewScroll : RecyclerView, Runnable {
     companion object {
@@ -59,7 +59,7 @@ class RecyclerViewScroll : RecyclerView, Runnable {
     }
 
     private fun getAppAtPosition(position: Int): AppView? {
-        return (findViewHolderForAdapterPosition(position) as? MainStage.AppShortcutHolder)?.cell?.app
+        return (findViewHolderForAdapterPosition(position) as? MainStageRecycler.AppHolder)?.cell?.app
     }
 
     private fun getPosition(v: DummyCell): Int {

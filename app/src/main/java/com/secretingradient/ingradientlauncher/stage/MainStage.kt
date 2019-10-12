@@ -4,76 +4,51 @@ import android.content.ClipData
 import android.content.Context
 import android.graphics.PointF
 import android.view.DragEvent
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.LinearLayout
-import androidx.core.view.setPadding
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.secretingradient.ingradientlauncher.*
+import com.secretingradient.ingradientlauncher.AppManager
+import com.secretingradient.ingradientlauncher.R
 import com.secretingradient.ingradientlauncher.element.AppView
-import com.secretingradient.ingradientlauncher.element.DummyCell
+import com.secretingradient.ingradientlauncher.toPx
 
 class MainStage(context: Context) : BaseStage(context), View.OnLongClickListener, View.OnDragListener {
     val FLIP_ZONE = toPx(40).toInt()
 
     var apps = AppManager.mainScreenApps
     override val stageLayoutId = R.layout.stage_0_main_screen
-    lateinit var recyclerView: RecyclerViewScroll
-    var widthCell = getPrefs(context).getInt(Preferences.MAIN_SCREEN_WIDTH_CELL, -1)
-    var heightCell = getPrefs(context).getInt(Preferences.MAIN_SCREEN_HEIGHT_CELL, -1)
+    lateinit var recyclerView: MainStageRecycler
+
 
     override fun inflateAndAttach(rootLayout: ViewGroup) {
         super.inflateAndAttach(rootLayout)
         recyclerView = rootLayout.findViewById(R.id.stage_0_recycler)
-        recyclerView.setHasFixedSize(true)
-        recyclerView.adapter = RecyclerListAdapter()
-        recyclerView.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
         recyclerView.apps = apps
-        recyclerView.setOnDragListener(this)
-        rootLayout.setOnDragListener(this)
-    }
-
-    inner class RecyclerListAdapter : RecyclerView.Adapter<AppShortcutHolder>() {
-        override fun getItemCount() = apps.size
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppShortcutHolder {
-            val holder = AppShortcutHolder(LayoutInflater.from(context).inflate(R.layout.stage_0_vh, parent, false))
-            holder.cell.apply {
-                setOnDragListener(this@MainStage)
-                layoutParams = LinearLayout.LayoutParams(widthCell,heightCell)
+        recyclerView.saveListener = object : MainStageRecycler.OnSaveDataListener {
+            override fun onSaveData() {
+                saveData()
             }
-            adaptApp(holder.cell.app!!)
-            return holder
         }
-
-        override fun onBindViewHolder(holder: AppShortcutHolder, position: Int) {
-            holder.cell.app?.appInfo = AppManager.getApp(apps[position])!!
-            holder.cell.app?.translationX = 0f
-        }
-    }
-
-    class AppShortcutHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val cell = itemView as DummyCell
     }
 
     override fun adaptApp(app: AppView) {
-        app.setOnLongClickListener(this@MainStage)
-        app.setPadding(0)
+//        app.setOnLongClickListener(this@MainStage)
     }
 
-    override fun onLongClick(v: View?): Boolean {
-        if (v is AppView) {
-            v.showMenu()
-            startDrag(v)
-        }
-        return true
+    private fun saveData() {
+        AppManager.applyMainScreenChanges(context, apps)
+        println("save data")
     }
 
     private var dragApp: AppView? = null
     private var isFirstDrag = true
+
+    override fun onLongClick(v: View?): Boolean {
+/*        if (v is AppView) {
+            v.showMenu()
+            startDrag(v)
+        }*/
+        return true
+    }
 
     override fun startDrag(v: View) {
         if (v is AppView) {
@@ -82,29 +57,29 @@ class MainStage(context: Context) : BaseStage(context), View.OnLongClickListener
     }
 
     override fun onFocus(event: DragEvent) {
-        isFirstDrag = true
+/*        isFirstDrag = true
         dragApp = getParcelApp(event)
 
         if (isMyEvent(event)) {
             recyclerView.startDragWith(dragApp!!.parent as DummyCell)
         } else {
             recyclerView.startDrag()
-        }
+        }*/
     }
 
     override fun onFocusLost(event: DragEvent) {
     }
 
     override fun onDragEnded(event: DragEvent) {
-        recyclerView.stopDragScroll()
+/*        recyclerView.stopDragScroll()
         saveData()
-        dragApp = null
+        dragApp = null*/
     }
 
     override fun onDrag(v: View?, event: DragEvent?): Boolean {
         super.onDrag(v, event)
 
-        when (event?.action) {
+/*        when (event?.action) {
 
             DragEvent.ACTION_DRAG_STARTED -> {}
 
@@ -125,8 +100,8 @@ class MainStage(context: Context) : BaseStage(context), View.OnLongClickListener
                 } else if (v is FrameLayout) {
                     // v is root - FrameLayout
                     when {
-/*                        event.x > v.width - SCROLL_ZONE -> recyclerView.startDragScroll(+1)
-                        event.x < SCROLL_ZONE -> recyclerView.startDragScroll(-1)*/
+*//*                        event.x > v.width - SCROLL_ZONE -> recyclerView.startDragScroll(+1)
+                        event.x < SCROLL_ZONE -> recyclerView.startDragScroll(-1)*//*
 //                        event.y > v.height - FLIP_ZONE -> flipToStage(1, event)
                         else -> recyclerView.stopDragScroll()
                     }
@@ -138,15 +113,11 @@ class MainStage(context: Context) : BaseStage(context), View.OnLongClickListener
             DragEvent.ACTION_DROP -> {}
 
             DragEvent.ACTION_DRAG_ENDED -> {}
-        }
+        }*/
         return true
     }
 
     private fun toParentCoords(v: View, event: DragEvent): PointF {
         return PointF(v.left + event.x, v.top + event.y)
-    }
-
-    private fun saveData() {
-        AppManager.applyMainScreenChanges(context, apps)
     }
 }
