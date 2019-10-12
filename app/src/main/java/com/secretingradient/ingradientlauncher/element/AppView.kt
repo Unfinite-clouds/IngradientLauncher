@@ -82,6 +82,7 @@ class AppView : TextView, MenuItem.OnMenuItemClickListener, View.OnClickListener
         animator = ObjectAnimator.ofFloat(this, "alpha", 0f, 1f).apply {
             duration = 2000
         }
+        isClickable = true
         animatorScale = AnimatorInflater.loadAnimator(context, R.animator.icon_touch)
         animatorScale.setTarget(this)
     }
