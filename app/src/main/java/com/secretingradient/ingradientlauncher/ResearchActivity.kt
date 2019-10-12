@@ -2,6 +2,7 @@
 
 package com.secretingradient.ingradientlauncher
 
+import android.animation.LayoutTransition
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Rect
@@ -9,7 +10,9 @@ import android.os.Bundle
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.MotionEvent
+import android.view.View
 import android.view.ViewGroup
+import android.view.animation.Animation
 import android.view.animation.DecelerateInterpolator
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
@@ -115,6 +118,7 @@ class MyRecyclerView : RecyclerView {
     val list = mutableListOf<AppInfo>()
     var itemTouchHelper: ItemTouchHelper
     var selectedVH: BaseViewHolder? = null
+    lateinit var tmpVH: BaseViewHolder
     init {
         this.adapter = MyAdapter()
         layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
@@ -151,11 +155,38 @@ class MyRecyclerView : RecyclerView {
         }
 
 
-        if (ev.action == MotionEvent.ACTION_UP && !r.contains(ev.x.toInt(), ev.y.toInt())){
-            if (selectedVH != null) {
+        if (ev.action == MotionEvent.ACTION_UP && selectedVH != null){
+            if (!r.contains(ev.x.toInt(), ev.y.toInt())) {
                 adapter?.notifyItemRemoved(selectedVH!!.adapterPosition)
+                return true
+            } else {
+                tmpVH = selectedVH!!
+                val t = tmpVH.itemView as ViewGroup
+                t.layoutAnimationListener = object : Animation.AnimationListener {
+                    override fun onAnimationRepeat(animation: Animation?) {
+
+                    }
+
+                    override fun onAnimationEnd(animation: Animation?) {
+                        println("end layout")
+                    }
+
+                    override fun onAnimationStart(animation: Animation?) {
+                        println("start layout")
+                    }
+                }
+                postOnAnimation {
+                    t.layoutTransition.addTransitionListener(object : LayoutTransition.TransitionListener {
+                        override fun startTransition(transition: LayoutTransition?, container: ViewGroup?, view: View?, transitionType: Int) {
+                            println("start tran")
+                        }
+
+                        override fun endTransition(transition: LayoutTransition?, container: ViewGroup?, view: View?, transitionType: Int) {
+                            println("end tran")
+                        }
+                    })
+                }
             }
-            return true
         }
         return super.dispatchTouchEvent(ev)
     }
