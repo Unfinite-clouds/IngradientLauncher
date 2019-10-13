@@ -24,6 +24,8 @@ class MainStageRecycler : RecyclerView {
     private var itemTouchHelper: ItemTouchHelper
     var saveListener: OnSaveDataListener? = null
     var selectedAppHolder: ViewHolder? = null
+    private var tmpRemoved = false
+    private val bounds = Rect()
 
     init {
         setHasFixedSize(true)
@@ -107,16 +109,41 @@ class MainStageRecycler : RecyclerView {
         }
     }
 
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        bounds.set(0,0,w,h)
+    }
+
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        val r = Rect(0, 0, width, height)
-        if (ev.action == MotionEvent.ACTION_UP && selectedAppHolder != null) {
-            if (!r.contains(ev.x.toInt(), ev.y.toInt())) {
-                adapter?.notifyItemRemoved(selectedAppHolder!!.adapterPosition)
-                // TODO update apps
-                return true
+        if (ev.action == MotionEvent.ACTION_DOWN)
+            tmpRemoved = false
+
+        if ((ev.action == MotionEvent.ACTION_UP || ev.action == MotionEvent.ACTION_MOVE)
+            && selectedAppHolder != null) {
+
+            val pos = selectedAppHolder!!.adapterPosition
+            val isInBounds = hitPoint(ev.x, ev.y)
+
+            if (!tmpRemoved && !isInBounds) {
+                tmpRemoved = true
+                apps.removeAt(pos)
+                adapter?.notifyItemRemoved(pos)
+                println("Removed")
+            } else if (tmpRemoved && isInBounds){
+                tmpRemoved = false
+                apps.add(pos, (selectedAppHolder!! as AppHolder).app.appInfo.id)
+                adapter?.notifyItemInserted(pos)
+                println("Inserted")
             }
+
+            if (ev.action == MotionEvent.ACTION_UP && !isInBounds)
+                return true
         }
         return super.dispatchTouchEvent(ev)
+    }
+
+    private fun <T: Number> hitPoint(x: T, y: T): Boolean {
+        return bounds.contains(x.toInt(), y.toInt())
     }
 
     interface OnSaveDataListener {
