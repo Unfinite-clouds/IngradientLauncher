@@ -27,7 +27,7 @@ import kotlin.math.min
 
 
 class AppView : TextView, MenuItem.OnMenuItemClickListener, View.OnClickListener {
-    var appInfo: AppInfo
+    var appInfo: AppInfo = AppInfo()
         set(value) {
             field = value
             text = field.label
@@ -77,7 +77,6 @@ class AppView : TextView, MenuItem.OnMenuItemClickListener, View.OnClickListener
 //        maxLines = 1
         setLines(1)
         setTextColor(Color.WHITE)
-        setOnClickListener(this)
         ellipsize = TextUtils.TruncateAt.END
         animator = ObjectAnimator.ofFloat(this, "alpha", 0f, 1f).apply {
             duration = 2000
@@ -87,6 +86,7 @@ class AppView : TextView, MenuItem.OnMenuItemClickListener, View.OnClickListener
         animatorScale.setTarget(this)
     }
 
+    constructor(context: Context) : super(context)
     constructor(context: Context, appInfo: AppInfo) : super(context) {
         this.appInfo = appInfo
         this.icon = appInfo.icon

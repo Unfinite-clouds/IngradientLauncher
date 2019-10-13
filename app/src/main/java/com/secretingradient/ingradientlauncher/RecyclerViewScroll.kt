@@ -59,7 +59,7 @@ class RecyclerViewScroll : RecyclerView, Runnable {
     }
 
     private fun getAppAtPosition(position: Int): AppView? {
-        return (findViewHolderForAdapterPosition(position) as? MainStageRecycler.AppHolder)?.cell?.app
+        return (findViewHolderForAdapterPosition(position) as? MainStageRecycler.AppHolder)?.app
     }
 
     private fun getPosition(v: DummyCell): Int {

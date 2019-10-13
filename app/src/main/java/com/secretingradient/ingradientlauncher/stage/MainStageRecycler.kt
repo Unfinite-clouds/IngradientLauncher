@@ -3,7 +3,6 @@ package com.secretingradient.ingradientlauncher.stage
 import android.content.Context
 import android.graphics.Rect
 import android.util.AttributeSet
-import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -14,9 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.secretingradient.ingradientlauncher.AppManager
 import com.secretingradient.ingradientlauncher.Preferences
-import com.secretingradient.ingradientlauncher.R
 import com.secretingradient.ingradientlauncher.element.AppView
-import com.secretingradient.ingradientlauncher.element.DummyCell
 import com.secretingradient.ingradientlauncher.getPrefs
 import java.util.*
 
@@ -32,9 +29,6 @@ class MainStageRecycler : RecyclerView {
         setHasFixedSize(true)
         adapter = RecyclerListAdapter()
         layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
-//        apps = apps
-//        setOnDragListener(this)
-//        rootLayout.setOnDragListener(this)
         itemTouchHelper = ItemTouchHelper(TouchHelper())
         itemTouchHelper.attachToRecyclerView(this)
     }
@@ -46,30 +40,26 @@ class MainStageRecycler : RecyclerView {
         override fun getItemCount() = apps.size
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppHolder {
-            val holder = AppHolder(LayoutInflater.from(context).inflate(R.layout.stage_0_vh, parent, false))
-            holder.cell.apply {
-                //                setOnDragListener(this@MainStage)
+            return AppHolder(AppView(context).apply {
                 layoutParams = LinearLayout.LayoutParams(widthCell, heightCell)
-            }
-            return holder
+            })
         }
 
         override fun onBindViewHolder(holder: AppHolder, position: Int) {
-            holder.cell.app?.appInfo = AppManager.getApp(apps[position])!!
-            holder.cell.app?.setOnClickListener(holder.cell.app)
+            holder.app.appInfo = AppManager.getApp(apps[position])!!
+            holder.app.setOnClickListener(holder.app)
         }
 
         override fun onViewAttachedToWindow(holder: AppHolder) {
-            holder.cell.translationX = 0f
-            holder.cell.translationY = 0f
-            holder.app?.animatorScale?.start()
+            holder.app.translationX = 0f
+            holder.app.translationY = 0f
+            holder.app.animatorScale.start()
             super.onViewAttachedToWindow(holder)
         }
     }
 
     class AppHolder(itemView: View) : ViewHolder(itemView) {
-        val cell = itemView as DummyCell
-        val app: AppView? = cell.app
+        val app = itemView as AppView
     }
 
     inner class TouchHelper : ItemTouchHelper.Callback() {
@@ -122,6 +112,7 @@ class MainStageRecycler : RecyclerView {
         if (ev.action == MotionEvent.ACTION_UP && selectedAppHolder != null) {
             if (!r.contains(ev.x.toInt(), ev.y.toInt())) {
                 adapter?.notifyItemRemoved(selectedAppHolder!!.adapterPosition)
+                // TODO update apps
                 return true
             }
         }
