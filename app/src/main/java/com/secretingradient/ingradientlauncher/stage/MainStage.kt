@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.Context
 import android.graphics.PointF
 import android.view.*
+import androidx.recyclerview.widget.RecyclerView
 import com.secretingradient.ingradientlauncher.AppManager
 import com.secretingradient.ingradientlauncher.R
 import com.secretingradient.ingradientlauncher.element.AppView
@@ -29,6 +30,11 @@ class MainStage(context: Context) : BaseStage(context), View.OnLongClickListener
                 saveData()
             }
         }
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+//                TODO scroll wallpaper (dx, dy)
+            }
+        })
         rootLayout.setOnTouchListener(this)
     }
 
@@ -38,15 +44,12 @@ class MainStage(context: Context) : BaseStage(context), View.OnLongClickListener
 
     private fun saveData() {
         AppManager.applyMainScreenChanges(context, apps)
-        println("save data")
     }
 
     override fun onTouch(v: View?, event: MotionEvent): Boolean {
-
         when (event.action) {
             MotionEvent.ACTION_UP -> rootLayout.requestDisallowInterceptTouchEvent(false)
         }
-
         return gDetector.onTouchEvent(event)
     }
 

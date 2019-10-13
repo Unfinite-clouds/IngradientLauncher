@@ -26,7 +26,7 @@ import com.secretingradient.ingradientlauncher.toPx
 import kotlin.math.min
 
 
-class AppView : TextView, MenuItem.OnMenuItemClickListener, View.OnClickListener {
+class AppView : TextView, MenuItem.OnMenuItemClickListener {
     var appInfo: AppInfo = AppInfo()
         set(value) {
             field = value
@@ -119,8 +119,11 @@ class AppView : TextView, MenuItem.OnMenuItemClickListener, View.OnClickListener
         super.onSizeChanged(w, h, oldw, oldh)
     }
 
-    override fun onClick(v: View?) {
-        context.startActivity(context.packageManager.getLaunchIntentForPackage(appInfo.packageName))
+    companion object : OnClickListener{
+        override fun onClick(v: View?) {
+            if (v is AppView)
+                v.context.startActivity(v.context.packageManager.getLaunchIntentForPackage(v.appInfo.packageName))
+        }
     }
 
     fun createDragShadow(): DragShadowBuilder {

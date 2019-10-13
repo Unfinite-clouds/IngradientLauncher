@@ -48,7 +48,7 @@ class MainStageRecycler : RecyclerView {
 
         override fun onBindViewHolder(holder: AppHolder, position: Int) {
             holder.app.appInfo = AppManager.getApp(apps[position])!!
-            holder.app.setOnClickListener(holder.app)
+            holder.app.setOnClickListener(AppView)
         }
 
         override fun onViewAttachedToWindow(holder: AppHolder) {
