@@ -24,7 +24,6 @@ class MainStageRecycler : RecyclerView {
     private var itemTouchHelper: ItemTouchHelper
     var saveListener: OnSaveDataListener? = null
     var selectedAppHolder: ViewHolder? = null
-    private var tmpRemoved = false
     private val bounds = Rect()
 
     init {
@@ -115,29 +114,13 @@ class MainStageRecycler : RecyclerView {
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        if (ev.action == MotionEvent.ACTION_DOWN)
-            tmpRemoved = false
-
-        if ((ev.action == MotionEvent.ACTION_UP || ev.action == MotionEvent.ACTION_MOVE)
-            && selectedAppHolder != null) {
-
-            val pos = selectedAppHolder!!.adapterPosition
-            val isInBounds = hitPoint(ev.x, ev.y)
-
-            if (!tmpRemoved && !isInBounds) {
-                tmpRemoved = true
+        if (ev.action == MotionEvent.ACTION_UP && selectedAppHolder != null) {
+            if (!hitPoint(ev.x, ev.y)) {
+                val pos = selectedAppHolder!!.adapterPosition
                 apps.removeAt(pos)
                 adapter?.notifyItemRemoved(pos)
-                println("Removed")
-            } else if (tmpRemoved && isInBounds){
-                tmpRemoved = false
-                apps.add(pos, (selectedAppHolder!! as AppHolder).app.appInfo.id)
-                adapter?.notifyItemInserted(pos)
-                println("Inserted")
-            }
-
-            if (ev.action == MotionEvent.ACTION_UP && !isInBounds)
                 return true
+            }
         }
         return super.dispatchTouchEvent(ev)
     }
