@@ -3,20 +3,21 @@ package com.secretingradient.ingradientlauncher.stage
 import android.content.ClipData
 import android.content.Context
 import android.graphics.PointF
-import android.view.DragEvent
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import com.secretingradient.ingradientlauncher.AppManager
 import com.secretingradient.ingradientlauncher.R
 import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.toPx
+import kotlin.math.abs
 
-class MainStage(context: Context) : BaseStage(context), View.OnLongClickListener, View.OnDragListener {
+class MainStage(context: Context) : BaseStage(context), View.OnLongClickListener, View.OnDragListener, View.OnTouchListener {
     val FLIP_ZONE = toPx(40).toInt()
 
     var apps = AppManager.mainScreenApps
     override val stageLayoutId = R.layout.stage_0_main_screen
     lateinit var recyclerView: MainStageRecycler
+    val gListener = GestureListener()
+    val gDetector = GestureDetector(context, gListener)
 
 
     override fun inflateAndAttach(rootLayout: ViewGroup) {
@@ -28,6 +29,7 @@ class MainStage(context: Context) : BaseStage(context), View.OnLongClickListener
                 saveData()
             }
         }
+        rootLayout.setOnTouchListener(this)
     }
 
     override fun adaptApp(app: AppView) {
@@ -37,6 +39,45 @@ class MainStage(context: Context) : BaseStage(context), View.OnLongClickListener
     private fun saveData() {
         AppManager.applyMainScreenChanges(context, apps)
         println("save data")
+    }
+
+    override fun onTouch(v: View?, event: MotionEvent): Boolean {
+
+        when (event.action) {
+            MotionEvent.ACTION_UP -> rootLayout.requestDisallowInterceptTouchEvent(false)
+        }
+
+        return gDetector.onTouchEvent(event)
+    }
+
+    inner class GestureListener : GestureDetector.SimpleOnGestureListener() {
+        var recognized = false
+        val slop = toPx(5)
+
+        override fun onDown(e: MotionEvent?): Boolean {
+            recyclerView.onTouchEvent(e)
+            recognized = false
+            return true
+        }
+
+        override fun onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
+            val dx = abs(e1.x - e2.x)
+            val dy = abs(e1.y - e2.y)
+            if (!recognized && dx*dx + dy*dy > slop*slop && dx > dy) {
+                    recognized = true
+                    rootLayout.requestDisallowInterceptTouchEvent(true)
+            }
+            if (recognized) {
+                recyclerView.onTouchEvent(e2)
+            }
+            return recognized
+        }
+
+        override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean {
+            recyclerView.fling(-velocityX.toInt(), 0)
+            return true
+        }
+
     }
 
     private var dragApp: AppView? = null
