@@ -13,6 +13,7 @@ import com.secretingradient.ingradientlauncher.element.AppInfo
 import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.element.DummyCell
 import com.secretingradient.ingradientlauncher.element.TrashView
+import java.io.Serializable
 
 class UserStage(context: Context) : BasePagerStage(context), View.OnDragListener, View.OnLongClickListener {
     val FLIP_ZONE = toPx(40).toInt()
@@ -23,7 +24,7 @@ class UserStage(context: Context) : BasePagerStage(context), View.OnDragListener
     var pageCount = getPrefs(context).getInt(Preferences.CUSTOM_GRID_PAGE_COUNT, -1)
     var cellPadding = toPx(6).toInt()
     override val stageLayoutId = R.layout.stage_1_custom_grid
-    override val viewPagerId = R.id.custom_grid_vp
+    override val viewPagerId = R.id.user_stage_pager
     override val stageAdapter = CustomGridAdapter(context) as StageAdapter
     lateinit var trashView: TrashView
 
@@ -31,6 +32,10 @@ class UserStage(context: Context) : BasePagerStage(context), View.OnDragListener
         super.inflateAndAttach(rootLayout)
         trashView = rootLayout.findViewById(R.id.trash_view)
         trashView.setOnDragListener(this)
+    }
+
+    data class SnapElementInfo(val appInfo: AppInfo, val snapLayoutInfo: SnapLayout.SnapLayoutInfo) : Serializable {
+        companion object { private const val serialVersionUID = 4402L }
     }
 
     inner class CustomGridAdapter(context: Context) : BasePagerStage.StageAdapter(context) {

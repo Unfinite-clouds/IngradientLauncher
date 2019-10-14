@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.FrameLayout
 import androidx.core.view.children
+import java.io.Serializable
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -34,7 +35,12 @@ class SnapLayout : FrameLayout {
     override fun onViewAdded(child: View) {
         SnapLayoutParams.verifyLayoutParams(child)
         val lp = child.layoutParams as SnapLayoutParams
-        lp.computeBounds(snapCountX, snapCountY)
+        lp.computeBounds(snapCountX)
+    }
+
+    fun addView(child: View, layoutInfo: SnapLayoutInfo) {
+        child.layoutParams = SnapLayoutParams(layoutInfo)
+        addView(child)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -68,8 +74,8 @@ class SnapLayout : FrameLayout {
     override fun measureChild(child: View, widthSpec: Int, heightSpec: Int) {
         val lp = child.layoutParams as SnapLayoutParams
 
-        child.measure(MeasureSpec.makeMeasureSpec(lp.snapWidth*snapStepX, MeasureSpec.EXACTLY),
-                      MeasureSpec.makeMeasureSpec(lp.snapHeight*snapStepY, MeasureSpec.EXACTLY))
+        child.measure(MeasureSpec.makeMeasureSpec(lp.info.snapWidth*snapStepX, MeasureSpec.EXACTLY),
+                      MeasureSpec.makeMeasureSpec(lp.info.snapHeight*snapStepY, MeasureSpec.EXACTLY))
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
@@ -106,49 +112,69 @@ class SnapLayout : FrameLayout {
 
 
     class SnapLayoutParams : LayoutParams {
-        var position = -1
-        var snapWidth = -1
-        var snapHeight = -1
+        lateinit var info: SnapLayoutInfo
         val bounds = Rect()
 
         constructor(c: Context, attrs: AttributeSet) : super(c, attrs)
         constructor(pos: Int, snapWidth: Int, snapHeight: Int) : super(0, 0) {
-            this.position = pos
-            this.snapWidth = snapWidth
-            this.snapHeight = snapHeight
+            this.info = SnapLayoutInfo(pos, snapWidth, snapHeight)
+        }
+        constructor(info: SnapLayoutInfo) : super (0,0) {
+            this.info = info.copy()
         }
 
-        fun computeBounds(snapCountX: Int, snapCountY: Int) {
+        fun computeBounds(snapCountX: Int) {
             bounds.apply {
                 left = getPosX(snapCountX)
-                top =  getPosY(snapCountY)
-                right = left + snapWidth
-                bottom = top + snapHeight
+                top =  getPosY(snapCountX)
+                right = left + info.snapWidth
+                bottom = top + info.snapHeight
             }
         }
 
         private fun getPosX(snapCountX: Int): Int {
-            return position % snapCountX
+            return info.position % snapCountX
         }
 
-        private fun getPosY(snapCountY: Int): Int {
-            return position / snapCountY
-        }
-
-        fun verify() {
-            check(position > -1 && snapWidth > 0 && snapHeight > 0) {this}
+        private fun getPosY(snapCountX: Int): Int {
+            return info.position / snapCountX
         }
 
         override fun toString(): String {
-            return "${this.javaClass.simpleName}={ position=$position, snapWidth=$snapWidth, snapHeight=$snapHeight, width=$width, height=$height }"
+            return "${this.javaClass.simpleName}={ info=$info }"
         }
 
         companion object {
             fun verifyLayoutParams(v: View) {
                 val lp = v.layoutParams
                 lp as? SnapLayoutParams ?: throw LauncherException("Invalid LayoutParams $lp of view $v.")
-                lp.verify()
+                lp.info.verify()
             }
+        }
+    }
+
+
+    data class SnapLayoutInfo(
+        var position: Int = -1,
+        var snapWidth: Int = -1,
+        var snapHeight: Int = -1
+    ) : Serializable {
+        companion object {
+            private const val serialVersionUID = 4401L
+        }
+
+        constructor(info: SnapLayoutInfo) : this (info.position, info.snapWidth, info.snapHeight)
+
+        fun copy(): SnapLayoutInfo {
+            return SnapLayoutInfo(this)
+        }
+
+        fun verify() {
+            check(position > -1 && snapWidth > 0 && snapHeight > 0) { this }
+        }
+
+        override fun toString(): String {
+            return "${this.javaClass.simpleName}={ position=$position, snapWidth=$snapWidth, snapHeight=$snapHeight }"
         }
     }
 }

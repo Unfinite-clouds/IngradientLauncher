@@ -3,18 +3,21 @@
     xmlns:custom="http://schemas.android.com/apk/res-auto"
     android:id="@+id/research_root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
     <com.secretingradient.ingradientlauncher.SnapLayout
         android:id="@+id/snap_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        custom:snapCountX="0"
-        custom:snapCountY="4">
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        custom:snapCountX="8"
+        custom:snapCountY="12">
     </com.secretingradient.ingradientlauncher.SnapLayout>
     <EditText
         android:id="@+id/edit_text"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="40dp"
+        android:layout_weight="0"
         android:inputType="number"/>
 </com.secretingradient.ingradientlauncher.MyRoot>
 
