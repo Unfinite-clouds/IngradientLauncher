@@ -11,6 +11,7 @@ import kotlin.math.floor
 
 class SnapLayout : FrameLayout {
 
+    // when we change snapCountX or snapCountY, we need to recompute children's LayoutParams
     private var snapCountX = 0
     private var snapCountY = 0
     private var snapStepX = -1
@@ -31,9 +32,9 @@ class SnapLayout : FrameLayout {
     }
 
     override fun onViewAdded(child: View) {
-        val lp = child.layoutParams as? SnapLayoutParams ?:
-            throw LauncherException("Invalid LayoutParams ${child.layoutParams} of child $child.")
-        lp.verify()
+        SnapLayoutParams.verifyLayoutParams(child)
+        val lp = child.layoutParams as SnapLayoutParams
+        lp.computeBounds(snapCountX, snapCountY)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -67,27 +68,28 @@ class SnapLayout : FrameLayout {
     override fun measureChild(child: View, widthSpec: Int, heightSpec: Int) {
         val lp = child.layoutParams as SnapLayoutParams
 
-        lp.computeWidthAndHeight(snapStepX, snapStepY)
-
-        child.measure(MeasureSpec.makeMeasureSpec(lp.width, MeasureSpec.EXACTLY),
-                      MeasureSpec.makeMeasureSpec(lp.height, MeasureSpec.EXACTLY))
+        child.measure(MeasureSpec.makeMeasureSpec(lp.snapWidth*snapStepX, MeasureSpec.EXACTLY),
+                      MeasureSpec.makeMeasureSpec(lp.snapHeight*snapStepY, MeasureSpec.EXACTLY))
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         children.forEach { child: View ->
             val lp = child.layoutParams as SnapLayoutParams
-            val l = getPosX(lp.position) * snapStepX
-            val t = getPosY(lp.position) * snapStepY
+            val l = lp.bounds.left * snapStepX
+            val t = lp.bounds.top  * snapStepY
             child.layout(l, t, l + child.measuredWidth, t + child.measuredHeight)
         }
     }
 
-    private fun getPosX(pos: Int): Int {
-        return pos % snapCountX
-    }
-
-    private fun getPosY(pos: Int): Int {
-        return pos / snapCountY
+    fun canLayoutView(v: View): Boolean {
+        SnapLayoutParams.verifyLayoutParams(v)
+        val lp_v = v.layoutParams as SnapLayoutParams
+        children.forEach {
+            val lp = it.layoutParams as SnapLayoutParams
+            if (Rect.intersects(lp_v.bounds, lp.bounds))
+                return false
+        }
+        return true
     }
 
     private fun verify() {
@@ -107,16 +109,30 @@ class SnapLayout : FrameLayout {
         var position = -1
         var snapWidth = -1
         var snapHeight = -1
+        val bounds = Rect()
+
         constructor(c: Context, attrs: AttributeSet) : super(c, attrs)
-        constructor(pos: Int, snapWidth: Int, snapHeight: Int) : super(-1, -1) {
+        constructor(pos: Int, snapWidth: Int, snapHeight: Int) : super(0, 0) {
             this.position = pos
             this.snapWidth = snapWidth
             this.snapHeight = snapHeight
         }
 
-        fun computeWidthAndHeight(snapStepX: Int, snapStepY: Int) {
-            width = snapWidth * snapStepX
-            height = snapHeight * snapStepY
+        fun computeBounds(snapCountX: Int, snapCountY: Int) {
+            bounds.apply {
+                left = getPosX(snapCountX)
+                top =  getPosY(snapCountY)
+                right = left + snapWidth
+                bottom = top + snapHeight
+            }
+        }
+
+        private fun getPosX(snapCountX: Int): Int {
+            return position % snapCountX
+        }
+
+        private fun getPosY(snapCountY: Int): Int {
+            return position / snapCountY
         }
 
         fun verify() {
@@ -125,6 +141,14 @@ class SnapLayout : FrameLayout {
 
         override fun toString(): String {
             return "${this.javaClass.simpleName}={ position=$position, snapWidth=$snapWidth, snapHeight=$snapHeight, width=$width, height=$height }"
+        }
+
+        companion object {
+            fun verifyLayoutParams(v: View) {
+                val lp = v.layoutParams
+                lp as? SnapLayoutParams ?: throw LauncherException("Invalid LayoutParams $lp of view $v.")
+                lp.verify()
+            }
         }
     }
 }
