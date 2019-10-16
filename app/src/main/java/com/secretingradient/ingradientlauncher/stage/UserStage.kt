@@ -5,16 +5,15 @@ import android.graphics.Color
 import android.graphics.Point
 import android.graphics.PointF
 import android.graphics.Rect
-import android.view.DragEvent
-import android.view.MotionEvent
-import android.view.View
+import android.view.*
 import android.widget.ImageView
 import androidx.core.view.children
 import androidx.core.view.setPadding
+import androidx.viewpager2.widget.ViewPager2
 import com.secretingradient.ingradientlauncher.*
 import com.secretingradient.ingradientlauncher.element.*
 
-class UserStage(context: Context) : BasePagerSnapStage(context), View.OnLongClickListener {
+class UserStage(context: Context) : BasePagerSnapStage(context) {
     val FLIP_ZONE = toPx(40).toInt()
 
     var apps = AppManager.customGridApps
@@ -26,6 +25,8 @@ class UserStage(context: Context) : BasePagerSnapStage(context), View.OnLongClic
     override val viewPagerId = R.id.user_stage_pager
     override val pagerAdapter = UserPagerAdapter(context) as PagerSnapAdapter
     lateinit var trashView: TrashView
+    val currentSnapLayout: SnapLayout
+        get() = (stageViewPager.getChildAt(0) as ViewGroup).getChildAt(0) as SnapLayout
 
     override fun inflateAndAttach(stageRoot: StageRoot) {
         super.inflateAndAttach(stageRoot)
@@ -33,6 +34,7 @@ class UserStage(context: Context) : BasePagerSnapStage(context), View.OnLongClic
 //        trashView.setOnDragListener(this)
         stageRoot.setOnTouchListener(this)
         trashView.setOnTouchListener(this)
+        (stageViewPager.getChildAt(0) as ViewGroup).clipChildren = false
     }
 
     inner class UserPagerAdapter(context: Context) : BasePagerSnapStage.PagerSnapAdapter(context, columnCount, rowCount) {
@@ -68,35 +70,53 @@ class UserStage(context: Context) : BasePagerSnapStage(context), View.OnLongClic
         app.setPadding(cellPadding)
     }
 
-    override fun onLongClick(v: View?): Boolean {
-//        if (v is AppView) {
-//            v.showMenu()
-//            startDrag(v)
-//        }
-        return true
+    val gListener = GestureListener()
+    val gDetector = GestureDetector(context, gListener)
+    private var selected: AppView? = null
+    private var inEditMode = false
+    private val ghostView = ImageView(context).apply { setBackgroundColor(Color.LTGRAY) }
+    private val pointer = PointF()
+    private val touchPoint = Point()
+    private val scaleInEditMode = 0.85f
+    private val eventPoint = Point()
+
+    private fun startEditMode() {
+        inEditMode = true
+        stageRoot.parent.requestDisallowInterceptTouchEvent(true)
+        stageViewPager.animate().scaleX(scaleInEditMode).scaleY(scaleInEditMode).start()
     }
 
-    var selected: AppView? = null
-    var inEditMode = false
-        set(value) {
-            field = value
-//            launcherViewPager.requestDisallowInterceptTouchEvent(value)
-//            stageViewPager.requestDisallowInterceptTouchEvent(value) // TODO - tmp
+    private fun endEditMode() {
+        if (inEditMode) {
+            selected?.let {
+                it.translationX = 0f
+                it.translationY = 0f
+            }
+            selected = null
+            stageViewPager.animate().scaleX(1f).scaleY(1f).start()
         }
-    val ghostView = ImageView(context).apply { setBackgroundColor(Color.LTGRAY) }
-    val pointer = PointF()
+        inEditMode = false
+//        stageRoot.parent.requestDisallowInterceptTouchEvent(false)
+        stageRoot.shouldIntercept = false
+    }
 
     override fun onTouch(v: View, event: MotionEvent): Boolean {
+        gDetector.onTouchEvent(event)
 
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 println("ACTION_DOWN --- x = ${event.x} y = ${event.y} selected = ${selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
                 selected = v as? AppView
                 if (selected != null) {
-                    inEditMode = true
-                    stageRoot.parent.requestDisallowInterceptTouchEvent(true)
+                    touchPoint.set(selected!!.left + stageViewPager.left + event.x.toInt(), selected!!.top + stageViewPager.top + event.y.toInt())
+                    selected!!.animatorScale.start()
                     stageRoot.shouldIntercept = true
-
+                }
+                if (inEditMode) {
+                    stageRoot.parent.requestDisallowInterceptTouchEvent(true)
+                }
+                if (inEditMode && selected == null) {
+                    endEditMode()
                 }
             }
 
@@ -105,31 +125,32 @@ class UserStage(context: Context) : BasePagerSnapStage(context), View.OnLongClic
 
                 // TODO: test for perform fast swipe
 //                if (isSwipe) ...
-                if (selected == null)
+                if (selected == null || !inEditMode)
                     return false
 
+                selected!!.translationX = (event.x - touchPoint.x)/scaleInEditMode
+                selected!!.translationY = (event.y - touchPoint.y)/scaleInEditMode
 
-                selected!!.translationX = event.x - (selected!!.left + stageViewPager.left)
-                selected!!.translationY = event.y - (selected!!.top + stageViewPager.top)
-//                selected!!.visibility = View.INVISIBLE
 
-//                pointer.set(event.x, event.y)
+                eventPoint.set(event.x.toInt(), event.y.toInt())
+                val hitedView = getHitView(eventPoint)
 
-                hitedView = getHitView(event.x.toInt(), event.y.toInt())
-
+                when (hitedView) {
+                    is TrashView -> hitedView.activate()
+                    is ViewPager2 -> {
+                        val snap = currentSnapLayout
+                        ghostView.layoutParams = SnapLayout.SnapLayoutParams(-1, 2, 2)
+                        snap.removeView(ghostView)
+                        snap.tryAddView(ghostView, ghostView.layoutParams as SnapLayout.SnapLayoutParams, eventPoint)
+                    }
+                }
                 (hitedView as? TrashView)?.activate()
+
             }
 
             MotionEvent.ACTION_UP -> {
                 println("ACTION_UP selected = ${selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
-                selected?.let {
-                    it.translationX = 0f
-                    it.translationY = 0f
-                    it.visibility = View.VISIBLE
-                }
                 selected = null
-                inEditMode = false
-                stageRoot.parent.requestDisallowInterceptTouchEvent(true)
                 stageRoot.shouldIntercept = false
             }
         }
@@ -137,30 +158,41 @@ class UserStage(context: Context) : BasePagerSnapStage(context), View.OnLongClic
         return true
     }
 
+    inner class GestureListener : GestureDetector.SimpleOnGestureListener() {
+        override fun onDown(e: MotionEvent?): Boolean {
+            return true
+        }
+
+        override fun onLongPress(e: MotionEvent) {
+            startEditMode()
+        }
+    }
+
     private var lastHited: View? = null
     private val hitRect = Rect()
-    private val p = Point()
+//    private val p = Point()
     private var hitedView: View? = null
 
-    private fun getHitView(x: Int, y: Int): View {
-        p.set(x, y)
+    private fun getHitView(p: Point): View {
 
-        if (lastHited != null && testHit(lastHited!!)) {
+        lastHited?.getHitRect(hitRect)
+        if (lastHited != null && hitRect.contains(p.x, p.y)) {
             return lastHited!!
         }
 
         stageRoot.children.forEach {
-            if (testHit(it))
+            it.getHitRect(hitRect)
+            if (hitRect.contains(p.x, p.y))
                 return it
         }
 
         return stageRoot
     }
 
-    private fun testHit(v: View): Boolean {
+/*    private fun testHit(v: View): Boolean {
         v.getHitRect(hitRect)
         return hitRect.contains(p.x, p.y)
-    }
+    }*/
 
 
 
@@ -178,15 +210,15 @@ class UserStage(context: Context) : BasePagerSnapStage(context), View.OnLongClic
     }
 
     override fun onFocus(event: DragEvent) {
-        // it's time to handle this drag event
+        // it's time to handle this drag startEvent
 //        isFirstDrag = true
 //        direction = Point(0, 0)
 //
-//        dragApp = if (isMyEvent(event)) getParcelApp(event) else createAppView(getParcelApp(event).appInfo)
-//        dragCell = if (isMyEvent(event)) dragApp!!.parent as DummyCell else null
+//        dragApp = if (isMyEvent(startEvent)) getParcelApp(startEvent) else createAppView(getParcelApp(startEvent).appInfo)
+//        dragCell = if (isMyEvent(startEvent)) dragApp!!.parent as DummyCell else null
 //
-//        if (isMyEvent(event)) {
-//            // we have started the drag event
+//        if (isMyEvent(startEvent)) {
+//            // we have started the drag startEvent
 //            removeApp(dragCell!!)
 //        } else {
 //            // drag becomes from other stage
@@ -212,9 +244,9 @@ class UserStage(context: Context) : BasePagerSnapStage(context), View.OnLongClic
     }
 
     override fun onDrag(v: View?, event: DragEvent?): Boolean {
-//        super.onDrag(v, event)
+//        super.onDrag(v, startEvent)
 //
-//        when (event?.action) {
+//        when (startEvent?.action) {
 //
 //            DragEvent.ACTION_DRAG_STARTED -> {}
 //
@@ -228,10 +260,10 @@ class UserStage(context: Context) : BasePagerSnapStage(context), View.OnLongClic
 //
 //                if (v is DummyCell) {
 //                    val newDirection: Point =
-//                        if (event.y > event.x)
-//                            if (event.y > v.height - event.x) Point(0, -1) else Point(1, 0)
+//                        if (startEvent.y > startEvent.x)
+//                            if (startEvent.y > v.height - startEvent.x) Point(0, -1) else Point(1, 0)
 //                        else
-//                            if (event.y > v.height - event.x) Point(-1, 0) else Point(0, 1)
+//                            if (startEvent.y > v.height - startEvent.x) Point(-1, 0) else Point(0, 1)
 //
 //                    if (direction != newDirection) {
 //                        // TODO: doTranslateBy is shit
@@ -240,10 +272,10 @@ class UserStage(context: Context) : BasePagerSnapStage(context), View.OnLongClic
 //                        doTranslateBy(v, direction, 100f)
 //                    }
 //
-//                    (v.parent as SnapGridLayout).tryFlipPage(v, event)
+//                    (v.parent as SnapGridLayout).tryFlipPage(v, startEvent)
 //
-//                    if (event.y > v.top + FLIP_ZONE) {
-//                        flipToStage(0, event)
+//                    if (startEvent.y > v.top + FLIP_ZONE) {
+//                        flipToStage(0, startEvent)
 //                    }
 //                }
 //            }
@@ -269,7 +301,7 @@ class UserStage(context: Context) : BasePagerSnapStage(context), View.OnLongClic
 //
 //            DragEvent.ACTION_DRAG_ENDED -> {
 //                if (v is DummyCell && !isEnded) {
-//                    // will be called only once per drag event
+//                    // will be called only once per drag startEvent
 //                    isEnded = true
 //                    // TODO: parentGrid, dragEnded, saveState are shits
 //                    val grid = v.parent as SnapGridLayout

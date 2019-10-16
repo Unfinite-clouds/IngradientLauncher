@@ -3,7 +3,9 @@
 package com.secretingradient.ingradientlauncher
 
 import android.content.Context
-import android.graphics.*
+import android.graphics.Color
+import android.graphics.Point
+import android.graphics.PointF
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.GestureDetector
@@ -14,11 +16,9 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.graphics.withTranslation
 import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.element.SnapElementInfo
 import kotlinx.android.synthetic.main.research_layout.*
-import kotlinx.android.synthetic.main.research_layout.view.*
 
 
 class ResearchActivity : AppCompatActivity() {
@@ -33,15 +33,15 @@ class ResearchActivity : AppCompatActivity() {
 
         fillApps()
 
-        apps.forEach {
-            snap_layout.addView(AppView(this, it.appInfo).apply {
-                this.setOnTouchListener(this@ResearchActivity.research_root)
-            }, it.snapLayoutInfo)
-        }
+//        apps.forEach {
+//            snap_layout.addView(AppView(this, it.appInfo).apply {
+//                this.setOnTouchListener(this@ResearchActivity.research_root)
+//            }, it.snapLayoutInfo)
+//        }
 
-        snap_layout.setOnTouchListener(research_root)
+//        snap_layout.setOnTouchListener(research_root)
         research_root.setOnTouchListener(research_root)
-        edit_text.setOnTouchListener(research_root)
+//        edit_text.setOnTouchListener(research_root)
 
         edit_text.setOnEditorActionListener { v, actionId, event ->
             v as EditText
@@ -70,6 +70,7 @@ class ResearchActivity : AppCompatActivity() {
 
 
 class MyRoot : LinearLayout, View.OnTouchListener {
+
     var selected: View? = null
     var isEditMode = false
     val gListener = GestureListener()
@@ -80,7 +81,7 @@ class MyRoot : LinearLayout, View.OnTouchListener {
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
-    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+/*    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
         return super.dispatchTouchEvent(ev)
     }
 
@@ -89,11 +90,10 @@ class MyRoot : LinearLayout, View.OnTouchListener {
             return true
 
         return false
-    }
+    }*/
 
     override fun onTouch(v: View, event: MotionEvent): Boolean {
-
-        when (event.action) {
+/*        when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 println("ACTION_DOWN selected = $selected, v = $v")
                 selected = v as? AppView
@@ -144,7 +144,7 @@ class MyRoot : LinearLayout, View.OnTouchListener {
                 }
                 selected = null
             }
-        }
+        }*/
 
         return true
     }
@@ -181,12 +181,12 @@ class MyRoot : LinearLayout, View.OnTouchListener {
     }
 
 
-    override fun dispatchDraw(canvas: Canvas) {
+/*    override fun dispatchDraw(canvas: Canvas) {
         super.dispatchDraw(canvas)
         canvas.withTranslation(pointer.x, pointer.y) {
             selected?.draw(canvas)
         }
-    }
+    }*/
 }
 
 

@@ -5,6 +5,7 @@ import android.graphics.Point
 import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.view.children
 import java.io.Serializable
@@ -14,10 +15,10 @@ import kotlin.math.floor
 class SnapLayout : FrameLayout {
 
     // when we change snapCountX or snapCountY, we need to recompute children's LayoutParams
-    private var snapCountX = 0
-    private var snapCountY = 0
-    private var snapStepX = -1
-    private var snapStepY = -1
+    var snapCountX = 0
+    var snapCountY = 0
+    var snapStepX = -1
+    var snapStepY = -1
 
     private var paddingInternal = Rect()
 
@@ -34,7 +35,7 @@ class SnapLayout : FrameLayout {
     }
 
     override fun onViewAdded(child: View) {
-        SnapLayoutParams.verifyLayoutParams(child)
+        SnapLayoutParams.verifyLayoutParams(child.layoutParams)
         val lp = child.layoutParams as SnapLayoutParams
         lp.computeSnapBounds(snapCountX)
     }
@@ -51,24 +52,23 @@ class SnapLayout : FrameLayout {
         val myWidth = MeasureSpec.getSize(widthMeasureSpec)
         val myHeight = MeasureSpec.getSize(heightMeasureSpec)
 
-        if (myWidth == measuredWidth && myHeight == measuredHeight) {
-            setMeasuredDimension(myWidth, myHeight)
-            return
+
+        if (myWidth != measuredWidth || myHeight != measuredHeight) {
+            snapStepX = myWidth / snapCountX
+            snapStepY = myHeight / snapCountY
+
+            val reminderX = myWidth - snapStepX * snapCountX
+            val reminderY = myHeight - snapStepY * snapCountY
+
+            paddingInternal.set(
+                floor(reminderX.toFloat() / 2f).toInt(),
+                floor(reminderY.toFloat() / 2f).toInt(),
+                ceil(reminderX.toFloat() / 2f).toInt(),
+                ceil(reminderY.toFloat() / 2f).toInt()
+            )
         }
 
-        snapStepX = myWidth / snapCountX
-        snapStepY = myHeight / snapCountY
-
-        val reminderX = myWidth - snapStepX*snapCountX
-        val reminderY = myHeight - snapStepY*snapCountY
-
-        paddingInternal.set(
-            floor(reminderX.toFloat()/2f).toInt(),
-            floor(reminderY.toFloat()/2f).toInt(),
-            ceil(reminderX.toFloat()/2f).toInt(),
-            ceil(reminderY.toFloat()/2f).toInt())
-
-//        measureChildren(0, 0)
+        measureChildren(0, 0)
 
         setMeasuredDimension(myWidth, myHeight)
     }
@@ -76,8 +76,8 @@ class SnapLayout : FrameLayout {
     override fun measureChild(child: View, widthSpec: Int, heightSpec: Int) {
         val lp = child.layoutParams as SnapLayoutParams
 
-        child.measure(MeasureSpec.makeMeasureSpec(lp.snapInfo.snapWidth*snapStepX, MeasureSpec.EXACTLY),
-                      MeasureSpec.makeMeasureSpec(lp.snapInfo.snapHeight*snapStepY, MeasureSpec.EXACTLY))
+        child.measure(MeasureSpec.makeMeasureSpec(lp.snapWidth*snapStepX, MeasureSpec.EXACTLY),
+                      MeasureSpec.makeMeasureSpec(lp.snapHeight*snapStepY, MeasureSpec.EXACTLY))
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
@@ -86,28 +86,39 @@ class SnapLayout : FrameLayout {
             val lp = child.layoutParams as SnapLayoutParams
             val l = lp.snapBounds.left * snapStepX
             val t = lp.snapBounds.top  * snapStepY
-            child.layout(l, t, l + lp.snapInfo.snapWidth * snapStepX, t + lp.snapInfo.snapHeight * snapStepY)
+            child.layout(l, t, l + lp.snapWidth * snapStepX, t + lp.snapHeight * snapStepY)
         }
     }
 
     fun canPlaceView(v: View): Boolean {
-        SnapLayoutParams.verifyLayoutParams(v)
+        SnapLayoutParams.verifyLayoutParams(v.layoutParams)
         return canPlaceHere(v.layoutParams as SnapLayoutParams)
     }
 
     fun canPlaceHere(p: Point, snapWidth: Int, snapHeight: Int): Boolean {
-        return canPlaceHere(SnapLayoutParams(getPosSnapped(p), snapWidth, snapHeight, snapCountX))
+        val pos = getPosSnapped(p, 2)
+        return canPlaceHere(SnapLayoutParams(pos, snapWidth, snapHeight, snapCountX))
+    }
+
+    fun canPlaceHere(pos: Int, snapWidth: Int, snapHeight: Int): Boolean {
+        return canPlaceHere(SnapLayoutParams(pos, snapWidth, snapHeight, snapCountX))
     }
 
     fun canPlaceHere(layoutInfo: SnapLayoutInfo): Boolean {
         return canPlaceHere(SnapLayoutParams(layoutInfo, snapCountX))
     }
 
+    private var last_lp_child: SnapLayoutParams? = null
     fun canPlaceHere(lp: SnapLayoutParams): Boolean {
+        if (last_lp_child != null && Rect.intersects(lp.snapBounds, last_lp_child!!.snapBounds))
+            return false
+
         children.forEach {
             val lp_child = it.layoutParams as SnapLayoutParams
-            if (Rect.intersects(lp.snapBounds, lp_child.snapBounds))
+            if (Rect.intersects(lp.snapBounds, lp_child.snapBounds)) {
+                last_lp_child = lp_child
                 return false
+            }
         }
         return true
     }
@@ -116,11 +127,24 @@ class SnapLayout : FrameLayout {
         return Point(p.x / snapStepX * snapStepX, p.y / snapStepY * snapStepY)
     }
 
-    fun getPosSnapped(p: Point, step: Int = 1): Int {
+    fun getPosSnapped(p: Point, step: Int = 2): Int {
         // int division! Order does matter
-        return p.x / snapStepX / step * step  +  p.y / snapStepY  / step * step * snapCountX
+        return p.x / snapStepX / step * step  +  p.y / snapStepY / step * step * snapCountX
     }
 
+    fun tryAddView(v: View, lp: SnapLayoutParams, p: Point): Boolean {
+        val pos = getPosSnapped(p)
+        val saved_pos = lp.position  // save
+        lp.position = pos
+        lp.computeSnapBounds(snapCountX)
+        if (canPlaceHere(lp)) {
+            addView(v)
+            return true
+        }
+        lp.position = saved_pos  // restore
+        lp.computeSnapBounds(snapCountX) // bad code
+        return false
+    }
 
     private fun verify() {
         check(snapCountX > 0 && snapCountY > 0) {this}
@@ -135,23 +159,14 @@ class SnapLayout : FrameLayout {
     }
 
 
-    class SnapLayoutParams : LayoutParams {
-        lateinit var snapInfo: SnapLayoutInfo
-        lateinit var snapBounds: Rect
+    class SnapLayoutParams(var position: Int, var snapWidth: Int, var snapHeight: Int) : LayoutParams(0, 0) {
+        lateinit var snapBounds: Rect // need recompute if any property or snapCountX was change
 
-        constructor(c: Context, attrs: AttributeSet) : super(c, attrs)
-        constructor(pos: Int, snapWidth: Int, snapHeight: Int) : super(0, 0) {
-            this.snapInfo = SnapLayoutInfo(pos, snapWidth, snapHeight)
-        }
-        constructor(pos: Int, snapWidth: Int, snapHeight: Int, snapCountX: Int) : super(0, 0) {
-            this.snapInfo = SnapLayoutInfo(pos, snapWidth, snapHeight)
+        constructor(info: SnapLayoutInfo) : this(info.position, info.snapWidth, info.snapHeight)
+        constructor(pos: Int, snapWidth: Int, snapHeight: Int, snapCountX: Int) : this(pos, snapWidth, snapHeight) {
             computeSnapBounds(snapCountX)
         }
-        constructor(info: SnapLayoutInfo) : super (0,0) {
-            this.snapInfo = info.copy()
-        }
-        constructor(info: SnapLayoutInfo, snapCountX: Int) : super (0,0) {
-            this.snapInfo = info.copy()
+        constructor(info: SnapLayoutInfo, snapCountX: Int) : this(info.position, info.snapWidth, info.snapHeight) {
             computeSnapBounds(snapCountX)
         }
 
@@ -159,28 +174,31 @@ class SnapLayout : FrameLayout {
             snapBounds = Rect().apply {
                 left = getPosX(snapCountX)
                 top =  getPosY(snapCountX)
-                right = left + snapInfo.snapWidth
-                bottom = top + snapInfo.snapHeight
+                right = left + snapWidth
+                bottom = top + snapHeight
             }
         }
 
         private fun getPosX(snapCountX: Int): Int {
-            return snapInfo.position % snapCountX
+            return position % snapCountX
         }
 
         private fun getPosY(snapCountX: Int): Int {
-            return snapInfo.position / snapCountX
+            return position / snapCountX
         }
 
         override fun toString(): String {
-            return "${this.javaClass.simpleName}={ snapInfo=$snapInfo }"
+            return "${this.javaClass.simpleName}={ position=$position, snapWidth=$snapWidth, snapHeight=$snapHeight }"
+        }
+
+        fun verify() {
+            check(position > -1 && snapWidth > 0 && snapHeight > 0) { this }
         }
 
         companion object {
-            fun verifyLayoutParams(v: View) {
-                val lp = v.layoutParams
-                lp as? SnapLayoutParams ?: throw LauncherException("Invalid LayoutParams $lp of view $v.")
-                lp.snapInfo.verify()
+            fun verifyLayoutParams(lp: ViewGroup.LayoutParams) {
+                lp as? SnapLayoutParams ?: throw LauncherException("Invalid LayoutParams $lp")
+                lp.verify()
             }
         }
     }
