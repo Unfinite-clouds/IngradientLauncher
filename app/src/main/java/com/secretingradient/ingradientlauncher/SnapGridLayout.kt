@@ -11,7 +11,7 @@ import androidx.core.view.forEach
 import androidx.core.view.iterator
 import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.element.DummyCell
-import com.secretingradient.ingradientlauncher.stage.BasePagerStage
+import com.secretingradient.ingradientlauncher.stage.BasePagerSnapStage
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -22,7 +22,7 @@ class SnapGridLayout : GridLayout {
         get() = rowCount*columnCount
     val gridBounds: IntRange
         get() = size*page until size*(page+1)
-    var stage: BasePagerStage? = null
+    var stage: BasePagerSnapStage? = null
     lateinit var positions: IntArray  // global cell positions within whole stage
     private var widthCell = -1
     private var heightCell = -1
@@ -35,7 +35,7 @@ class SnapGridLayout : GridLayout {
         clipChildren = false
     }
 
-    constructor(context: Context, nrows: Int, ncols: Int, page: Int, stage: BasePagerStage) : super(context) {
+    constructor(context: Context, nrows: Int, ncols: Int, page: Int, stage: BasePagerSnapStage) : super(context) {
         this.page = page
         this.stage = stage
         setGridSize(nrows, ncols)

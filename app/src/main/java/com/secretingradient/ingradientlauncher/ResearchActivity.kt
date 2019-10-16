@@ -16,7 +16,7 @@ import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.withTranslation
 import com.secretingradient.ingradientlauncher.element.AppView
-import com.secretingradient.ingradientlauncher.stage.UserStage
+import com.secretingradient.ingradientlauncher.element.SnapElementInfo
 import kotlinx.android.synthetic.main.research_layout.*
 import kotlinx.android.synthetic.main.research_layout.view.*
 
@@ -24,7 +24,7 @@ import kotlinx.android.synthetic.main.research_layout.view.*
 class ResearchActivity : AppCompatActivity() {
 
     var value = 0
-    val apps = mutableListOf<UserStage.SnapElementInfo>()
+    val apps = mutableListOf<SnapElementInfo>()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,7 +61,7 @@ class ResearchActivity : AppCompatActivity() {
         AppManager.loadAllApps(this)
         val allApps = AppManager.allApps.values.toList()
         for (i in 0..6) {
-            apps.add(i, UserStage.SnapElementInfo(allApps[i], SnapLayout.SnapLayoutInfo(i*2 + (i*2/8)*8, 2, 2)))
+            apps.add(i, SnapElementInfo(allApps[i], SnapLayout.SnapLayoutInfo(i*2 + (i*2/8)*8, 2, 2)))
         }
     }
 

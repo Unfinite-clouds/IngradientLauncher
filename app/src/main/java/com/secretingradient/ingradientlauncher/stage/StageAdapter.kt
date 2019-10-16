@@ -46,7 +46,8 @@ class StageAdapter(val context: Context) : RecyclerView.Adapter<BoundViewHolder>
             }
             2 -> {
                 // AllApps starter
-                stage = AllAppsStage(context)
+//                stage = AllAppsStage(context)
+                stage = UserStage(context)
             }
             3 -> {
                 // Widgets starter

@@ -3,6 +3,7 @@ package com.secretingradient.ingradientlauncher.stage
 import android.content.ClipData
 import android.content.Context
 import android.view.DragEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.setPadding
@@ -11,7 +12,11 @@ import com.secretingradient.ingradientlauncher.element.AppInfo
 import com.secretingradient.ingradientlauncher.element.AppView
 import kotlin.math.ceil
 
-class AllAppsStage(context: Context) : BasePagerStage(context), View.OnLongClickListener {
+class AllAppsStage(context: Context) : BasePagerSnapStage(context), View.OnLongClickListener {
+    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     var allApps = AppManager.getSortedApps()
     var rowCount = getPrefs(context).getInt(Preferences.ALLAPPS_ROW_COUNT, -1)
     var columnCount = getPrefs(context).getInt(Preferences.ALLAPPS_COLUMN_COUNT, -1)
@@ -19,21 +24,21 @@ class AllAppsStage(context: Context) : BasePagerStage(context), View.OnLongClick
     var cellPadding = toPx(6).toInt()
     override val stageLayoutId = R.layout.stage_2_all_apps
     override val viewPagerId = R.id.all_apps_vp
-    override val stageAdapter = AllAppsAdapter(context) as StageAdapter
+    override val pagerAdapter = AllAppsAdapter(context) as PagerSnapAdapter
 
     override fun inflateAndAttach(rootLayout: ViewGroup) {
         super.inflateAndAttach(rootLayout)
         rootLayout.setOnDragListener(this)
     }
 
-    inner class AllAppsAdapter(context: Context) : StageAdapter(context) {
+    inner class AllAppsAdapter(context: Context) : PagerSnapAdapter(context, columnCount, rowCount) {
         override fun getItemCount() = pageCount
 
-        override fun createPage(context: Context, page: Int): SnapGridLayout {
-            val grid = SnapGridLayout(context, rowCount, columnCount, page, this@AllAppsStage)
+        override fun createPage(page: Int): SnapLayout {
+            val grid = SnapLayout(context, columnCount, rowCount)
 
             var position: Int
-            for (i in 0 until grid.size) {
+/*            for (i in 0 until grid.size) {
                 position = i+grid.size*page
                 if (position > allApps.size - 1)
                     break
@@ -41,7 +46,7 @@ class AllAppsStage(context: Context) : BasePagerStage(context), View.OnLongClick
                 val appInfo = AppManager.getApp(allApps[position])
                 if (appInfo != null)
                     grid.putApp(createAppShortcut(appInfo), position)
-            }
+            }*/
             return grid
         }
 

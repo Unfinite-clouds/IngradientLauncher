@@ -1,21 +1,20 @@
 package com.secretingradient.ingradientlauncher.stage
 
-import android.content.ClipData
 import android.content.Context
+import android.graphics.Color
 import android.graphics.Point
+import android.graphics.PointF
+import android.graphics.Rect
 import android.view.DragEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.forEach
+import android.widget.ImageView
 import androidx.core.view.setPadding
 import com.secretingradient.ingradientlauncher.*
-import com.secretingradient.ingradientlauncher.element.AppInfo
-import com.secretingradient.ingradientlauncher.element.AppView
-import com.secretingradient.ingradientlauncher.element.DummyCell
-import com.secretingradient.ingradientlauncher.element.TrashView
-import java.io.Serializable
+import com.secretingradient.ingradientlauncher.element.*
 
-class UserStage(context: Context) : BasePagerStage(context), View.OnDragListener, View.OnLongClickListener {
+class UserStage(context: Context) : BasePagerSnapStage(context), View.OnLongClickListener {
     val FLIP_ZONE = toPx(40).toInt()
 
     var apps = AppManager.customGridApps
@@ -25,7 +24,7 @@ class UserStage(context: Context) : BasePagerStage(context), View.OnDragListener
     var cellPadding = toPx(6).toInt()
     override val stageLayoutId = R.layout.stage_1_custom_grid
     override val viewPagerId = R.id.user_stage_pager
-    override val stageAdapter = CustomGridAdapter(context) as StageAdapter
+    override val pagerAdapter = UserPagerAdapter(context) as PagerSnapAdapter
     lateinit var trashView: TrashView
 
     override fun inflateAndAttach(rootLayout: ViewGroup) {
@@ -34,86 +33,172 @@ class UserStage(context: Context) : BasePagerStage(context), View.OnDragListener
         trashView.setOnDragListener(this)
     }
 
-    data class SnapElementInfo(val appInfo: AppInfo, val snapLayoutInfo: SnapLayout.SnapLayoutInfo) : Serializable {
-        companion object { private const val serialVersionUID = 4402L }
-    }
-
-    inner class CustomGridAdapter(context: Context) : BasePagerStage.StageAdapter(context) {
+    inner class UserPagerAdapter(context: Context) : BasePagerSnapStage.PagerSnapAdapter(context, columnCount, rowCount) {
         override fun getItemCount() = pageCount
 
-        override fun createPage(context: Context, page: Int): SnapGridLayout {
-            val grid = SnapGridLayout(context, rowCount, columnCount, page, this@UserStage)
+        override fun createPage(page: Int): SnapLayout {
+            val snapLayout = SnapLayout(context, columnCount*2, rowCount*2) // do nothing
 
-            grid.forEach {
-                it.setOnDragListener(this@UserStage)
-            }
+//            var appInfo: AppInfo?
+//            var i = 0
+//            apps.forEach {
+//                appInfo = AppManager.getApp(it.value) ?: throw LauncherException()
+//                snapLayout.addView(createAppView(appInfo!!), SnapLayout.SnapLayoutInfo(i*2 + (i*2/8)*8, 2, 2))
+//                if (i>5)
+//                    return@forEach
+//                i++
+//            }
 
-            var appInfo: AppInfo?
-            apps.forEach {
-                if (it.key in grid.gridBounds) {
-                    appInfo = AppManager.getApp(it.value)
-                    if (appInfo != null)
-                        grid.putApp(createAppShortcut(appInfo!!), it.key)
-                }
+            val pageState = MutableList(8) {i ->
+                SnapElementInfo(AppManager.getApp(apps[i]!!)!!, SnapLayout.SnapLayoutInfo((i + (i/columnCount)*columnCount)*2, 2, 2))
             }
-            return grid
+            pageStates.add(pageState)
+
+            return snapLayout
         }
     }
 
-    fun createAppShortcut(appInfo: AppInfo): AppView {
+    fun createAppView(appInfo: AppInfo): AppView {
         return AppView(context, appInfo).apply { adaptApp(this) }
     }
 
     override fun adaptApp(app: AppView) {
-        app.setOnLongClickListener(this@UserStage)
         app.setPadding(cellPadding)
     }
 
     override fun onLongClick(v: View?): Boolean {
-        if (v is AppView) {
-            v.showMenu()
-            startDrag(v)
-        }
+//        if (v is AppView) {
+//            v.showMenu()
+//            startDrag(v)
+//        }
         return true
     }
 
-    private var direction = Point()
-    private var dragCell: DummyCell? = null
-    private var dragApp: AppView? = null
-    private var isFirstDrag = true
+    var selected: AppView? = null
+    var inEditMode = false
+        set(value) {
+            field = value
+            launcherViewPager.requestDisallowInterceptTouchEvent(value)
+            stageViewPager.requestDisallowInterceptTouchEvent(value) // TODO - tmp
+        }
+    val ghostView = ImageView(context).apply { setBackgroundColor(Color.LTGRAY) }
+    val pointer = PointF()
+    var lastHited: View? = null
+
+    override fun onTouch(v: View, event: MotionEvent): Boolean {
+
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                println("ACTION_DOWN selected = ${selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
+                inEditMode = true
+                selected = v as? AppView
+            }
+
+            MotionEvent.ACTION_MOVE -> {
+                println("ACTION_MOVE x = ${event.x} y = ${event.y} selected = ${selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
+
+                if (selected == null) {
+                    return false
+                }
+
+                // we want to have global coords
+//                selected!!.translationX = event.x - selected!!.left
+//                selected!!.translationY = event.y - selected!!.top
+                selected!!.visibility = View.INVISIBLE
+                pointer.set(event.x, event.y)
+
+                val hitedView = getHitView(event.x.toInt(), event.y.toInt())
+                if (hitedView is TrashView) {
+                    hitedView.activate()
+                }
+
+            }
+
+            MotionEvent.ACTION_UP -> {
+                println("ACTION_MOVE = ${selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
+                inEditMode = false
+                selected?.let {
+//                    it.translationX = 0f
+//                    it.translationY = 0f
+                    it.visibility = View.VISIBLE
+                }
+                selected = null
+            }
+        }
+
+        return true
+    }
+
+    val hitRect = Rect()
+    val p = Point()
+    private fun getHitView(x: Int, y: Int): View {
+        p.set(x, y)
+
+        if (lastHited != null && testHit(lastHited!!)) {
+            return lastHited!!
+        }
+
+        val testedView: View
+
+        testedView = (stageViewPager.adapter as PagerSnapAdapter).currentViewHolder.snapLayout
+        if (testHit(testedView)) {
+            lastHited = testedView
+            return testedView
+        }
+
+//        and so on...
+//        testedView = removeSensor
+//        if (testHit(testedView)) {
+//            lastHited = testedView
+//            return testedView
+//        }
+
+        return rootLayout
+    }
+
+    private fun testHit(v: View): Boolean {
+        v.getHitRect(hitRect)
+        return hitRect.contains(p.x, p.y)
+    }
+
+//    private var direction = Point()
+//    private var dragCell: DummyCell? = null
+//    private var dragApp: AppView? = null
+//    private var isFirstDrag = true
 
     override fun startDrag(v: View) {
-        if (v is AppView) {
-            v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), DragState(v, this), 0)
-        }
+//        if (v is AppView) {
+//            v.startDrag(ClipData.newPlainText("",""), v.createDragShadow(), DragState(v, this), 0)
+//        }
     }
 
     override fun onFocus(event: DragEvent) {
         // it's time to handle this drag event
-        isFirstDrag = true
-        direction = Point(0, 0)
-
-        dragApp = if (isMyEvent(event)) getParcelApp(event) else createAppShortcut(getParcelApp(event).appInfo)
-        dragCell = if (isMyEvent(event)) dragApp!!.parent as DummyCell else null
-
-        if (isMyEvent(event)) {
-            // we have started the drag event
-            removeApp(dragCell!!)
-        } else {
-            // drag becomes from other stage
-            adaptApp(dragApp!!) // we don't create a copy
-        }
-        trashView.activate()
+//        isFirstDrag = true
+//        direction = Point(0, 0)
+//
+//        dragApp = if (isMyEvent(event)) getParcelApp(event) else createAppView(getParcelApp(event).appInfo)
+//        dragCell = if (isMyEvent(event)) dragApp!!.parent as DummyCell else null
+//
+//        if (isMyEvent(event)) {
+//            // we have started the drag event
+//            removeApp(dragCell!!)
+//        } else {
+//            // drag becomes from other stage
+//            adaptApp(dragApp!!) // we don't create a copy
+//        }
+//        trashView.activate()
 
     }
 
     override fun onFocusLost(event: DragEvent) {}
 
     override fun onDragEnded(event: DragEvent) {
-        dragCell = null
-        dragApp = null
-        trashView.deactivate()
-        saveState()
+//        dragCell = null
+//        dragApp = null
+//        trashView.deactivate()
+//        saveState()
+
 /*        cell.parentGrid.dragEnded()
         cell.parentGrid.saveState()
 //      dragApp?.icon?.clearColorFilter()
@@ -122,75 +207,75 @@ class UserStage(context: Context) : BasePagerStage(context), View.OnDragListener
     }
 
     override fun onDrag(v: View?, event: DragEvent?): Boolean {
-        super.onDrag(v, event)
-
-        when (event?.action) {
-
-            DragEvent.ACTION_DRAG_STARTED -> {}
-
-            DragEvent.ACTION_DRAG_ENTERED -> {
-                if (v is DummyCell)
-                    v.setBackgroundResource(R.drawable.bot_gradient)
-            }
-
-            DragEvent.ACTION_DRAG_LOCATION -> {
-                if (isFirstDrag) isFirstDrag = false else dragApp?.dismissMenu()
-
-                if (v is DummyCell) {
-                    val newDirection: Point =
-                        if (event.y > event.x)
-                            if (event.y > v.height - event.x) Point(0, -1) else Point(1, 0)
-                        else
-                            if (event.y > v.height - event.x) Point(-1, 0) else Point(0, 1)
-
-                    if (direction != newDirection) {
-                        // TODO: doTranslateBy is shit
-                        doTranslateBy(v, direction, 0f) // back translating
-                        direction = newDirection
-                        doTranslateBy(v, direction, 100f)
-                    }
-
-                    (v.parent as SnapGridLayout).tryFlipPage(v, event)
-
-                    if (event.y > v.top + FLIP_ZONE) {
-                        flipToStage(0, event)
-                    }
-                }
-            }
-
-            DragEvent.ACTION_DRAG_EXITED -> {
-                if (v is DummyCell) {
-                    doTranslateBy(v, direction, 0f) // back translating
-                    v.defaultState()
-                }
-            }
-
-            DragEvent.ACTION_DROP -> {
-                // v is the view to drop
-                if (v == trashView) {
-                    dragApp = null
-                }
-                else if (v is DummyCell && canMoveBy(v, direction)) {
-                    doTranslateBy(v, direction, 0f) // back translating - just for prevent blinking
-                    doMoveBy(v, direction)
-                    putApp(dragApp!!, v)
-                }
-            }
-
-            DragEvent.ACTION_DRAG_ENDED -> {
-                if (v is DummyCell && !isEnded) {
-                    // will be called only once per drag event
-                    isEnded = true
-                    // TODO: parentGrid, dragEnded, saveState are shits
-                    val grid = v.parent as SnapGridLayout
-                    grid.dragEnded()
-
-//                    endDrag()
-                }
-                if (v is DummyCell)
-                    v.defaultState()
-            }
-        }
+//        super.onDrag(v, event)
+//
+//        when (event?.action) {
+//
+//            DragEvent.ACTION_DRAG_STARTED -> {}
+//
+//            DragEvent.ACTION_DRAG_ENTERED -> {
+//                if (v is DummyCell)
+//                    v.setBackgroundResource(R.drawable.bot_gradient)
+//            }
+//
+//            DragEvent.ACTION_DRAG_LOCATION -> {
+//                if (isFirstDrag) isFirstDrag = false else dragApp?.dismissMenu()
+//
+//                if (v is DummyCell) {
+//                    val newDirection: Point =
+//                        if (event.y > event.x)
+//                            if (event.y > v.height - event.x) Point(0, -1) else Point(1, 0)
+//                        else
+//                            if (event.y > v.height - event.x) Point(-1, 0) else Point(0, 1)
+//
+//                    if (direction != newDirection) {
+//                        // TODO: doTranslateBy is shit
+//                        doTranslateBy(v, direction, 0f) // back translating
+//                        direction = newDirection
+//                        doTranslateBy(v, direction, 100f)
+//                    }
+//
+//                    (v.parent as SnapGridLayout).tryFlipPage(v, event)
+//
+//                    if (event.y > v.top + FLIP_ZONE) {
+//                        flipToStage(0, event)
+//                    }
+//                }
+//            }
+//
+//            DragEvent.ACTION_DRAG_EXITED -> {
+//                if (v is DummyCell) {
+//                    doTranslateBy(v, direction, 0f) // back translating
+//                    v.defaultState()
+//                }
+//            }
+//
+//            DragEvent.ACTION_DROP -> {
+//                // v is the view to drop
+//                if (v == trashView) {
+//                    dragApp = null
+//                }
+//                else if (v is DummyCell && canMoveBy(v, direction)) {
+//                    doTranslateBy(v, direction, 0f) // back translating - just for prevent blinking
+//                    doMoveBy(v, direction)
+//                    putApp(dragApp!!, v)
+//                }
+//            }
+//
+//            DragEvent.ACTION_DRAG_ENDED -> {
+//                if (v is DummyCell && !isEnded) {
+//                    // will be called only once per drag event
+//                    isEnded = true
+//                    // TODO: parentGrid, dragEnded, saveState are shits
+//                    val grid = v.parent as SnapGridLayout
+//                    grid.dragEnded()
+//
+////                    endDrag()
+//                }
+//                if (v is DummyCell)
+//                    v.defaultState()
+//            }
+//        }
         return true
     }
 
@@ -224,37 +309,37 @@ class UserStage(context: Context) : BasePagerStage(context), View.OnDragListener
         }
     }
 
-    private fun doRecursionPass(cell: DummyCell, direction: Point, action: (thisCell: DummyCell, nextCell: DummyCell) -> Unit): Boolean {
-        if (cell.isEmptyCell()) {
-            return true
-        }
-        if (direction.x == 0 && direction.y == 0) {
-            action(cell, cell)
-            return true
-        }
-        val next = Point(cell.relativePosition.x + direction.x, cell.relativePosition.y + direction.y)
-        val nextCell: DummyCell? = (cell.parent as SnapGridLayout).getCellAt(next)
-        if (nextCell != null && doRecursionPass(nextCell, direction, action)) {
-            action(cell, nextCell)
-            return true
-        }
-        return false
-    }
-
-    private fun canMoveBy(cell: DummyCell, direction: Point): Boolean {
-        return doRecursionPass(cell, direction) { thisCell, nextCell -> }
-    }
-
-    private fun doMoveBy(cell: DummyCell, direction: Point): Boolean {
-        return doRecursionPass(cell, direction) { thisCell, nextCell ->
-            moveApp(thisCell, nextCell)
-        }
-    }
-
-    private fun doTranslateBy(cell: DummyCell, direction: Point, value: Float): Boolean {
-        return doRecursionPass(cell, direction) { thisCell, nextCell ->
-            thisCell.app?.translationX = value*direction.x
-            thisCell.app?.translationY = value*direction.y
-        }
-    }
+//    private fun doRecursionPass(cell: DummyCell, direction: Point, action: (thisCell: DummyCell, nextCell: DummyCell) -> Unit): Boolean {
+//        if (cell.isEmptyCell()) {
+//            return true
+//        }
+//        if (direction.x == 0 && direction.y == 0) {
+//            action(cell, cell)
+//            return true
+//        }
+//        val next = Point(cell.relativePosition.x + direction.x, cell.relativePosition.y + direction.y)
+//        val nextCell: DummyCell? = (cell.parent as SnapGridLayout).getCellAt(next)
+//        if (nextCell != null && doRecursionPass(nextCell, direction, action)) {
+//            action(cell, nextCell)
+//            return true
+//        }
+//        return false
+//    }
+//
+//    private fun canMoveBy(cell: DummyCell, direction: Point): Boolean {
+//        return doRecursionPass(cell, direction) { thisCell, nextCell -> }
+//    }
+//
+//    private fun doMoveBy(cell: DummyCell, direction: Point): Boolean {
+//        return doRecursionPass(cell, direction) { thisCell, nextCell ->
+//            moveApp(thisCell, nextCell)
+//        }
+//    }
+//
+//    private fun doTranslateBy(cell: DummyCell, direction: Point, value: Float): Boolean {
+//        return doRecursionPass(cell, direction) { thisCell, nextCell ->
+//            thisCell.app?.translationX = value*direction.x
+//            thisCell.app?.translationY = value*direction.y
+//        }
+//    }
 }
