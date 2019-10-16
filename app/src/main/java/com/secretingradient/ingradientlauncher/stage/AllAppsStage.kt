@@ -5,7 +5,6 @@ import android.content.Context
 import android.view.DragEvent
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
 import androidx.core.view.setPadding
 import com.secretingradient.ingradientlauncher.*
 import com.secretingradient.ingradientlauncher.element.AppInfo
@@ -26,9 +25,9 @@ class AllAppsStage(context: Context) : BasePagerSnapStage(context), View.OnLongC
     override val viewPagerId = R.id.all_apps_vp
     override val pagerAdapter = AllAppsAdapter(context) as PagerSnapAdapter
 
-    override fun inflateAndAttach(rootLayout: ViewGroup) {
-        super.inflateAndAttach(rootLayout)
-        rootLayout.setOnDragListener(this)
+    override fun inflateAndAttach(stageRoot: StageRoot) {
+        super.inflateAndAttach(stageRoot)
+        stageRoot.setOnDragListener(this)
     }
 
     inner class AllAppsAdapter(context: Context) : PagerSnapAdapter(context, columnCount, rowCount) {

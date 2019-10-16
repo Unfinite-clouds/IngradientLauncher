@@ -3,7 +3,10 @@ package com.secretingradient.ingradientlauncher.stage
 import android.content.ClipData
 import android.content.Context
 import android.graphics.PointF
-import android.view.*
+import android.view.DragEvent
+import android.view.GestureDetector
+import android.view.MotionEvent
+import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import com.secretingradient.ingradientlauncher.AppManager
 import com.secretingradient.ingradientlauncher.R
@@ -21,9 +24,9 @@ class MainStage(context: Context) : BaseStage(context), View.OnLongClickListener
     val gDetector = GestureDetector(context, gListener)
 
 
-    override fun inflateAndAttach(rootLayout: ViewGroup) {
-        super.inflateAndAttach(rootLayout)
-        recyclerView = rootLayout.findViewById(R.id.stage_0_recycler)
+    override fun inflateAndAttach(stageRoot: StageRoot) {
+        super.inflateAndAttach(stageRoot)
+        recyclerView = stageRoot.findViewById(R.id.stage_0_recycler)
         recyclerView.apps = apps
         recyclerView.saveListener = object : MainStageRecycler.OnSaveDataListener {
             override fun onSaveData() {
@@ -35,7 +38,7 @@ class MainStage(context: Context) : BaseStage(context), View.OnLongClickListener
 //                TODO scroll wallpaper (dx, dy)
             }
         })
-        rootLayout.setOnTouchListener(this)
+        stageRoot.setOnTouchListener(this)
     }
 
     override fun adaptApp(app: AppView) {
@@ -48,7 +51,7 @@ class MainStage(context: Context) : BaseStage(context), View.OnLongClickListener
 
     override fun onTouch(v: View?, event: MotionEvent): Boolean {
         when (event.action) {
-            MotionEvent.ACTION_UP -> rootLayout.requestDisallowInterceptTouchEvent(false)
+            MotionEvent.ACTION_UP -> stageRoot.requestDisallowInterceptTouchEvent(false)
         }
         return gDetector.onTouchEvent(event)
     }
@@ -68,7 +71,7 @@ class MainStage(context: Context) : BaseStage(context), View.OnLongClickListener
             val dy = abs(e1.y - e2.y)
             if (!recognized && dx*dx + dy*dy > slop*slop && dx > dy) {
                     recognized = true
-                    rootLayout.requestDisallowInterceptTouchEvent(true)
+                    stageRoot.requestDisallowInterceptTouchEvent(true)
             }
             if (recognized) {
                 recyclerView.onTouchEvent(e2)
@@ -91,7 +94,7 @@ class MainStage(context: Context) : BaseStage(context), View.OnLongClickListener
             v.showMenu()
             startDrag(v)
         }*/
-        return true
+        return false
     }
 
     override fun startDrag(v: View) {

@@ -25,7 +25,7 @@ class StageAdapter(val context: Context) : RecyclerView.Adapter<BoundViewHolder>
     override fun onBindViewHolder(holder: BoundViewHolder, position: Int) {
         if (holder.boundPosition != position) {
             println("binding position $position")
-            val rootLayout = holder.itemView as ViewGroup
+            val rootLayout = holder.itemView as StageRoot
             rootLayout.removeAllViews()
             val stage = createStage(context, position)
             stage.inflateAndAttach(rootLayout)

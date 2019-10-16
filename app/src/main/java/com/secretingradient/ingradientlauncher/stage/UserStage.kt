@@ -8,8 +8,8 @@ import android.graphics.Rect
 import android.view.DragEvent
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
 import android.widget.ImageView
+import androidx.core.view.children
 import androidx.core.view.setPadding
 import com.secretingradient.ingradientlauncher.*
 import com.secretingradient.ingradientlauncher.element.*
@@ -27,10 +27,12 @@ class UserStage(context: Context) : BasePagerSnapStage(context), View.OnLongClic
     override val pagerAdapter = UserPagerAdapter(context) as PagerSnapAdapter
     lateinit var trashView: TrashView
 
-    override fun inflateAndAttach(rootLayout: ViewGroup) {
-        super.inflateAndAttach(rootLayout)
-        trashView = rootLayout.findViewById(R.id.trash_view)
-        trashView.setOnDragListener(this)
+    override fun inflateAndAttach(stageRoot: StageRoot) {
+        super.inflateAndAttach(stageRoot)
+        trashView = stageRoot.findViewById(R.id.trash_view)
+//        trashView.setOnDragListener(this)
+        stageRoot.setOnTouchListener(this)
+        trashView.setOnTouchListener(this)
     }
 
     inner class UserPagerAdapter(context: Context) : BasePagerSnapStage.PagerSnapAdapter(context, columnCount, rowCount) {
@@ -78,59 +80,68 @@ class UserStage(context: Context) : BasePagerSnapStage(context), View.OnLongClic
     var inEditMode = false
         set(value) {
             field = value
-            launcherViewPager.requestDisallowInterceptTouchEvent(value)
-            stageViewPager.requestDisallowInterceptTouchEvent(value) // TODO - tmp
+//            launcherViewPager.requestDisallowInterceptTouchEvent(value)
+//            stageViewPager.requestDisallowInterceptTouchEvent(value) // TODO - tmp
         }
     val ghostView = ImageView(context).apply { setBackgroundColor(Color.LTGRAY) }
     val pointer = PointF()
-    var lastHited: View? = null
 
     override fun onTouch(v: View, event: MotionEvent): Boolean {
 
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                println("ACTION_DOWN selected = ${selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
-                inEditMode = true
+                println("ACTION_DOWN --- x = ${event.x} y = ${event.y} selected = ${selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
                 selected = v as? AppView
+                if (selected != null) {
+                    inEditMode = true
+                    stageRoot.parent.requestDisallowInterceptTouchEvent(true)
+                    stageRoot.shouldIntercept = true
+
+                }
             }
 
             MotionEvent.ACTION_MOVE -> {
                 println("ACTION_MOVE x = ${event.x} y = ${event.y} selected = ${selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
 
-                if (selected == null) {
+                // TODO: test for perform fast swipe
+//                if (isSwipe) ...
+                if (selected == null)
                     return false
-                }
 
-                // we want to have global coords
-//                selected!!.translationX = event.x - selected!!.left
-//                selected!!.translationY = event.y - selected!!.top
-                selected!!.visibility = View.INVISIBLE
-                pointer.set(event.x, event.y)
 
-                val hitedView = getHitView(event.x.toInt(), event.y.toInt())
-                if (hitedView is TrashView) {
-                    hitedView.activate()
-                }
+                selected!!.translationX = event.x - (selected!!.left + stageViewPager.left)
+                selected!!.translationY = event.y - (selected!!.top + stageViewPager.top)
+//                selected!!.visibility = View.INVISIBLE
 
+//                pointer.set(event.x, event.y)
+
+                hitedView = getHitView(event.x.toInt(), event.y.toInt())
+
+                (hitedView as? TrashView)?.activate()
             }
 
             MotionEvent.ACTION_UP -> {
-                println("ACTION_MOVE = ${selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
-                inEditMode = false
+                println("ACTION_UP selected = ${selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
                 selected?.let {
-//                    it.translationX = 0f
-//                    it.translationY = 0f
+                    it.translationX = 0f
+                    it.translationY = 0f
                     it.visibility = View.VISIBLE
                 }
                 selected = null
+                inEditMode = false
+                stageRoot.parent.requestDisallowInterceptTouchEvent(true)
+                stageRoot.shouldIntercept = false
             }
         }
 
         return true
     }
 
-    val hitRect = Rect()
-    val p = Point()
+    private var lastHited: View? = null
+    private val hitRect = Rect()
+    private val p = Point()
+    private var hitedView: View? = null
+
     private fun getHitView(x: Int, y: Int): View {
         p.set(x, y)
 
@@ -138,28 +149,22 @@ class UserStage(context: Context) : BasePagerSnapStage(context), View.OnLongClic
             return lastHited!!
         }
 
-        val testedView: View
-
-        testedView = (stageViewPager.adapter as PagerSnapAdapter).currentViewHolder.snapLayout
-        if (testHit(testedView)) {
-            lastHited = testedView
-            return testedView
+        stageRoot.children.forEach {
+            if (testHit(it))
+                return it
         }
 
-//        and so on...
-//        testedView = removeSensor
-//        if (testHit(testedView)) {
-//            lastHited = testedView
-//            return testedView
-//        }
-
-        return rootLayout
+        return stageRoot
     }
 
     private fun testHit(v: View): Boolean {
         v.getHitRect(hitRect)
         return hitRect.contains(p.x, p.y)
     }
+
+
+
+
 
 //    private var direction = Point()
 //    private var dragCell: DummyCell? = null

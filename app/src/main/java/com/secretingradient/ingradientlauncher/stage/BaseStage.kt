@@ -4,17 +4,16 @@ import android.content.Context
 import android.view.DragEvent
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import com.secretingradient.ingradientlauncher.MainActivity
 import com.secretingradient.ingradientlauncher.element.AppView
 
 abstract class BaseStage(val context: Context) : View.OnDragListener {
-    val launcherViewPager = (context as MainActivity).launcherViewPager
-    lateinit var rootLayout: ViewGroup
+    lateinit var stageRoot: StageRoot
     protected abstract val stageLayoutId: Int
+    val launcherViewPager = (context as MainActivity).launcherViewPager
 
-    open fun inflateAndAttach(rootLayout: ViewGroup) {
-        this.rootLayout = LayoutInflater.from(context).inflate(stageLayoutId, rootLayout, true) as ViewGroup
+    open fun inflateAndAttach(stageRoot: StageRoot) {
+        this.stageRoot = LayoutInflater.from(context).inflate(stageLayoutId, stageRoot, true) as StageRoot
     }
 
     fun flipToStage(number: Int, event: DragEvent) {

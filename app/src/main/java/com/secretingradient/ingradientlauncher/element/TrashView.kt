@@ -19,7 +19,7 @@ class TrashView : ImageView{
     }
 
     fun deactivate() {
-        setBackgroundResource(R.color.Transparent)
+        setBackgroundResource(R.color.TransparentBlack)
         setImageDrawable(null)
     }
 }

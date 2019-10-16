@@ -14,10 +14,10 @@ abstract class BasePagerSnapStage(context: Context) : BaseStage(context), View.O
     protected abstract val pagerAdapter: PagerSnapAdapter
     protected abstract val viewPagerId: Int
 
-    override fun inflateAndAttach(rootLayout: ViewGroup) {
-        View.inflate(context, stageLayoutId, rootLayout)
-        this.rootLayout = rootLayout
-        stageViewPager = rootLayout.findViewById<ViewPager2>(viewPagerId)
+    override fun inflateAndAttach(stageRoot: StageRoot) {
+        View.inflate(context, stageLayoutId, stageRoot)
+        this.stageRoot = stageRoot
+        stageViewPager = stageRoot.findViewById<ViewPager2>(viewPagerId)
         stageViewPager.adapter = pagerAdapter
     }
 
