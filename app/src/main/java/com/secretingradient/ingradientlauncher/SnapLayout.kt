@@ -1,6 +1,7 @@
 package com.secretingradient.ingradientlauncher
 
 import android.content.Context
+import android.graphics.Point
 import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.View
@@ -35,7 +36,7 @@ class SnapLayout : FrameLayout {
     override fun onViewAdded(child: View) {
         SnapLayoutParams.verifyLayoutParams(child)
         val lp = child.layoutParams as SnapLayoutParams
-        lp.computeBounds(snapCountX)
+        lp.computeSnapBounds(snapCountX)
     }
 
     fun addView(child: View, layoutInfo: SnapLayoutInfo) {
@@ -44,6 +45,7 @@ class SnapLayout : FrameLayout {
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        println("...onMeasure")
         verify()
 
         val myWidth = MeasureSpec.getSize(widthMeasureSpec)
@@ -66,7 +68,7 @@ class SnapLayout : FrameLayout {
             ceil(reminderX.toFloat()/2f).toInt(),
             ceil(reminderY.toFloat()/2f).toInt())
 
-        measureChildren(0, 0)
+//        measureChildren(0, 0)
 
         setMeasuredDimension(myWidth, myHeight)
     }
@@ -74,29 +76,51 @@ class SnapLayout : FrameLayout {
     override fun measureChild(child: View, widthSpec: Int, heightSpec: Int) {
         val lp = child.layoutParams as SnapLayoutParams
 
-        child.measure(MeasureSpec.makeMeasureSpec(lp.info.snapWidth*snapStepX, MeasureSpec.EXACTLY),
-                      MeasureSpec.makeMeasureSpec(lp.info.snapHeight*snapStepY, MeasureSpec.EXACTLY))
+        child.measure(MeasureSpec.makeMeasureSpec(lp.snapInfo.snapWidth*snapStepX, MeasureSpec.EXACTLY),
+                      MeasureSpec.makeMeasureSpec(lp.snapInfo.snapHeight*snapStepY, MeasureSpec.EXACTLY))
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        println("...onLayout")
         children.forEach { child: View ->
             val lp = child.layoutParams as SnapLayoutParams
-            val l = lp.bounds.left * snapStepX
-            val t = lp.bounds.top  * snapStepY
-            child.layout(l, t, l + child.measuredWidth, t + child.measuredHeight)
+            val l = lp.snapBounds.left * snapStepX
+            val t = lp.snapBounds.top  * snapStepY
+            child.layout(l, t, l + lp.snapInfo.snapWidth * snapStepX, t + lp.snapInfo.snapHeight * snapStepY)
         }
     }
 
-    fun canLayoutView(v: View): Boolean {
+    fun canPlaceView(v: View): Boolean {
         SnapLayoutParams.verifyLayoutParams(v)
-        val lp_v = v.layoutParams as SnapLayoutParams
+        return canPlaceHere(v.layoutParams as SnapLayoutParams)
+    }
+
+    fun canPlaceHere(p: Point, snapWidth: Int, snapHeight: Int): Boolean {
+        return canPlaceHere(SnapLayoutParams(getPosSnapped(p), snapWidth, snapHeight, snapCountX))
+    }
+
+    fun canPlaceHere(layoutInfo: SnapLayoutInfo): Boolean {
+        return canPlaceHere(SnapLayoutParams(layoutInfo, snapCountX))
+    }
+
+    fun canPlaceHere(lp: SnapLayoutParams): Boolean {
         children.forEach {
-            val lp = it.layoutParams as SnapLayoutParams
-            if (Rect.intersects(lp_v.bounds, lp.bounds))
+            val lp_child = it.layoutParams as SnapLayoutParams
+            if (Rect.intersects(lp.snapBounds, lp_child.snapBounds))
                 return false
         }
         return true
     }
+
+    fun getPointSnapped(p: Point): Point {
+        return Point(p.x / snapStepX * snapStepX, p.y / snapStepY * snapStepY)
+    }
+
+    fun getPosSnapped(p: Point, step: Int = 1): Int {
+        // int division! Order does matter
+        return p.x / snapStepX / step * step  +  p.y / snapStepY  / step * step * snapCountX
+    }
+
 
     private fun verify() {
         check(snapCountX > 0 && snapCountY > 0) {this}
@@ -112,43 +136,51 @@ class SnapLayout : FrameLayout {
 
 
     class SnapLayoutParams : LayoutParams {
-        lateinit var info: SnapLayoutInfo
-        val bounds = Rect()
+        lateinit var snapInfo: SnapLayoutInfo
+        lateinit var snapBounds: Rect
 
         constructor(c: Context, attrs: AttributeSet) : super(c, attrs)
         constructor(pos: Int, snapWidth: Int, snapHeight: Int) : super(0, 0) {
-            this.info = SnapLayoutInfo(pos, snapWidth, snapHeight)
+            this.snapInfo = SnapLayoutInfo(pos, snapWidth, snapHeight)
+        }
+        constructor(pos: Int, snapWidth: Int, snapHeight: Int, snapCountX: Int) : super(0, 0) {
+            this.snapInfo = SnapLayoutInfo(pos, snapWidth, snapHeight)
+            computeSnapBounds(snapCountX)
         }
         constructor(info: SnapLayoutInfo) : super (0,0) {
-            this.info = info.copy()
+            this.snapInfo = info.copy()
+        }
+        constructor(info: SnapLayoutInfo, snapCountX: Int) : super (0,0) {
+            this.snapInfo = info.copy()
+            computeSnapBounds(snapCountX)
         }
 
-        fun computeBounds(snapCountX: Int) {
-            bounds.apply {
+        fun computeSnapBounds(snapCountX: Int) {
+            snapBounds = Rect().apply {
                 left = getPosX(snapCountX)
                 top =  getPosY(snapCountX)
-                right = left + info.snapWidth
-                bottom = top + info.snapHeight
+                right = left + snapInfo.snapWidth
+                bottom = top + snapInfo.snapHeight
             }
         }
 
         private fun getPosX(snapCountX: Int): Int {
-            return info.position % snapCountX
+            return snapInfo.position % snapCountX
         }
 
         private fun getPosY(snapCountX: Int): Int {
-            return info.position / snapCountX
+            return snapInfo.position / snapCountX
         }
 
         override fun toString(): String {
-            return "${this.javaClass.simpleName}={ info=$info }"
+            return "${this.javaClass.simpleName}={ snapInfo=$snapInfo }"
         }
 
         companion object {
             fun verifyLayoutParams(v: View) {
                 val lp = v.layoutParams
                 lp as? SnapLayoutParams ?: throw LauncherException("Invalid LayoutParams $lp of view $v.")
-                lp.info.verify()
+                lp.snapInfo.verify()
             }
         }
     }

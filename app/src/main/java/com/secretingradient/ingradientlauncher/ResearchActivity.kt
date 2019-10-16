@@ -3,8 +3,7 @@
 package com.secretingradient.ingradientlauncher
 
 import android.content.Context
-import android.graphics.Color
-import android.graphics.Point
+import android.graphics.*
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.GestureDetector
@@ -12,11 +11,14 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.graphics.withTranslation
 import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.stage.UserStage
 import kotlinx.android.synthetic.main.research_layout.*
+import kotlinx.android.synthetic.main.research_layout.view.*
 
 
 class ResearchActivity : AppCompatActivity() {
@@ -39,6 +41,7 @@ class ResearchActivity : AppCompatActivity() {
 
         snap_layout.setOnTouchListener(research_root)
         research_root.setOnTouchListener(research_root)
+        edit_text.setOnTouchListener(research_root)
 
         edit_text.setOnEditorActionListener { v, actionId, event ->
             v as EditText
@@ -71,44 +74,73 @@ class MyRoot : LinearLayout, View.OnTouchListener {
     var isEditMode = false
     val gListener = GestureListener()
     val gDetector = GestureDetector(context, gListener)
-    var startPoint = Point()
+    val ghostView = ImageView(context).apply { setBackgroundColor(Color.BLUE) }
+    val pointer = PointF()
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
-    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
-        if (isEditMode && selected != null)
-            return true
+    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+        return super.dispatchTouchEvent(ev)
+    }
 
-        if (ev.action == MotionEvent.ACTION_DOWN)
-            return false
+    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+        if (selected != null)
+            return true
 
         return false
     }
 
     override fun onTouch(v: View, event: MotionEvent): Boolean {
-        gDetector.onTouchEvent(event)
 
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 println("ACTION_DOWN selected = $selected, v = $v")
-                isEditMode = true
-                selected = v
-                startPoint = Point(event.x.toInt() - v.left, event.y.toInt() - v.top)
+                selected = v as? AppView
             }
 
             MotionEvent.ACTION_MOVE -> {
                 println("ACTION_MOVE ev.x = ${event.x} selected = $selected, v = $v")
-                if (v == this && selected != null) {
-                    selected!!.translationX = event.x - selected!!.left
-                    selected!!.translationY = event.y - selected!!.top
+
+                if (selected == null) {
+                    return false
                 }
+
+//                selected!!.translationX = event.x - selected!!.left
+//                selected!!.translationY = event.y - selected!!.top
+                selected!!.visibility = View.INVISIBLE
+                pointer.set(event.x, event.y)
+
+                val hitRect = Rect()
+
+                snap_layout.getHitRect(hitRect)
+                if (hitRect.contains(event.x.toInt(), event.y.toInt())) {
+                    println("in snap_layout")
+                    val local = getLocalPoint(snap_layout, event)
+                    snap_layout.removeView(ghostView)
+                    if (snap_layout.canPlaceHere(local, 2, 2)) {
+                        println("can be placed")
+                        snap_layout.addView(ghostView, SnapLayout.SnapLayoutInfo(snap_layout.getPosSnapped(local, 2), 2, 2))
+                    }
+                }
+
+                research_img.getHitRect(hitRect)
+                if (hitRect.contains(event.x.toInt(), event.y.toInt())) {
+                    println("in research_img")
+                    research_img.setBackgroundColor(Color.BLUE)
+                    invalidate()
+                } else {
+                    research_img.setBackgroundColor(Color.TRANSPARENT)
+                }
+
             }
 
             MotionEvent.ACTION_UP -> {
-                if (selected !is AppView) {
-                    println("end EditMode with selected = $selected, v = $v")
-                    isEditMode = false
+                println("ACTION_MOVE = $selected, v = $v")
+                selected?.let {
+//                    it.translationX = 0f
+//                    it.translationY = 0f
+                    it.visibility = View.VISIBLE
                 }
                 selected = null
             }
@@ -116,6 +148,7 @@ class MyRoot : LinearLayout, View.OnTouchListener {
 
         return true
     }
+
     inner class GestureListener : GestureDetector.SimpleOnGestureListener() {
         override fun onDown(e: MotionEvent?): Boolean {
             return false
@@ -143,6 +176,17 @@ class MyRoot : LinearLayout, View.OnTouchListener {
         }
     }
 
+    fun getLocalPoint(child: View, event: MotionEvent): Point {
+        return Point(event.x.toInt() - child.left, event.y.toInt() - child.top)
+    }
+
+
+    override fun dispatchDraw(canvas: Canvas) {
+        super.dispatchDraw(canvas)
+        canvas.withTranslation(pointer.x, pointer.y) {
+            selected?.draw(canvas)
+        }
+    }
 }
 
 

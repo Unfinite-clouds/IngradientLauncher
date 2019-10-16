@@ -13,6 +13,12 @@
         custom:snapCountX="8"
         custom:snapCountY="12">
     </com.secretingradient.ingradientlauncher.SnapLayout>
+    <ImageView
+        android:id="@+id/research_img"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0"
+        android:src="@drawable/ic_info"/>
     <EditText
         android:id="@+id/edit_text"
         android:layout_width="match_parent"
