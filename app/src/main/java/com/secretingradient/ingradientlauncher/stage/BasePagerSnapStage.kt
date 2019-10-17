@@ -49,7 +49,7 @@ abstract class BasePagerSnapStage(context: Context) : BaseStage(context), View.O
             createPage(page)   // don't need to create pages lazy. create all in init() instead
             val pageState = pageStates[page]
             pageState.forEach {
-                holder.snapLayout.addView( // we should avoid creating here
+                holder.snapLayout.addNewView( // avoid creating here
                     AppView(context, it.appInfo).apply { setOnTouchListener(this@BasePagerSnapStage) },
                     it.snapLayoutInfo)
             }

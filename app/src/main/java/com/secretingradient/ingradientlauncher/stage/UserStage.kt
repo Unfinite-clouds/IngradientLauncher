@@ -3,7 +3,6 @@ package com.secretingradient.ingradientlauncher.stage
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Point
-import android.graphics.PointF
 import android.graphics.Rect
 import android.view.*
 import android.widget.ImageView
@@ -47,7 +46,7 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
 //            var i = 0
 //            apps.forEach {
 //                appInfo = AppManager.getApp(it.value) ?: throw LauncherException()
-//                snapLayout.addView(createAppView(appInfo!!), SnapLayout.SnapLayoutInfo(i*2 + (i*2/8)*8, 2, 2))
+//                snapLayout.addNewView(createAppView(appInfo!!), SnapLayout.SnapLayoutInfo(i*2 + (i*2/8)*8, 2, 2))
 //                if (i>5)
 //                    return@forEach
 //                i++
@@ -70,15 +69,17 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
         app.setPadding(cellPadding)
     }
 
-    val gListener = GestureListener()
-    val gDetector = GestureDetector(context, gListener)
+
+    private val gListener = GestureListener()
+    private val gDetector = GestureDetector(context, gListener)
     private var selected: AppView? = null
+    private val ghostView = ImageView(context).apply { setBackgroundColor(Color.LTGRAY); layoutParams = SnapLayout.SnapLayoutParams(-1, 2, 2) }
     private var inEditMode = false
-    private val ghostView = ImageView(context).apply { setBackgroundColor(Color.LTGRAY) }
-    private val pointer = PointF()
-    private val touchPoint = Point()
     private val scaleInEditMode = 0.85f
-    private val eventPoint = Point()
+    private val selectedPivot = Point()
+    private val touchPoint = Point()
+    private val localPoint = Point()
+    private var newPos = -1
 
     private fun startEditMode() {
         inEditMode = true
@@ -87,28 +88,31 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
     }
 
     private fun endEditMode() {
-        if (inEditMode) {
-            selected?.let {
-                it.translationX = 0f
-                it.translationY = 0f
-            }
-            selected = null
-            stageViewPager.animate().scaleX(1f).scaleY(1f).start()
-        }
+        unselect()
+        stageViewPager.animate().scaleX(1f).scaleY(1f).start()
         inEditMode = false
 //        stageRoot.parent.requestDisallowInterceptTouchEvent(false)
         stageRoot.shouldIntercept = false
     }
 
+    private fun unselect() {
+        selected?.let {
+            it.translationX = 0f
+            it.translationY = 0f
+        }
+        selected = null
+    }
+
     override fun onTouch(v: View, event: MotionEvent): Boolean {
         gDetector.onTouchEvent(event)
+        touchPoint.set(event.x.toInt(), event.y.toInt())
 
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 println("ACTION_DOWN --- x = ${event.x} y = ${event.y} selected = ${selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
                 selected = v as? AppView
                 if (selected != null) {
-                    touchPoint.set(selected!!.left + stageViewPager.left + event.x.toInt(), selected!!.top + stageViewPager.top + event.y.toInt())
+                    selectedPivot.set(selected!!.left + stageViewPager.left + touchPoint.x, selected!!.top + stageViewPager.top + touchPoint.y)
                     selected!!.animatorScale.start()
                     stageRoot.shouldIntercept = true
                 }
@@ -128,20 +132,24 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
                 if (selected == null || !inEditMode)
                     return false
 
-                selected!!.translationX = (event.x - touchPoint.x)/scaleInEditMode
-                selected!!.translationY = (event.y - touchPoint.y)/scaleInEditMode
+                selected!!.translationX = (event.x - selectedPivot.x)/scaleInEditMode
+                selected!!.translationY = (event.y - selectedPivot.y)/scaleInEditMode
 
-
-                eventPoint.set(event.x.toInt(), event.y.toInt())
-                val hitedView = getHitView(eventPoint)
+                val hitedView = getHitView(touchPoint)
 
                 when (hitedView) {
                     is TrashView -> hitedView.activate()
                     is ViewPager2 -> {
                         val snap = currentSnapLayout
-                        ghostView.layoutParams = SnapLayout.SnapLayoutParams(-1, 2, 2)
-                        snap.removeView(ghostView)
-                        snap.tryAddView(ghostView, ghostView.layoutParams as SnapLayout.SnapLayoutParams, eventPoint)
+                        localPoint.set(touchPoint.x - stageViewPager.left, touchPoint.y - stageViewPager.top)
+                        newPos = snap.getPosSnapped(localPoint, 2)
+                        if (snap.canPlaceViewToPos(ghostView, newPos)) {
+                            if (ghostView.parent == null)
+                                snap.addNewView(ghostView, newPos, 2, 2)
+                            else {
+                                snap.moveView(ghostView, newPos)
+                            }
+                        }
                     }
                 }
                 (hitedView as? TrashView)?.activate()
@@ -150,7 +158,13 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
 
             MotionEvent.ACTION_UP -> {
                 println("ACTION_UP selected = ${selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
-                selected = null
+                if (selected != null) {
+                    val snap = currentSnapLayout
+                    snap.removeView(ghostView)
+                    snap.moveView(selected!!, newPos)
+                    // saveData()
+                }
+                unselect()
                 stageRoot.shouldIntercept = false
             }
         }
@@ -170,11 +184,8 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
 
     private var lastHited: View? = null
     private val hitRect = Rect()
-//    private val p = Point()
-    private var hitedView: View? = null
 
     private fun getHitView(p: Point): View {
-
         lastHited?.getHitRect(hitRect)
         if (lastHited != null && hitRect.contains(p.x, p.y)) {
             return lastHited!!
@@ -182,18 +193,14 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
 
         stageRoot.children.forEach {
             it.getHitRect(hitRect)
-            if (hitRect.contains(p.x, p.y))
+            if (hitRect.contains(p.x, p.y)) {
+                lastHited = it
                 return it
+            }
         }
 
         return stageRoot
     }
-
-/*    private fun testHit(v: View): Boolean {
-        v.getHitRect(hitRect)
-        return hitRect.contains(p.x, p.y)
-    }*/
-
 
 
 

@@ -40,8 +40,13 @@ class SnapLayout : FrameLayout {
         lp.computeSnapBounds(snapCountX)
     }
 
-    fun addView(child: View, layoutInfo: SnapLayoutInfo) {
+    fun addNewView(child: View, layoutInfo: SnapLayoutInfo) {
         child.layoutParams = SnapLayoutParams(layoutInfo)
+        addView(child)
+    }
+
+    fun addNewView(child: View, pos: Int, snapWidth: Int, snapHeight: Int) {
+        child.layoutParams = SnapLayoutParams(pos, snapWidth, snapHeight)
         addView(child)
     }
 
@@ -108,6 +113,12 @@ class SnapLayout : FrameLayout {
         return canPlaceHere(SnapLayoutParams(layoutInfo, snapCountX))
     }
 
+    fun canPlaceViewToPos(v: View, pos: Int): Boolean {
+        val lp = v.layoutParams as SnapLayoutParams
+        val new_lp = SnapLayoutParams(pos, lp.snapWidth, lp.snapHeight, snapCountX)
+        return canPlaceHere(new_lp)
+    }
+
     private var last_lp_child: SnapLayoutParams? = null
     fun canPlaceHere(lp: SnapLayoutParams): Boolean {
         if (last_lp_child != null && Rect.intersects(lp.snapBounds, last_lp_child!!.snapBounds))
@@ -115,7 +126,7 @@ class SnapLayout : FrameLayout {
 
         children.forEach {
             val lp_child = it.layoutParams as SnapLayoutParams
-            if (Rect.intersects(lp.snapBounds, lp_child.snapBounds)) {
+            if (Rect.intersects(lp.snapBounds, lp_child.snapBounds)) { // todo - bad using snapBounds
                 last_lp_child = lp_child
                 return false
             }
@@ -144,6 +155,17 @@ class SnapLayout : FrameLayout {
         lp.position = saved_pos  // restore
         lp.computeSnapBounds(snapCountX) // bad code
         return false
+    }
+
+    fun moveView(v: View, pos: Int) {
+        if (v.parent != this) throw LauncherException("view ${v.javaClass.simpleName} must be a child of SnapLayout to move")
+        val lp = v.layoutParams as SnapLayoutParams
+        if (lp.position != pos) {
+            val old = lp.position
+            lp.position = pos
+            lp.computeSnapBounds(snapCountX)
+            requestLayout()
+        }
     }
 
     private fun verify() {

@@ -34,7 +34,7 @@ class ResearchActivity : AppCompatActivity() {
         fillApps()
 
 //        apps.forEach {
-//            snap_layout.addView(AppView(this, it.appInfo).apply {
+//            snap_layout.addNewView(AppView(this, it.appInfo).apply {
 //                this.setOnTouchListener(this@ResearchActivity.research_root)
 //            }, it.snapLayoutInfo)
 //        }
@@ -120,7 +120,7 @@ class MyRoot : LinearLayout, View.OnTouchListener {
                     snap_layout.removeView(ghostView)
                     if (snap_layout.canPlaceHere(local, 2, 2)) {
                         println("can be placed")
-                        snap_layout.addView(ghostView, SnapLayout.SnapLayoutInfo(snap_layout.getPosSnapped(local, 2), 2, 2))
+                        snap_layout.addNewView(ghostView, SnapLayout.SnapLayoutInfo(snap_layout.getPosSnapped(local, 2), 2, 2))
                     }
                 }
 
