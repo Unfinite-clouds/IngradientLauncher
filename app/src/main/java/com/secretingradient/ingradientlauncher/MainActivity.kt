@@ -16,22 +16,22 @@ class MainActivity : AppCompatActivity() {
 
 
 //        Storable.deleteFile(this, Storable.ALL_APPS)
-//        Storable.deleteFile(this, Storable.MAIN_SCREEN_APPS)
-//        Storable.deleteFile(this, Storable.CUSTOM_GRID_APPS)
+//        Storable.deleteFile(this, Storable.MAIN_STAGE_APPS)
+//        Storable.deleteFile(this, Storable.USER_STAGE_APPS)
 
-        AppManager.loadAllApps(this)
+        SaveManager.init(this)
 
-//        val allApps = AppManager.allApps.iterator()
+//        val apps = SaveManager.apps.iterator()
 //
 //        for (i in 0..12) {
-//            AppManager.applyCustomGridChanges(this, i, allApps.next().key)
+//            SaveManager.dumpUserStageApps(this, i, apps.next().key)
 //        }
 //
 //        val list = mutableListOf<String>()
 //        for (i in 0..12) {
-//            list.add(allApps.next().key)
+//            list.add(apps.next().key)
 //        }
-//        AppManager.applyMainScreenChanges(this, list)
+//        SaveManager.dumpMainStageApps(this, list)
 
 
         getPrefs(this).edit {putBoolean(Preferences.FIRST_LOAD, true)}

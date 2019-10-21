@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Point
 import android.graphics.Rect
+import android.os.Build
 import android.view.*
 import android.widget.ImageView
 import androidx.core.view.children
@@ -15,7 +16,7 @@ import com.secretingradient.ingradientlauncher.element.*
 class UserStage(context: Context) : BasePagerSnapStage(context) {
     val FLIP_ZONE = toPx(40).toInt()
 
-    var apps = AppManager.customGridApps
+    var apps = SaveManager.userStageApps
     var rowCount = getPrefs(context).getInt(Preferences.CUSTOM_GRID_ROW_COUNT, -1)
     var columnCount = getPrefs(context).getInt(Preferences.CUSTOM_GRID_COLUMN_COUNT, -1)
     var pageCount = getPrefs(context).getInt(Preferences.CUSTOM_GRID_PAGE_COUNT, -1)
@@ -33,6 +34,7 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
 //        trashView.setOnDragListener(this)
         stageRoot.setOnTouchListener(this)
         trashView.setOnTouchListener(this)
+//        stageViewPager.offscreenPageLimit = 2
         (stageViewPager.getChildAt(0) as ViewGroup).clipChildren = false
     }
 
@@ -45,7 +47,7 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
 //            var appInfo: AppInfo?
 //            var i = 0
 //            apps.forEach {
-//                appInfo = AppManager.getApp(it.value) ?: throw LauncherException()
+//                appInfo = SaveManager.getApp(it.value) ?: throw LauncherException()
 //                snapLayout.addNewView(createAppView(appInfo!!), SnapLayout.SnapLayoutInfo(i*2 + (i*2/8)*8, 2, 2))
 //                if (i>5)
 //                    return@forEach
@@ -53,7 +55,7 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
 //            }
 
             val pageState = MutableList(8) {i ->
-                SnapElementInfo(AppManager.getApp(apps[i]!!)!!, SnapLayout.SnapLayoutInfo((i + (i/columnCount)*columnCount)*2, 2, 2))
+                SnapElementInfo(SaveManager.getApp(apps[i]!!)!!, SnapLayout.SnapLayoutInfo((i + (i/columnCount)*columnCount)*2, 2, 2))
             }
             pageStates.add(pageState)
 
@@ -69,110 +71,73 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
         app.setPadding(cellPadding)
     }
 
+    inner class EditModeListener : GestureDetector.SimpleOnGestureListener() { // todo
+        var selected: AppView? = null
+        private val ghostView = ImageView(context).apply { setBackgroundColor(Color.LTGRAY); layoutParams = SnapLayout.SnapLayoutParams(-1,2,2) }
+        private var inEditMode = false
+        private val scaleInEditMode = 0.85f
+        private val selectedPivot = Point()
+        private val touchPoint = Point()
+        private val localPoint = Point()
+        private var newPos = -1
 
-    private val gListener = GestureListener()
-    private val gDetector = GestureDetector(context, gListener)
-    private var selected: AppView? = null
-    private val ghostView = ImageView(context).apply { setBackgroundColor(Color.LTGRAY); layoutParams = SnapLayout.SnapLayoutParams(-1, 2, 2) }
-    private var inEditMode = false
-    private val scaleInEditMode = 0.85f
-    private val selectedPivot = Point()
-    private val touchPoint = Point()
-    private val localPoint = Point()
-    private var newPos = -1
-
-    private fun startEditMode() {
-        inEditMode = true
-        stageRoot.parent.requestDisallowInterceptTouchEvent(true)
-        stageViewPager.animate().scaleX(scaleInEditMode).scaleY(scaleInEditMode).start()
-    }
-
-    private fun endEditMode() {
-        unselect()
-        stageViewPager.animate().scaleX(1f).scaleY(1f).start()
-        inEditMode = false
-//        stageRoot.parent.requestDisallowInterceptTouchEvent(false)
-        stageRoot.shouldIntercept = false
-    }
-
-    private fun unselect() {
-        selected?.let {
-            it.translationX = 0f
-            it.translationY = 0f
-        }
-        selected = null
-    }
-
-    override fun onTouch(v: View, event: MotionEvent): Boolean {
-        gDetector.onTouchEvent(event)
-        touchPoint.set(event.x.toInt(), event.y.toInt())
-
-        when (event.action) {
-            MotionEvent.ACTION_DOWN -> {
-                println("ACTION_DOWN --- x = ${event.x} y = ${event.y} selected = ${selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
-                selected = v as? AppView
-                if (selected != null) {
-                    selectedPivot.set(selected!!.left + stageViewPager.left + touchPoint.x, selected!!.top + stageViewPager.top + touchPoint.y)
-                    selected!!.animatorScale.start()
-                    stageRoot.shouldIntercept = true
-                }
-                if (inEditMode) {
-                    stageRoot.parent.requestDisallowInterceptTouchEvent(true)
-                }
-                if (inEditMode && selected == null) {
-                    endEditMode()
-                }
+        fun onDown(v: View, event: MotionEvent) {
+            selected = v as? AppView
+            if (selected != null) {
+                selectedPivot.set(selected!!.left + stageViewPager.left + event.x.toInt(), selected!!.top + stageViewPager.top + event.y.toInt())
+                selected!!.animatorScale.start()
+                stageRoot.shouldIntercept = true
             }
+            if (inEditMode) {
+                stageRoot.parent.requestDisallowInterceptTouchEvent(true)
+            }
+            if (inEditMode && selected == null) {
+                endEditMode()
+            }
+        }
 
-            MotionEvent.ACTION_MOVE -> {
-                println("ACTION_MOVE x = ${event.x} y = ${event.y} selected = ${selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
+        fun onMove(v: View, event: MotionEvent) {
+            touchPoint.set(event.x.toInt(), event.y.toInt())
 
-                // TODO: test for perform fast swipe
-//                if (isSwipe) ...
-                if (selected == null || !inEditMode)
-                    return false
+            // TODO: test for perform fast swipe
+            // if (isSwipe) ...
+            if (selected == null || !inEditMode)
+                return
 
-                selected!!.translationX = (event.x - selectedPivot.x)/scaleInEditMode
-                selected!!.translationY = (event.y - selectedPivot.y)/scaleInEditMode
+            selected!!.translationX = (event.x - selectedPivot.x)/scaleInEditMode
+            selected!!.translationY = (event.y - selectedPivot.y)/scaleInEditMode
 
-                val hitedView = getHitView(touchPoint)
+            val hitedView = getHitView(touchPoint)
 
-                when (hitedView) {
-                    is TrashView -> hitedView.activate()
-                    is ViewPager2 -> {
-                        val snap = currentSnapLayout
-                        localPoint.set(touchPoint.x - stageViewPager.left, touchPoint.y - stageViewPager.top)
-                        newPos = snap.getPosSnapped(localPoint, 2)
-                        if (snap.canPlaceViewToPos(ghostView, newPos)) {
-                            if (ghostView.parent == null)
-                                snap.addNewView(ghostView, newPos, 2, 2)
-                            else {
-                                snap.moveView(ghostView, newPos)
-                            }
+            when (hitedView) {
+                is TrashView -> hitedView.activate()
+                is ViewPager2 -> {
+                    val snap = currentSnapLayout
+                    localPoint.set(touchPoint.x - stageViewPager.left, touchPoint.y - stageViewPager.top)
+                    newPos = snap.getPosSnapped(localPoint, 2)
+                    if (snap.canPlaceViewToPos(ghostView, newPos, selected)) {
+                        if (ghostView.parent == null)
+                            snap.addNewView(ghostView, newPos, 2, 2)
+                        else {
+                            snap.moveView(ghostView, newPos)
                         }
                     }
                 }
-                (hitedView as? TrashView)?.activate()
-
             }
-
-            MotionEvent.ACTION_UP -> {
-                println("ACTION_UP selected = ${selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
-                if (selected != null) {
-                    val snap = currentSnapLayout
-                    snap.removeView(ghostView)
-                    snap.moveView(selected!!, newPos)
-                    // saveData()
-                }
-                unselect()
-                stageRoot.shouldIntercept = false
-            }
+            (hitedView as? TrashView)?.activate()
         }
 
-        return true
-    }
+        fun onUp(v: View, event: MotionEvent) {
+            if (selected != null) {
+                val snap = currentSnapLayout
+                snap.removeView(ghostView)
+                snap.moveView(selected!!, newPos)
+                // TODO save state
+            }
+            unselect()
+            stageRoot.shouldIntercept = false
+        }
 
-    inner class GestureListener : GestureDetector.SimpleOnGestureListener() {
         override fun onDown(e: MotionEvent?): Boolean {
             return true
         }
@@ -180,6 +145,54 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
         override fun onLongPress(e: MotionEvent) {
             startEditMode()
         }
+
+        private fun startEditMode() {
+            inEditMode = true
+            stageRoot.parent.requestDisallowInterceptTouchEvent(true)
+            stageViewPager.animate().scaleX(scaleInEditMode).scaleY(scaleInEditMode).start()
+        }
+
+        private fun endEditMode() {
+            unselect()
+            stageViewPager.animate().scaleX(1f).scaleY(1f).start()
+            inEditMode = false
+            stageRoot.shouldIntercept = false
+        }
+
+        private fun unselect() {
+            selected?.let {
+                it.translationX = 0f
+                it.translationY = 0f
+            }
+            selected = null
+        }
+    }
+
+    private val editModeListener = EditModeListener()
+    private val editModeDetector = GestureDetector(context, editModeListener)
+
+    override fun onTouch(v: View, event: MotionEvent): Boolean {
+        // todo remove
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            println("${MotionEvent.actionToString(event.action)} x = ${event.x} y = ${event.y} selected = ${editModeListener.selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
+        }
+
+        editModeDetector.onTouchEvent(event)
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                editModeListener.onDown(v, event)
+            }
+
+            MotionEvent.ACTION_MOVE -> {
+                editModeListener.onMove(v, event)
+            }
+
+            MotionEvent.ACTION_UP -> {
+                editModeListener.onUp(v, event)
+            }
+        }
+
+        return true
     }
 
     private var lastHited: View? = null
@@ -324,12 +337,12 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
     }
 
     private fun saveState() {
-        AppManager.applyCustomGridChanges(context, apps)
+        SaveManager.dumpUserStageApps(context)
     }
 
     private fun putApp(app: AppView, to: DummyCell) {
         to.app = app
-        apps[to.position] = app.appInfo.id
+        apps.put(to.position, app.appInfo.id)
     }
 
     private fun removeApp(cell: DummyCell) {
@@ -348,7 +361,7 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
             from.removeAllViews()
             to.app = shortcutTemp
 
-            apps[to.position] = apps[from.position]!!
+            apps.put(to.position, apps[from.position]!!)
             apps.remove(from.position)
         }
     }

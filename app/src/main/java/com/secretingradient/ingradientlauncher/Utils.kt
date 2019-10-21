@@ -6,9 +6,12 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.util.SparseArray
+import androidx.core.util.set
 import androidx.preference.PreferenceManager
 import java.io.ByteArrayOutputStream
 import java.io.InputStreamReader
+import java.util.*
 import kotlin.random.Random
 
 fun toDp(px: Float): Float {
@@ -56,4 +59,13 @@ fun printFile(context: Context, file: String){
     val inputStreamstr = InputStreamReader(context.openFileInput(file))
     println(inputStreamstr.readText())
     inputStreamstr.close()
+}
+
+fun MutableList<*>.swap(from: Int, to: Int) {
+    Collections.swap(this, from, to)
+}
+
+fun SparseArray<*>.swap(from: Int, to: Int) {
+    val tmp = this[to]
+    this.set(to, from)
 }

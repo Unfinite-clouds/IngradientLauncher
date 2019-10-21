@@ -11,8 +11,8 @@ import androidx.core.view.postDelayed
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.secretingradient.ingradientlauncher.AppManager
 import com.secretingradient.ingradientlauncher.Preferences
+import com.secretingradient.ingradientlauncher.SaveManager
 import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.getPrefs
 import java.util.*
@@ -47,7 +47,7 @@ class MainStageRecycler : RecyclerView {
         }
 
         override fun onBindViewHolder(holder: AppHolder, position: Int) {
-            holder.app.appInfo = AppManager.getApp(apps[position])!!
+            holder.app.appInfo = SaveManager.getApp(apps[position])!!
             holder.app.setOnClickListener(AppView)
         }
 

@@ -16,10 +16,10 @@ class AllAppsStage(context: Context) : BasePagerSnapStage(context), View.OnLongC
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    var allApps = AppManager.getSortedApps()
+    var apps = SaveManager.allAppsSorted
     var rowCount = getPrefs(context).getInt(Preferences.ALLAPPS_ROW_COUNT, -1)
     var columnCount = getPrefs(context).getInt(Preferences.ALLAPPS_COLUMN_COUNT, -1)
-    var pageCount = ceil(allApps.size.toFloat() / (rowCount*columnCount)).toInt()
+    var pageCount = ceil(apps.size.toFloat() / (rowCount*columnCount)).toInt()
     var cellPadding = toPx(6).toInt()
     override val stageLayoutId = R.layout.stage_2_all_apps
     override val viewPagerId = R.id.all_apps_vp
@@ -39,10 +39,10 @@ class AllAppsStage(context: Context) : BasePagerSnapStage(context), View.OnLongC
             var position: Int
 /*            for (i in 0 until grid.size) {
                 position = i+grid.size*page
-                if (position > allApps.size - 1)
+                if (position > apps.size - 1)
                     break
 
-                val appInfo = AppManager.getApp(allApps[position])
+                val appInfo = SaveManager.getApp(apps[position])
                 if (appInfo != null)
                     grid.putApp(createAppShortcut(appInfo), position)
             }*/

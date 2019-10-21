@@ -58,8 +58,8 @@ class ResearchActivity : AppCompatActivity() {
     }
 
     fun fillApps() {
-        AppManager.loadAllApps(this)
-        val allApps = AppManager.allApps.values.toList()
+        SaveManager.init(this)
+        val allApps = SaveManager.allApps.values.toList()
         for (i in 0..6) {
             apps.add(i, SnapElementInfo(allApps[i], SnapLayout.SnapLayoutInfo(i*2 + (i*2/8)*8, 2, 2)))
         }

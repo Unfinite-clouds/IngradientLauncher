@@ -113,22 +113,24 @@ class SnapLayout : FrameLayout {
         return canPlaceHere(SnapLayoutParams(layoutInfo, snapCountX))
     }
 
-    fun canPlaceViewToPos(v: View, pos: Int): Boolean {
+    fun canPlaceViewToPos(v: View, pos: Int, excepted: View? = null): Boolean {
         val lp = v.layoutParams as SnapLayoutParams
         val new_lp = SnapLayoutParams(pos, lp.snapWidth, lp.snapHeight, snapCountX)
-        return canPlaceHere(new_lp)
+        return canPlaceHere(new_lp, excepted)
     }
 
     private var last_lp_child: SnapLayoutParams? = null
-    fun canPlaceHere(lp: SnapLayoutParams): Boolean {
+    fun canPlaceHere(lp: SnapLayoutParams, excepted: View? = null): Boolean {
         if (last_lp_child != null && Rect.intersects(lp.snapBounds, last_lp_child!!.snapBounds))
             return false
 
         children.forEach {
-            val lp_child = it.layoutParams as SnapLayoutParams
-            if (Rect.intersects(lp.snapBounds, lp_child.snapBounds)) { // todo - bad using snapBounds
-                last_lp_child = lp_child
-                return false
+            if (it != excepted) {
+                val lp_child = it.layoutParams as SnapLayoutParams
+                if (Rect.intersects(lp.snapBounds, lp_child.snapBounds)) { // todo - bad using snapBounds
+                    last_lp_child = lp_child
+                    return false
+                }
             }
         }
         return true
@@ -161,7 +163,6 @@ class SnapLayout : FrameLayout {
         if (v.parent != this) throw LauncherException("view ${v.javaClass.simpleName} must be a child of SnapLayout to move")
         val lp = v.layoutParams as SnapLayoutParams
         if (lp.position != pos) {
-            val old = lp.position
             lp.position = pos
             lp.computeSnapBounds(snapCountX)
             requestLayout()

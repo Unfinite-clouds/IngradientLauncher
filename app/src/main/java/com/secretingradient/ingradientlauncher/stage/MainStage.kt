@@ -8,8 +8,8 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import com.secretingradient.ingradientlauncher.AppManager
 import com.secretingradient.ingradientlauncher.R
+import com.secretingradient.ingradientlauncher.SaveManager
 import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.toPx
 import kotlin.math.abs
@@ -17,7 +17,7 @@ import kotlin.math.abs
 class MainStage(context: Context) : BaseStage(context), View.OnLongClickListener, View.OnDragListener, View.OnTouchListener {
     val FLIP_ZONE = toPx(40).toInt()
 
-    var apps = AppManager.mainScreenApps
+    var apps = SaveManager.mainStageApps
     override val stageLayoutId = R.layout.stage_0_main_screen
     lateinit var recyclerView: MainStageRecycler
     val gListener = GestureListener()
@@ -46,7 +46,7 @@ class MainStage(context: Context) : BaseStage(context), View.OnLongClickListener
     }
 
     private fun saveData() {
-        AppManager.applyMainScreenChanges(context, apps)
+        SaveManager.dumpMainStageApps(context)
     }
 
     override fun onTouch(v: View?, event: MotionEvent): Boolean {
