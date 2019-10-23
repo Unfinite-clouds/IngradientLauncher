@@ -15,23 +15,24 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.main)
 
 
-//        Storable.deleteFile(this, Storable.ALL_APPS)
-//        Storable.deleteFile(this, Storable.MAIN_STAGE_APPS)
-//        Storable.deleteFile(this, Storable.USER_STAGE_APPS)
+//        DataKeeper.deleteFile(this, DataKeeper.ALL_APPS)
+//        DataKeeper.deleteFile(this, DataKeeper.MAIN_STAGE_APPS)
+//        DataKeeper.deleteFile(this, DataKeeper.USER_STAGE_APPS)
 
-        SaveManager.init(this)
+        DataKeeper.init(this)
 
-//        val apps = SaveManager.apps.iterator()
+//        val apps = DataKeeper.allApps
 //
 //        for (i in 0..12) {
-//            SaveManager.dumpUserStageApps(this, i, apps.next().key)
+//            DataKeeper.mainStageAppsData.add(apps[i]!!)
 //        }
+//        DataKeeper.dumpUserStageApps(this)
 //
-//        val list = mutableListOf<String>()
 //        for (i in 0..12) {
-//            list.add(apps.next().key)
+//            DataKeeper.userStageAppsData[i/2*2] = apps[i]!!
 //        }
-//        SaveManager.dumpMainStageApps(this, list)
+//        DataKeeper.dumpUserStageApps(this)
+
 
 
         getPrefs(this).edit {putBoolean(Preferences.FIRST_LOAD, true)}

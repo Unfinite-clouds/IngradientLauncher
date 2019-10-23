@@ -17,14 +17,14 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.secretingradient.ingradientlauncher.element.AppView
-import com.secretingradient.ingradientlauncher.element.SnapElementInfo
+import com.secretingradient.ingradientlauncher.element.ElementInfo
 import kotlinx.android.synthetic.main.research_layout.*
 
 
 class ResearchActivity : AppCompatActivity() {
 
     var value = 0
-    val apps = mutableListOf<SnapElementInfo>()
+    val apps = mutableListOf<ElementInfo>()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,10 +58,10 @@ class ResearchActivity : AppCompatActivity() {
     }
 
     fun fillApps() {
-        SaveManager.init(this)
-        val allApps = SaveManager.allApps.values.toList()
+//        DataModel.init(this)
+//        val allApps = DataModel.allApps.values.toList()
         for (i in 0..6) {
-            apps.add(i, SnapElementInfo(allApps[i], SnapLayout.SnapLayoutInfo(i*2 + (i*2/8)*8, 2, 2)))
+//            apps.add(i, ElementInfo(allApps[i], SnapLayout.SnapLayoutInfo(i*2 + (i*2/8)*8, 2, 2)))
         }
     }
 

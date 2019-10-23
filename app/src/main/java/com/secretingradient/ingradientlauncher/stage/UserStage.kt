@@ -11,19 +11,22 @@ import androidx.core.view.children
 import androidx.core.view.setPadding
 import androidx.viewpager2.widget.ViewPager2
 import com.secretingradient.ingradientlauncher.*
-import com.secretingradient.ingradientlauncher.element.*
+import com.secretingradient.ingradientlauncher.element.AppInfo
+import com.secretingradient.ingradientlauncher.element.AppView
+import com.secretingradient.ingradientlauncher.element.TrashView
 
 class UserStage(context: Context) : BasePagerSnapStage(context) {
     val FLIP_ZONE = toPx(40).toInt()
 
-    var apps = SaveManager.userStageApps
-    var rowCount = getPrefs(context).getInt(Preferences.CUSTOM_GRID_ROW_COUNT, -1)
-    var columnCount = getPrefs(context).getInt(Preferences.CUSTOM_GRID_COLUMN_COUNT, -1)
-    var pageCount = getPrefs(context).getInt(Preferences.CUSTOM_GRID_PAGE_COUNT, -1)
+    var apps = DataKeeper.userStageAppsData
+    var folders = DataKeeper.userStageFoldersData
+    override var columnCount = getPrefs(context).getInt(Preferences.USER_STAGE_COLUMN_COUNT, -1)
+    override var rowCount = getPrefs(context).getInt(Preferences.USER_STAGE_ROW_COUNT, -1)
+    override var pageCount = getPrefs(context).getInt(Preferences.USER_STAGE_PAGE_COUNT, -1)
     var cellPadding = toPx(6).toInt()
     override val stageLayoutId = R.layout.stage_1_custom_grid
     override val viewPagerId = R.id.user_stage_pager
-    override val pagerAdapter = UserPagerAdapter(context) as PagerSnapAdapter
+    override val pagerAdapter = PagerSnapAdapter(apps, folders)
     lateinit var trashView: TrashView
     val currentSnapLayout: SnapLayout
         get() = (stageViewPager.getChildAt(0) as ViewGroup).getChildAt(0) as SnapLayout
@@ -31,36 +34,10 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
     override fun inflateAndAttach(stageRoot: StageRoot) {
         super.inflateAndAttach(stageRoot)
         trashView = stageRoot.findViewById(R.id.trash_view)
-//        trashView.setOnDragListener(this)
         stageRoot.setOnTouchListener(this)
         trashView.setOnTouchListener(this)
 //        stageViewPager.offscreenPageLimit = 2
         (stageViewPager.getChildAt(0) as ViewGroup).clipChildren = false
-    }
-
-    inner class UserPagerAdapter(context: Context) : BasePagerSnapStage.PagerSnapAdapter(context, columnCount, rowCount) {
-        override fun getItemCount() = pageCount
-
-        override fun createPage(page: Int): SnapLayout {
-            val snapLayout = SnapLayout(context, columnCount*2, rowCount*2) // do nothing
-
-//            var appInfo: AppInfo?
-//            var i = 0
-//            apps.forEach {
-//                appInfo = SaveManager.getApp(it.value) ?: throw LauncherException()
-//                snapLayout.addNewView(createAppView(appInfo!!), SnapLayout.SnapLayoutInfo(i*2 + (i*2/8)*8, 2, 2))
-//                if (i>5)
-//                    return@forEach
-//                i++
-//            }
-
-            val pageState = MutableList(8) {i ->
-                SnapElementInfo(SaveManager.getApp(apps[i]!!)!!, SnapLayout.SnapLayoutInfo((i + (i/columnCount)*columnCount)*2, 2, 2))
-            }
-            pageStates.add(pageState)
-
-            return snapLayout
-        }
     }
 
     fun createAppView(appInfo: AppInfo): AppView {
@@ -128,11 +105,15 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
         }
 
         fun onUp(v: View, event: MotionEvent) {
-            if (selected != null) {
+            if (inEditMode && selected != null) {
                 val snap = currentSnapLayout
+                val oldPos = (selected!!.layoutParams as SnapLayout.SnapLayoutParams).position
                 snap.removeView(ghostView)
                 snap.moveView(selected!!, newPos)
-                // TODO save state
+                // save state
+                apps.remove(oldPos)
+                apps[newPos] = selected!!.appInfo.id
+                DataKeeper.dumpUserStageApps(context)
             }
             unselect()
             stageRoot.shouldIntercept = false
@@ -214,9 +195,6 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
 
         return stageRoot
     }
-
-
-
 
 //    private var direction = Point()
 //    private var dragCell: DummyCell? = null
@@ -336,11 +314,9 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
         return true
     }
 
-    private fun saveState() {
-        SaveManager.dumpUserStageApps(context)
-    }
 
-    private fun putApp(app: AppView, to: DummyCell) {
+
+/*    private fun putApp(app: AppView, to: DummyCell) {
         to.app = app
         apps.put(to.position, app.appInfo.id)
     }
@@ -364,7 +340,7 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
             apps.put(to.position, apps[from.position]!!)
             apps.remove(from.position)
         }
-    }
+    }*/
 
 //    private fun doRecursionPass(cell: DummyCell, direction: Point, action: (thisCell: DummyCell, nextCell: DummyCell) -> Unit): Boolean {
 //        if (cell.isEmptyCell()) {

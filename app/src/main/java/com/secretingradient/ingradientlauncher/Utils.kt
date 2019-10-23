@@ -6,8 +6,6 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.util.SparseArray
-import androidx.core.util.set
 import androidx.preference.PreferenceManager
 import java.io.ByteArrayOutputStream
 import java.io.InputStreamReader
@@ -56,16 +54,11 @@ fun decodeBitmap(byteArray: ByteArray): Bitmap {
 }
 
 fun printFile(context: Context, file: String){
-    val inputStreamstr = InputStreamReader(context.openFileInput(file))
-    println(inputStreamstr.readText())
-    inputStreamstr.close()
+    val inputStream = InputStreamReader(context.openFileInput(file))
+    println(inputStream.readText())
+    inputStream.close()
 }
 
-fun MutableList<*>.swap(from: Int, to: Int) {
-    Collections.swap(this, from, to)
-}
-
-fun SparseArray<*>.swap(from: Int, to: Int) {
-    val tmp = this[to]
-    this.set(to, from)
+fun MutableList<*>.swap(i: Int, j: Int) {
+    Collections.swap(this, i, j)
 }

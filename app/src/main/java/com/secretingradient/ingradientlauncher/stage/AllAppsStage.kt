@@ -16,39 +16,18 @@ class AllAppsStage(context: Context) : BasePagerSnapStage(context), View.OnLongC
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    var apps = SaveManager.allAppsSorted
-    var rowCount = getPrefs(context).getInt(Preferences.ALLAPPS_ROW_COUNT, -1)
-    var columnCount = getPrefs(context).getInt(Preferences.ALLAPPS_COLUMN_COUNT, -1)
-    var pageCount = ceil(apps.size.toFloat() / (rowCount*columnCount)).toInt()
+    var apps = DataKeeper.allApps
+    override var rowCount = getPrefs(context).getInt(Preferences.ALLAPPS_STAGE_ROW_COUNT, -1)
+    override var columnCount = getPrefs(context).getInt(Preferences.ALLAPPS_STAGE_COLUMN_COUNT, -1)
+    override var pageCount = ceil(apps.size.toFloat() / (rowCount*columnCount)).toInt()
     var cellPadding = toPx(6).toInt()
     override val stageLayoutId = R.layout.stage_2_all_apps
     override val viewPagerId = R.id.all_apps_vp
-    override val pagerAdapter = AllAppsAdapter(context) as PagerSnapAdapter
+    override val pagerAdapter = PagerSnapAdapter(apps, mapOf())
 
     override fun inflateAndAttach(stageRoot: StageRoot) {
         super.inflateAndAttach(stageRoot)
         stageRoot.setOnDragListener(this)
-    }
-
-    inner class AllAppsAdapter(context: Context) : PagerSnapAdapter(context, columnCount, rowCount) {
-        override fun getItemCount() = pageCount
-
-        override fun createPage(page: Int): SnapLayout {
-            val grid = SnapLayout(context, columnCount, rowCount)
-
-            var position: Int
-/*            for (i in 0 until grid.size) {
-                position = i+grid.size*page
-                if (position > apps.size - 1)
-                    break
-
-                val appInfo = SaveManager.getApp(apps[position])
-                if (appInfo != null)
-                    grid.putApp(createAppShortcut(appInfo), position)
-            }*/
-            return grid
-        }
-
     }
 
     fun createAppShortcut(appInfo: AppInfo): AppView {
