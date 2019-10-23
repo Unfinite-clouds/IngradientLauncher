@@ -57,19 +57,21 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
         private val touchPoint = Point()
         private val localPoint = Point()
         private var newPos = -1
+        private var action = 0
+        private val MOVE = 1
+        private val FOLDER = 2
 
+        // stupid fucking android events
         fun onDown(v: View, event: MotionEvent) {
             selected = v as? AppView
+
             if (selected != null) {
                 selectedPivot.set(selected!!.left + stageViewPager.left + event.x.toInt(), selected!!.top + stageViewPager.top + event.y.toInt())
                 selected!!.animatorScale.start()
+            }
+            if (inEditMode && (v is StageRoot || v is AppView)) {
                 stageRoot.shouldIntercept = true
-            }
-            if (inEditMode) {
                 stageRoot.parent.requestDisallowInterceptTouchEvent(true)
-            }
-            if (inEditMode && selected == null) {
-                endEditMode()
             }
         }
 
@@ -81,6 +83,11 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
             if (selected == null || !inEditMode)
                 return
 
+            if (!stageRoot.shouldIntercept) {
+                stageRoot.shouldIntercept = true
+                stageRoot.parent.requestDisallowInterceptTouchEvent(true)
+            }
+
             selected!!.translationX = (event.x - selectedPivot.x)/scaleInEditMode
             selected!!.translationY = (event.y - selectedPivot.y)/scaleInEditMode
 
@@ -91,12 +98,20 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
                 is ViewPager2 -> {
                     val snap = currentSnapLayout
                     localPoint.set(touchPoint.x - stageViewPager.left, touchPoint.y - stageViewPager.top)
-                    newPos = snap.getPosSnapped(localPoint, 2)
-                    if (snap.canPlaceViewToPos(ghostView, newPos, selected)) {
-                        if (ghostView.parent == null)
-                            snap.addNewView(ghostView, newPos, 2, 2)
-                        else {
-                            snap.moveView(ghostView, newPos)
+                    val p = snap.getPosSnapped(localPoint, 2)
+                    if (newPos != p) {
+                        newPos = p
+                        if (snap.canPlaceViewToPos(ghostView, newPos, selected)) {
+                            action = MOVE
+                            if (ghostView.parent == null) {
+                                snap.addNewView(ghostView, newPos, 2, 2)
+                                selected!!.bringToFront()
+                            } else {
+                                snap.moveView(ghostView, newPos)
+                            }
+                        } else {
+                            action = FOLDER
+                            snap.removeView(ghostView)
                         }
                     }
                 }
@@ -105,18 +120,33 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
         }
 
         fun onUp(v: View, event: MotionEvent) {
+            val snap = currentSnapLayout
             if (inEditMode && selected != null) {
-                val snap = currentSnapLayout
-                val oldPos = (selected!!.layoutParams as SnapLayout.SnapLayoutParams).position
-                snap.removeView(ghostView)
-                snap.moveView(selected!!, newPos)
-                // save state
-                apps.remove(oldPos)
-                apps[newPos] = selected!!.appInfo.id
-                DataKeeper.dumpUserStageApps(context)
+                when (action) {
+                    MOVE -> {
+                        val oldPos = (selected!!.layoutParams as SnapLayout.SnapLayoutParams).position
+                        snap.moveView(selected!!, newPos)
+                        // update data
+                        apps.remove(oldPos)
+                        apps[newPos] = selected!!.appInfo.id
+                        DataKeeper.dumpUserStageApps(context)
+                    }
+                    FOLDER -> {
+                        // create folder at newPos
+                    }
+                }
             }
-            unselect()
+            if (inEditMode && selected == null) {
+                endEditMode()
+            }
+            snap.removeView(ghostView)
+            endAction()
             stageRoot.shouldIntercept = false
+        }
+
+        fun onCancel(v: View, event: MotionEvent) {
+            if (selected != null || v is SnapLayout)
+                stageRoot.shouldIntercept = false
         }
 
         override fun onDown(e: MotionEvent?): Boolean {
@@ -129,23 +159,24 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
 
         private fun startEditMode() {
             inEditMode = true
+            stageRoot.shouldIntercept = true
             stageRoot.parent.requestDisallowInterceptTouchEvent(true)
             stageViewPager.animate().scaleX(scaleInEditMode).scaleY(scaleInEditMode).start()
         }
 
         private fun endEditMode() {
-            unselect()
             stageViewPager.animate().scaleX(1f).scaleY(1f).start()
             inEditMode = false
             stageRoot.shouldIntercept = false
         }
 
-        private fun unselect() {
+        private fun endAction() {
             selected?.let {
                 it.translationX = 0f
                 it.translationY = 0f
             }
             selected = null
+            action = 0
         }
     }
 
@@ -171,8 +202,14 @@ class UserStage(context: Context) : BasePagerSnapStage(context) {
             MotionEvent.ACTION_UP -> {
                 editModeListener.onUp(v, event)
             }
-        }
 
+            MotionEvent.ACTION_CANCEL -> {
+                editModeListener.onCancel(v, event)
+            }
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            println("${MotionEvent.actionToString(event.action)} x = ${event.x} y = ${event.y} selected = ${editModeListener.selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
+        }
         return true
     }
 
