@@ -1,60 +1,57 @@
 package com.secretingradient.ingradientlauncher.stage
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.secretingradient.ingradientlauncher.BoundViewHolder
 import com.secretingradient.ingradientlauncher.LauncherException
+import com.secretingradient.ingradientlauncher.LauncherRootLayout
 import com.secretingradient.ingradientlauncher.R
 
-class StageAdapter(val context: Context) : RecyclerView.Adapter<BoundViewHolder>() {
+class StageAdapter(val launcherRootLayout: LauncherRootLayout) : RecyclerView.Adapter<StageAdapter.StageHolder>() {
+    val context = launcherRootLayout.context
+    val stages = launcherRootLayout.stages
 
     override fun getItemCount(): Int = 4
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BoundViewHolder {
-        return BoundViewHolder(
-            LayoutInflater.from(context).inflate(
-                R.layout.stage,
-                parent,
-                false
-            )
+    class StageHolder(val stageRootLayout: StageRootLayout) : RecyclerView.ViewHolder(stageRootLayout)
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StageHolder {
+        return StageHolder(
+            LayoutInflater.from(context).inflate(R.layout.stage_root, parent,false) as StageRootLayout
         )
     }
 
-    override fun onBindViewHolder(holder: BoundViewHolder, position: Int) {
-        if (holder.boundPosition != position) {
-            println("binding position $position")
-            val rootLayout = holder.itemView as StageRoot
-            rootLayout.removeAllViews()
-            val stage = createStage(context, position)
-            stage.inflateAndAttach(rootLayout)
-            holder.boundPosition = position
+    override fun onBindViewHolder(holder: StageHolder, position: Int) {
+        // todo: shit method
+        holder.stageRootLayout.removeAllViews()
+        if (stages.getOrNull(position) == null) {
+            println("inflating stage $position")
+            stages.add(inflateStage(position, holder.stageRootLayout))
+        } else {
+            holder.stageRootLayout.addView(stages[position].stageRootLayout)
         }
     }
 
-    private fun createStage(context: Context, position: Int) : BaseStage {
+    private fun inflateStage(position: Int, parent: StageRootLayout) : BaseStage {
         val stage: BaseStage
         when (position) {
             0 -> {
-                // Scroll starter
-                stage = MainStage(context)
+                stage = MainStage(launcherRootLayout)
             }
             1 -> {
-                // Custom starter
-                stage = UserStage(context)
+                stage = UserStage(launcherRootLayout)
             }
             2 -> {
-                // AllApps starter
-//                stage = AllAppsStage(context)
-                stage = UserStage(context)
+                // stage = AllAppsStage(launcherRootLayout)
+                stage = UserStage(launcherRootLayout)
             }
             3 -> {
-                // Widgets starter
-                stage = AllAppsStage(context)
+                // stage = WidgetStage(launcherRootLayout)
+                stage = AllAppsStage(launcherRootLayout)
             }
             else -> throw LauncherException("position must be in range 0..${itemCount - 1}")
         }
+        stage.initInflate(parent)
         return stage
     }
 }

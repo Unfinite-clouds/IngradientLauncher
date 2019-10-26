@@ -1,16 +1,17 @@
 package com.secretingradient.ingradientlauncher.stage
 
 import android.content.Context
-import android.graphics.Point
-import android.graphics.Rect
+import android.graphics.Canvas
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import android.widget.LinearLayout
-import androidx.core.view.children
+import androidx.core.graphics.withTranslation
 
-class StageRoot : LinearLayout {
+class StageRootLayout : LinearLayout {
+    lateinit var stage: BaseStage
     var shouldIntercept = false
+    var overlayView: View? = null
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
@@ -23,7 +24,20 @@ class StageRoot : LinearLayout {
         return shouldIntercept
     }
 
-    private val hitRect = Rect()
+    override fun dispatchDraw(canvas: Canvas?) {
+        super.dispatchDraw(canvas)
+        if (this.overlayView != null) {
+            canvas?.withTranslation(overlayView!!.translationX, overlayView!!.translationY) {
+                this@StageRootLayout.overlayView?.draw(canvas)
+            }
+        }
+    }
+
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        return super.onTouchEvent(event)
+    }
+
+/*    private val hitRect = Rect()
     private val p = Point()
     private var lastHited: View? = null
     var hitedView: View? = null
@@ -46,6 +60,5 @@ class StageRoot : LinearLayout {
     private fun testHit(v: View): Boolean {
         v.getHitRect(hitRect)
         return hitRect.contains(p.x, p.y)
-    }
-
+    }*/
 }

@@ -2,54 +2,69 @@
 
 package com.secretingradient.ingradientlauncher
 
+import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Color
+import android.graphics.Canvas
 import android.graphics.Point
-import android.graphics.PointF
+import android.graphics.Rect
 import android.os.Bundle
 import android.util.AttributeSet
-import android.view.GestureDetector
+import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.secretingradient.ingradientlauncher.element.AppView
+import androidx.core.graphics.withTranslation
+import androidx.core.view.children
+import androidx.core.view.get
+import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager2.widget.ViewPager2
 import com.secretingradient.ingradientlauncher.element.ElementInfo
-import kotlinx.android.synthetic.main.research_layout.*
+import kotlinx.android.synthetic.main._research_layout.*
 
 
 class ResearchActivity : AppCompatActivity() {
 
     var value = 0
     val apps = mutableListOf<ElementInfo>()
+    val stages = mutableListOf<Stage>()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.research_layout)
+        setContentView(R.layout._research_layout)
 
-        fillApps()
+//        fillApps()
 
-//        apps.forEach {
-//            snap_layout.addNewView(AppView(this, it.appInfo).apply {
-//                this.setOnTouchListener(this@ResearchActivity.research_root)
-//            }, it.snapLayoutInfo)
-//        }
+        research_root.vp = research_vp
+        research_root.stages = stages
+        (research_vp[0] as ViewGroup).clipChildren = false
+        research_vp.offscreenPageLimit = 2
 
-//        snap_layout.setOnTouchListener(research_root)
-        research_root.setOnTouchListener(research_root)
-//        edit_text.setOnTouchListener(research_root)
+        research_vp.adapter = object : RecyclerView.Adapter<StageVH>() {
+            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StageVH {
+                return StageVH(
+                    (LayoutInflater.from(parent.context).inflate(R.layout._research_item, parent, false) as Stage)
+                    .apply { stages.add(this); stageNumber = stages.size-1; mainRoot = this@ResearchActivity.research_root }
+                )
+            }
 
-        edit_text.setOnEditorActionListener { v, actionId, event ->
-            v as EditText
-            val text = v.text.toString()
-            value = if (text != "") text.toInt() else 0
-            hideKeyboard()
-            return@setOnEditorActionListener true
+            override fun onBindViewHolder(holder: StageVH, position: Int) {
+                holder.tv.text = position.toString()
+            }
+
+            override fun getItemCount() = 3
         }
+
+    }
+
+    class StageVH(val stage: Stage) : RecyclerView.ViewHolder(stage) {
+        val tv = stage.findViewById<TextView>(R.id.research_text)
     }
 
     fun hideKeyboard() {
@@ -58,8 +73,8 @@ class ResearchActivity : AppCompatActivity() {
     }
 
     fun fillApps() {
-//        DataModel.init(this)
-//        val allApps = DataModel.allApps.values.toList()
+        DataKeeper.init(this)
+//        val allApps = DataKeeper.allApps.values.toList()
         for (i in 0..6) {
 //            apps.add(i, ElementInfo(allApps[i], SnapLayout.SnapLayoutInfo(i*2 + (i*2/8)*8, 2, 2)))
         }
@@ -69,129 +84,200 @@ class ResearchActivity : AppCompatActivity() {
 }
 
 
-class MyRoot : LinearLayout, View.OnTouchListener {
+class MyRoot : LinearLayout {
 
-    var selected: View? = null
-    var isEditMode = false
-    val gListener = GestureListener()
-    val gDetector = GestureDetector(context, gListener)
-    val ghostView = ImageView(context).apply { setBackgroundColor(Color.BLUE) }
-    val pointer = PointF()
+    lateinit var vp: ViewPager2
+    var misdirection: View? = null
+    lateinit var stages: List<Stage>
+    var dispatchToCurrent = false
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
-/*    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        // dispatch to proper itemView - it will current viewHolder.itemView
+        // getCurrentItemView()
+        if (dispatchToCurrent) {
+            return getCurrentItemView().stage.dispatchTouchEvent(ev)
+        }
         return super.dispatchTouchEvent(ev)
     }
 
-    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
-        if (selected != null)
-            return true
+    fun getCurrentItemView(): ResearchActivity.StageVH {
+        return (vp[0] as RecyclerView).findViewHolderForLayoutPosition(vp.currentItem) as ResearchActivity.StageVH
+    }
 
-        return false
-    }*/
+/*    var selected: TextView? = null
+    val point = Point()
 
-    override fun onTouch(v: View, event: MotionEvent): Boolean {
-/*        when (event.action) {
+    @SuppressLint("NewApi")
+    val mStageTouchListener = OnTouchListener { v, event ->
+        // handling event in context of current ViewGroup item in ViewPager2
+        v as ViewGroup
+        println("${stages.indexOf(v)} ${MotionEvent.actionToString(event.action)}")
+        point.set(event.x.toInt(), event.y.toInt())
+        val viewUnderPointer = getHitViewAt(v, point)
+
+        when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                println("ACTION_DOWN selected = $selected, v = $v")
-                selected = v as? AppView
+                selected = viewUnderPointer as? TextView
+                if (selected != null) {
+                    v.requestDisallowInterceptTouchEvent(true)
+                }
             }
 
             MotionEvent.ACTION_MOVE -> {
-                println("ACTION_MOVE ev.x = ${event.x} selected = $selected, v = $v")
+                if (selected != null) {
 
-                if (selected == null) {
-                    return false
-                }
-
-//                selected!!.translationX = event.x - selected!!.left
-//                selected!!.translationY = event.y - selected!!.top
-                selected!!.visibility = View.INVISIBLE
-                pointer.set(event.x, event.y)
-
-                val hitRect = Rect()
-
-                snap_layout.getHitRect(hitRect)
-                if (hitRect.contains(event.x.toInt(), event.y.toInt())) {
-                    println("in snap_layout")
-                    val local = getLocalPoint(snap_layout, event)
-                    snap_layout.removeView(ghostView)
-                    if (snap_layout.canPlaceHere(local, 2, 2)) {
-                        println("can be placed")
-                        snap_layout.addNewView(ghostView, SnapLayout.SnapLayoutInfo(snap_layout.getPosSnapped(local, 2), 2, 2))
+                    drag(selected!!, point)
+                    if (viewUnderPointer is ImageView) {
+                        vp.currentItem = 1
                     }
                 }
+            }
 
-                research_img.getHitRect(hitRect)
-                if (hitRect.contains(event.x.toInt(), event.y.toInt())) {
-                    println("in research_img")
-                    research_img.setBackgroundColor(Color.BLUE)
-                    invalidate()
-                } else {
-                    research_img.setBackgroundColor(Color.TRANSPARENT)
-                }
-
+            MotionEvent.ACTION_CANCEL -> {
+                // touch intercepted by VP
+                selected = null
             }
 
             MotionEvent.ACTION_UP -> {
-                println("ACTION_MOVE = $selected, v = $v")
-                selected?.let {
-//                    it.translationX = 0f
-//                    it.translationY = 0f
-                    it.visibility = View.VISIBLE
-                }
                 selected = null
             }
-        }*/
-
-        return true
-    }
-
-    inner class GestureListener : GestureDetector.SimpleOnGestureListener() {
-        override fun onDown(e: MotionEvent?): Boolean {
-            return false
         }
 
-        override fun onLongPress(e: MotionEvent?) {
-            if (selected is AppView) {
-                println("start EditMode with selected = $selected")
-                selected?.setBackgroundColor(Color.YELLOW)
-                isEditMode = true
+        true
+    }
+
+    private var lastHited: View? = null
+    private val hitRect = Rect()
+    private fun getHitViewAt(v: ViewGroup, p: Point): View? {
+        lastHited?.getHitRect(hitRect)
+        if (lastHited != null && hitRect.contains(p.x, p.y)) {
+            return lastHited!!
+        }
+
+        v.children.forEach {
+            it.getHitRect(hitRect)
+            if (hitRect.contains(p.x, p.y)) {
+                lastHited = it
+                return it
             }
         }
 
-        override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean {
-            return super.onFling(e1, e2, velocityX, velocityY)
-        }
-
-        override fun onDoubleTap(e: MotionEvent?): Boolean {
-            return super.onDoubleTap(e)
-        }
-
-        override fun onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
-
-            return true
-        }
+        return null
     }
+*/
 
-    fun getLocalPoint(child: View, event: MotionEvent): Point {
-        return Point(event.x.toInt() - child.left, event.y.toInt() - child.top)
-    }
-
-
-/*    override fun dispatchDraw(canvas: Canvas) {
-        super.dispatchDraw(canvas)
-        canvas.withTranslation(pointer.x, pointer.y) {
-            selected?.draw(canvas)
-        }
-    }*/
 }
 
 
-class MyLinearLayout : LinearLayout {
-    constructor(context: Context?) : super(context)
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
+class Stage : FrameLayout {
+    lateinit var mainRoot: MyRoot
+    var stageNumber: Int = -1
+//    val overlayPoint = Point()
 
+    constructor(context: Context, n: Int) : super(context) { this.stageNumber = n}
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
+
+    private val point = Point()
+    private var selected: TextView? = null
+    var action = 0
+    val INSERT = 1
+
+    @SuppressLint("NewApi")
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        // handling event in context of current ViewGroup item in ViewPager2
+        println("$stageNumber ${MotionEvent.actionToString(event.action)}")
+        point.set(event.x.toInt(), event.y.toInt())
+        val viewUnderPointer = getHitViewAt(point)
+
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                select(viewUnderPointer)
+            }
+
+            MotionEvent.ACTION_MOVE -> {
+                if (selected != null) {
+                    invalidate()
+                    if (viewUnderPointer is ImageView && action != INSERT) {
+                        mainRoot.vp.currentItem = 1
+                        val receiverStage = mainRoot.stages[1]
+                        receiverStage.select(selected)
+                        receiverStage.action = INSERT
+                        removeView(selected!!)
+                        unselect()
+                        action = 0
+                    }
+                }
+            }
+
+            MotionEvent.ACTION_CANCEL -> {
+                // touch intercepted by VP
+                endAction()
+            }
+
+            MotionEvent.ACTION_UP -> {
+                if (action == INSERT) {
+                    selected!!.let {
+                        it.translationX = point.x.toFloat() - it.left
+                        it.translationY = point.y.toFloat() - it.top
+                        addView(it)
+                    }
+                }
+                endAction()
+            }
+        }
+        return true
+    }
+
+    fun select(v: View?) {
+        selected = v as? TextView
+        if (selected != null) {
+            requestDisallowInterceptTouchEvent(true)
+            mainRoot.dispatchToCurrent = true
+            selected!!.visibility = View.INVISIBLE
+        }
+    }
+
+    fun unselect() {
+        selected?.visibility = View.VISIBLE
+        selected = null
+        invalidate()
+    }
+
+    fun endAction() {
+        unselect()
+        mainRoot.dispatchToCurrent = false
+        action = 0
+    }
+
+    override fun dispatchDraw(canvas: Canvas?) {
+        super.dispatchDraw(canvas)
+        if (selected != null) {
+            canvas?.withTranslation(point.x.toFloat(), point.y.toFloat()) {
+                selected?.draw(canvas)
+            }
+        }
+    }
+
+
+    private var lastHited: View? = null
+    private val hitRect = Rect()
+    private fun getHitViewAt(p: Point): View? {
+        lastHited?.getHitRect(hitRect)
+        if (lastHited != null && hitRect.contains(p.x, p.y)) {
+            return lastHited!!
+        }
+
+        children.forEach {
+            it.getHitRect(hitRect)
+            if (hitRect.contains(p.x, p.y)) {
+                lastHited = it
+                return it
+            }
+        }
+
+        return null
+    }
 }

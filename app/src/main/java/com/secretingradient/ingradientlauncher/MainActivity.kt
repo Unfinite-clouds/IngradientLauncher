@@ -5,14 +5,11 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.viewpager2.widget.ViewPager2
-import com.secretingradient.ingradientlauncher.stage.StageAdapter
 
 class MainActivity : AppCompatActivity() {
-    lateinit var launcherViewPager: ViewPager2
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.main)
+        setContentView(R.layout.launcher_root)
 
 
 //        DataKeeper.deleteFile(this, DataKeeper.ALL_APPS)
@@ -39,13 +36,13 @@ class MainActivity : AppCompatActivity() {
         if (getPrefs(this).getBoolean(Preferences.FIRST_LOAD, true))
             Preferences.loadDefaultPreferences(this)
 
-        launcherViewPager = findViewById<ViewPager2>(R.id.root_viewpager)
-        launcherViewPager.adapter = StageAdapter(this)
-        launcherViewPager.orientation = ViewPager2.ORIENTATION_VERTICAL
+        val root = findViewById<LauncherRootLayout>(R.id.launcher_root)
+        root.initViewPager(findViewById(R.id.root_viewpager))
+
     }
 
     override fun onBackPressed() {
-        super.onBackPressed()  // remove
+        super.onBackPressed()  // do back stack
     }
 
     class PageTransformer : ViewPager2.PageTransformer {

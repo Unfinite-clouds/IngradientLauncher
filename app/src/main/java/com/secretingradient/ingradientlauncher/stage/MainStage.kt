@@ -1,7 +1,5 @@
 package com.secretingradient.ingradientlauncher.stage
 
-import android.content.ClipData
-import android.content.Context
 import android.graphics.PointF
 import android.view.DragEvent
 import android.view.GestureDetector
@@ -9,24 +7,27 @@ import android.view.MotionEvent
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import com.secretingradient.ingradientlauncher.DataKeeper
+import com.secretingradient.ingradientlauncher.LauncherRootLayout
 import com.secretingradient.ingradientlauncher.R
 import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.toPx
 import kotlin.math.abs
 
-class MainStage(context: Context) : BaseStage(context), View.OnLongClickListener, View.OnDragListener, View.OnTouchListener {
+class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRootLayout), View.OnTouchListener {
     val FLIP_ZONE = toPx(40).toInt()
 
     var apps = DataKeeper.mainStageAppsData
-    override val stageLayoutId = R.layout.stage_0_main_screen
+    override val stageLayoutId = R.layout.stage_0_main
     lateinit var recyclerView: MainStageRecycler
     val gListener = GestureListener()
     val gDetector = GestureDetector(context, gListener)
+    var isTransferred = false
+    var state = -1
 
-
-    override fun inflateAndAttach(stageRoot: StageRoot) {
-        super.inflateAndAttach(stageRoot)
-        recyclerView = stageRoot.findViewById(R.id.stage_0_recycler)
+    override fun initInflate(stageRootLayout: StageRootLayout) {
+        super.initInflate(stageRootLayout)
+        recyclerView = stageRootLayout.findViewById(R.id.stage_0_recycler)
+        recyclerView.setHasFixedSize(true)
         recyclerView.apps = apps
         recyclerView.saveListener = object : MainStageRecycler.OnSaveDataListener {
             override fun onSaveData() {
@@ -38,21 +39,36 @@ class MainStage(context: Context) : BaseStage(context), View.OnLongClickListener
 //                TODO scroll wallpaper (dx, dy)
             }
         })
-        stageRoot.setOnTouchListener(this)
+        stageRootLayout.setOnTouchListener(this)
     }
 
-    override fun adaptApp(app: AppView) {
-//        app.setOnLongClickListener(this@MainStage)
-    }
-
-    private fun saveData() {
-        DataKeeper.dumpMainStageApps(context)
+    override fun transferEvent(event: MotionEvent, v: AppView) {
+        goToStage(0)
+        apps.add(0, v.appInfo.id)
+        isTransferred = true
+        recyclerView.adapter?.notifyItemInserted(0)
+//        launcherRootLayout.dispatchToCurrent = true // we need this. but for now UserStage will set this
     }
 
     override fun onTouch(v: View?, event: MotionEvent): Boolean {
-        when (event.action) {
-            MotionEvent.ACTION_UP -> stageRoot.requestDisallowInterceptTouchEvent(false)
+        println("MainOnTouch")
+        if (isTransferred) {
+            isTransferred = false
+            state = 0
         }
+        if (state == 0) {
+            val transferredVH = recyclerView.findViewHolderForAdapterPosition(0)
+            if (transferredVH != null) {
+                println("found")
+                state = -1
+                recyclerView.itemTouchHelper.startDrag(transferredVH)
+            } else {
+            }
+        }
+
+        if (event.action == MotionEvent.ACTION_UP)
+            launcherRootLayout.dispatchToCurrent = false
+
         return gDetector.onTouchEvent(event)
     }
 
@@ -71,7 +87,7 @@ class MainStage(context: Context) : BaseStage(context), View.OnLongClickListener
             val dy = abs(e1.y - e2.y)
             if (!recognized && dx*dx + dy*dy > slop*slop && dx > dy) {
                     recognized = true
-                    stageRoot.requestDisallowInterceptTouchEvent(true)
+                    stageRootLayout.requestDisallowInterceptTouchEvent(true)
             }
             if (recognized) {
                 recyclerView.onTouchEvent(e2)
@@ -86,82 +102,8 @@ class MainStage(context: Context) : BaseStage(context), View.OnLongClickListener
 
     }
 
-    private var dragApp: AppView? = null
-    private var isFirstDrag = true
-
-    override fun onLongClick(v: View?): Boolean {
-/*        if (v is AppView) {
-            v.showMenu()
-            startDrag(v)
-        }*/
-        return false
-    }
-
-    override fun startDrag(v: View) {
-        if (v is AppView) {
-            v.startDrag(ClipData.newPlainText("", ""), v.createDragShadow(), DragState(v, this), 0)
-        }
-    }
-
-    override fun onFocus(event: DragEvent) {
-/*        isFirstDrag = true
-        dragApp = getParcelApp(event)
-
-        if (isMyEvent(event)) {
-            recyclerView.startDragWith(dragApp!!.parent as DummyCell)
-        } else {
-            recyclerView.startDrag()
-        }*/
-    }
-
-    override fun onFocusLost(event: DragEvent) {
-    }
-
-    override fun onDragEnded(event: DragEvent) {
-/*        recyclerView.stopDragScroll()
-        saveData()
-        dragApp = null*/
-    }
-
-    override fun onDrag(v: View?, event: DragEvent?): Boolean {
-        super.onDrag(v, event)
-
-/*        when (event?.action) {
-
-            DragEvent.ACTION_DRAG_STARTED -> {}
-
-            DragEvent.ACTION_DRAG_ENTERED -> {
-                if (v is DummyCell) {
-                    recyclerView.moveOrInsertDragged(v, dragApp!!.appInfo)
-                } else if (v is FrameLayout) {
-                    println("remove")
-                    recyclerView.removeDragged()
-                }
-            }
-
-            DragEvent.ACTION_DRAG_LOCATION -> {
-                if (isFirstDrag) isFirstDrag = false else dragApp?.dismissMenu()
-
-                if (v is DummyCell) {
-//                    recyclerView.checkAndScroll(toParentCoords(v, event))
-                } else if (v is FrameLayout) {
-                    // v is root - FrameLayout
-                    when {
-*//*                        event.x > v.width - SCROLL_ZONE -> recyclerView.startDragScroll(+1)
-                        event.x < SCROLL_ZONE -> recyclerView.startDragScroll(-1)*//*
-//                        event.y > v.height - FLIP_ZONE -> flipToStage(1, event)
-                        else -> recyclerView.stopDragScroll()
-                    }
-                }
-            }
-
-            DragEvent.ACTION_DRAG_EXITED -> {}
-
-            DragEvent.ACTION_DROP -> {}
-
-            DragEvent.ACTION_DRAG_ENDED -> {}
-        }*/
-        return true
+    private fun saveData() {
+        DataKeeper.dumpMainStageApps(context)
     }
 
     private fun toParentCoords(v: View, event: DragEvent): PointF {

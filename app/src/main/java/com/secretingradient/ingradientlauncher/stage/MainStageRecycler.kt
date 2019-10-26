@@ -21,7 +21,7 @@ class MainStageRecycler : RecyclerView {
     var widthCell = getPrefs(context).getInt(Preferences.MAIN_STAGE_WIDTH_CELL, -1)
     var heightCell = getPrefs(context).getInt(Preferences.MAIN_STAGE_HEIGHT_CELL, -1)
     lateinit var apps: MutableList<String>
-    private var itemTouchHelper: ItemTouchHelper
+    var itemTouchHelper: ItemTouchHelper
     var saveListener: OnSaveDataListener? = null
     var selectedAppHolder: ViewHolder? = null
     private val bounds = Rect()
@@ -65,9 +65,7 @@ class MainStageRecycler : RecyclerView {
 
     inner class TouchHelper : ItemTouchHelper.Callback() {
         private val duration = 500L
-        override fun isItemViewSwipeEnabled(): Boolean {
-            return false
-        }
+        override fun isItemViewSwipeEnabled() = false
 
         override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: ViewHolder): Int {
             return makeMovementFlags(
@@ -96,16 +94,14 @@ class MainStageRecycler : RecyclerView {
         }
 
         override fun clearView(recyclerView: RecyclerView, viewHolder: ViewHolder) {
-            // we need to wait until the RecoverAnimation ends
+            // wait until the RecoverAnimation ends
             recyclerView.postDelayed(duration) {
                 recyclerView.clipChildren = true
                 (recyclerView.parent as ViewGroup).clipChildren = true
             }
         }
 
-        override fun getAnimationDuration(recyclerView: RecyclerView, animationType: Int, animateDx: Float, animateDy: Float): Long {
-            return duration
-        }
+        override fun getAnimationDuration(recyclerView: RecyclerView, animationType: Int, animateDx: Float, animateDy: Float) = duration
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {

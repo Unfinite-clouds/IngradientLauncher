@@ -1,26 +1,26 @@
 package com.secretingradient.ingradientlauncher.stage
 
-import android.content.Context
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.secretingradient.ingradientlauncher.DataKeeper
+import com.secretingradient.ingradientlauncher.LauncherRootLayout
 import com.secretingradient.ingradientlauncher.SnapLayout
 import com.secretingradient.ingradientlauncher.element.FolderInfo
 
-abstract class BasePagerSnapStage(context: Context) : BaseStage(context), View.OnTouchListener {
+abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRootLayout), View.OnTouchListener {
     lateinit var stageViewPager: ViewPager2
     protected abstract val pagerAdapter: PagerSnapAdapter
     protected abstract val viewPagerId: Int
+    abstract override val stageLayoutId: Int
     abstract var columnCount: Int
     abstract var rowCount: Int
     abstract var pageCount: Int
 
-    override fun inflateAndAttach(stageRoot: StageRoot) {
-        View.inflate(context, stageLayoutId, stageRoot)
-        this.stageRoot = stageRoot
-        stageViewPager = stageRoot.findViewById(viewPagerId)
+    override fun initInflate(stageRootLayout: StageRootLayout) {
+        super.initInflate(stageRootLayout)
+        stageViewPager = stageRootLayout.findViewById(viewPagerId)
         stageViewPager.adapter = pagerAdapter
     }
 
@@ -37,7 +37,7 @@ abstract class BasePagerSnapStage(context: Context) : BaseStage(context), View.O
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
-                setOnTouchListener(this@BasePagerSnapStage)
+//                setOnTouchListener(this@BasePagerSnapStage)
             })
         }
 
@@ -67,7 +67,7 @@ abstract class BasePagerSnapStage(context: Context) : BaseStage(context), View.O
             apps.forEach {
                 if (isPosInPage(it.key, page)) {
                     holder.snapLayout.addNewView(
-                        DataKeeper.getAppInfoById(it.value)!!.createView(context).apply { setOnTouchListener(this@BasePagerSnapStage) },
+                        DataKeeper.getAppInfoById(it.value)!!.createView(context).apply { /*setOnTouchListener(this@BasePagerSnapStage)*/ },
                         it.key, 2, 2
                     )
                 }
@@ -75,7 +75,7 @@ abstract class BasePagerSnapStage(context: Context) : BaseStage(context), View.O
             folders.forEach {
                 if (isPosInPage(it.key, page)) {
                     holder.snapLayout.addNewView(
-                        FolderInfo.createView(context, it.value).apply { setOnTouchListener(this@BasePagerSnapStage) },
+                        FolderInfo.createView(context, it.value).apply { /*setOnTouchListener(this@BasePagerSnapStage)*/ },
                         it.key, 2, 2
                     )
                 }
