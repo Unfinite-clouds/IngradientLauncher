@@ -1,16 +1,11 @@
 package com.secretingradient.ingradientlauncher.stage
 
 import android.graphics.Point
-import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import com.secretingradient.ingradientlauncher.DataKeeper
-import com.secretingradient.ingradientlauncher.LauncherRootLayout
-import com.secretingradient.ingradientlauncher.R
+import com.secretingradient.ingradientlauncher.*
 import com.secretingradient.ingradientlauncher.element.AppView
-import com.secretingradient.ingradientlauncher.toPx
-import kotlin.math.abs
 
 class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRootLayout), View.OnTouchListener {
     val FLIP_ZONE = toPx(40).toInt()
@@ -18,10 +13,7 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
     var apps = DataKeeper.mainStageAppsData
     override val stageLayoutId = R.layout.stage_0_main
     lateinit var recyclerView: MainStageRecycler
-    val gListener = GestureListener()
-    val gDetector = GestureDetector(context, gListener)
-    var isTransferred = false
-    var state = -1
+    val gestureRecognizer = GestureRecognizer(context)
     var needInsert = false
     var insertedPos = -1
     lateinit var testApp: AppView
@@ -59,7 +51,14 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
             }
         })
         stageRootLayout.setOnTouchListener(this)
+        gestureRecognizer.onScrollDirectionRecognized = { scrollDirection ->
+            if (scrollDirection == GestureRecognizer.ScrollDirection.DIRECTION_X)
+                disallowScrollStage()
+        }
+        test()
+    }
 
+    private fun test() {
         testApp = recyclerView.createAppView(apps[2])
         stageRootLayout.addView(testApp)
         testApp.visibility = View.INVISIBLE
@@ -73,66 +72,49 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
     }
 
     override fun onTouch(v: View?, event: MotionEvent): Boolean {
+        gestureRecognizer.onTouchEvent(event)
+
         if (needInsert) {
             disallowScrollStage()
-            needInsert = false
-            tryInsertOnFly(event, testApp)
-            startDragOnFly(event)
+            if (tryInsertOnFly(event, testApp)) {
+                startDragOnFly(event)
+                needInsert = false
+            }
         }
 
-        if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) {
-            launcherRootLayout.dispatchToCurrent = false
-            needInsert = false
-            stageRootLayout.overlayView = null
+        if (event.action == MotionEvent.ACTION_DOWN) {
             recyclerView.onTouchEvent(event)
         }
 
-        return gDetector.onTouchEvent(event)
-    }
-
-    inner class GestureListener : GestureDetector.SimpleOnGestureListener() {
-        var recognized = false
-        val slop = toPx(5)
-
-        override fun onDown(e: MotionEvent?): Boolean {
-            recyclerView.onTouchEvent(e)
-            recognized = false
-            return true
+        when(gestureRecognizer.gesture) {
+            Gesture.SCROLL_X -> recyclerView.onTouchEvent(event)
         }
 
-        override fun onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
-            val dx = abs(e1.x - e2.x)
-            val dy = abs(e1.y - e2.y)
-            if (!recognized && dx*dx + dy*dy > slop*slop && dx > dy) {
-                disallowScrollStage()
-                recognized = true
-            }
-            if (recognized) {
-                recyclerView.onTouchEvent(e2)
-            }
-            return recognized
+        if (event.action == MotionEvent.ACTION_UP) {
+            launcherRootLayout.dispatchToCurrent = false
+            needInsert = false
+            stageRootLayout.overlayView = null
+            recyclerView.onTouchEvent(event) // make fling
         }
 
-        override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean {
-            recyclerView.fling(-velocityX.toInt(), 0)
-            return true
-        }
-
+        return true
     }
 
     private fun saveData() {
         DataKeeper.dumpMainStageApps(context)
     }
 
-    private fun tryInsertOnFly(event: MotionEvent, appView: AppView) {
+    private fun tryInsertOnFly(event: MotionEvent, appView: AppView): Boolean {
         if (event.action == MotionEvent.ACTION_MOVE) {
             touchPoint.set(event.x.toInt(), event.y.toInt())
             val hitTestResult = getHitView(touchPoint)
             if (hitTestResult == recyclerView) {
                 stageRootLayout.overlayView = null
                 insertedPos = recyclerView.insertViewAt(appView, event.x - recyclerView.left, event.y - recyclerView.top)
+                return true
             }
         }
+        return false
     }
 
     private fun startDragOnFly(event: MotionEvent) {
