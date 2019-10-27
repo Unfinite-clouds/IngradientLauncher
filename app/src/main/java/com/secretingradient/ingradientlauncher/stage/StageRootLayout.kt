@@ -2,21 +2,30 @@ package com.secretingradient.ingradientlauncher.stage
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.PointF
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
-import android.widget.LinearLayout
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.graphics.withTranslation
+import com.secretingradient.ingradientlauncher.OnDispatchTouchEventListener
 
-class StageRootLayout : LinearLayout {
+class StageRootLayout : ConstraintLayout {
     lateinit var stage: BaseStage
     var shouldIntercept = false
     var overlayView: View? = null
+    private val touchPoint = PointF()
+    var onDispatchTouchEventListener: OnDispatchTouchEventListener? = null
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
-    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        if (overlayView != null) {
+            touchPoint.set(ev.x, ev.y)
+            invalidate()
+        }
+        onDispatchTouchEventListener?.onDispatchTouchEvent(ev)
         return super.dispatchTouchEvent(ev)
     }
 
@@ -26,39 +35,10 @@ class StageRootLayout : LinearLayout {
 
     override fun dispatchDraw(canvas: Canvas?) {
         super.dispatchDraw(canvas)
-        if (this.overlayView != null) {
-            canvas?.withTranslation(overlayView!!.translationX, overlayView!!.translationY) {
-                this@StageRootLayout.overlayView?.draw(canvas)
+        overlayView?.let {
+            canvas?.withTranslation(touchPoint.x - it.width / 2, touchPoint.y - it.height / 2) {
+                it.draw(canvas)
             }
         }
     }
-
-    override fun onTouchEvent(event: MotionEvent?): Boolean {
-        return super.onTouchEvent(event)
-    }
-
-/*    private val hitRect = Rect()
-    private val p = Point()
-    private var lastHited: View? = null
-    var hitedView: View? = null
-
-    private fun getHitView(x: Int, y: Int): View {
-        p.set(x, y)
-
-        if (lastHited != null && testHit(lastHited!!)) {
-            return lastHited!!
-        }
-
-        children.forEach {
-            if (testHit(it))
-                return it
-        }
-
-        return this
-    }
-
-    private fun testHit(v: View): Boolean {
-        v.getHitRect(hitRect)
-        return hitRect.contains(p.x, p.y)
-    }*/
 }

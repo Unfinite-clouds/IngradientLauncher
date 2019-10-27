@@ -1,7 +1,13 @@
 package com.secretingradient.ingradientlauncher.stage
 
+import android.graphics.Point
+import android.graphics.Rect
 import android.view.LayoutInflater
 import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
+import androidx.core.view.children
+import com.secretingradient.ingradientlauncher.LauncherException
 import com.secretingradient.ingradientlauncher.LauncherRootLayout
 import com.secretingradient.ingradientlauncher.element.AppView
 
@@ -24,5 +30,44 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
 
     fun goToStage(number: Int) {
         launcherRootLayout.launcherViewPager.currentItem = number
+    }
+
+
+    private var lastHited: View? = null
+    private val hitRect = Rect()
+    protected val reusablePoint = Point()
+
+    protected fun getHitView(p: Point, view: ViewGroup = stageRootLayout): View? {
+        getLocationOnStage(view, reusablePoint)
+
+        lastHited?.getHitRect(hitRect)
+        if (lastHited != null
+            && view == stageRootLayout
+            && hitRect.contains(p.x - reusablePoint.x, p.y - reusablePoint.y)){
+            return lastHited!!
+        }
+
+//        val vg = if (view is ConstraintLayout) view.getChildAt(0) as ViewGroup else view
+
+        view.children.forEach {
+            it.getHitRect(hitRect)
+            if (hitRect.contains(p.x - reusablePoint.x, p.y - reusablePoint.y)) {
+                lastHited = it
+                return it
+            }
+        }
+
+        return null
+    }
+
+    protected fun getLocationOnStage(view: View, p: Point) {
+        p.set(0,0)
+        var v = view as View?
+        // get location on stage
+        while (v != stageRootLayout && v != null) {
+            p.set(p.x + v.left, p.y + v.top)
+            v = v.parent as View?
+        }
+        if (v == null) throw LauncherException("view $view must be a child of stageRootLayout")
     }
 }

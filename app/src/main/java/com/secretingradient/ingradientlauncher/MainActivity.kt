@@ -23,7 +23,7 @@ class MainActivity : AppCompatActivity() {
 //        for (i in 0..12) {
 //            DataKeeper.mainStageAppsData.add(apps[i]!!)
 //        }
-//        DataKeeper.dumpUserStageApps(this)
+//        DataKeeper.dumpMainStageApps(this)
 //
 //        for (i in 0..12) {
 //            DataKeeper.userStageAppsData[i/2*2] = apps[i]!!

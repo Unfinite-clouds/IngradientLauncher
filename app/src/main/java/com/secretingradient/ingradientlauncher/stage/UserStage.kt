@@ -2,14 +2,12 @@ package com.secretingradient.ingradientlauncher.stage
 
 import android.graphics.Color
 import android.graphics.Point
-import android.graphics.Rect
 import android.os.Build
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import androidx.core.view.children
 import androidx.viewpager2.widget.ViewPager2
 import com.secretingradient.ingradientlauncher.*
 import com.secretingradient.ingradientlauncher.element.AppView
@@ -36,7 +34,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
     override fun initInflate(stageRootLayout: StageRootLayout) {
         super.initInflate(stageRootLayout)
-        trashView = stageRootLayout.findViewById(R.id.trash_view)
+        trashView = stageRootLayout.findViewById(R.id.trash_view2)
         stageRootLayout.setOnTouchListener(this)
         stageRootLayout.shouldIntercept = true
 //        trashView.setOnTouchListener(this)
@@ -47,7 +45,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
     override fun onTouch(v: View, event: MotionEvent): Boolean {
         // todo remove
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-//            println("${MotionEvent.actionToString(event.action)} x = ${event.x} y = ${event.y} selected = ${editModeListener.selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
+            println("${MotionEvent.actionToString(event.action)} x = ${event.x} y = ${event.y} selected = ${editModeListener.selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
         }
 
 //        stageViewPager.getChildAt(0).onTouchEvent(event)
@@ -102,7 +100,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             return true
         }
 
-        // stupid fucking android events
+        // *stupid fucking android events*
         fun onDown(v: View, event: MotionEvent) {
             touchPoint.set(event.x.toInt(), event.y.toInt())
             stageViewPager.getChildAt(0).onTouchEvent(event)
@@ -113,8 +111,8 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                 if (hittedView is ViewPager2) {
                     hittedElement = getHitView(touchPoint, currentSnapLayout) as? AppView
                 }
-                select(hittedElement, touchPoint)  // just save view that was selected for further drag
-                disallowScrollStage()  // and prevent launcherVP to be scrolled (up/down)
+                select(hittedElement, touchPoint)  // save view that was selected for further drag
+                disallowScrollStage()  // prevent launcherVP to be scrolled (up/down)
                 canEndEditMode = true
             }
 
@@ -128,22 +126,13 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                 return
             }
 
-            selected!!.let {
-                it.translationX = (event.x - it.width / 2) // / scaleInEditMode
-                it.translationY = (event.y - it.height / 2) // / scaleInEditMode
-            }
-
-            stageRootLayout.invalidate()
-
             val sensorView = getHitView(touchPoint)
 
             when (sensorView) {
                 is TrashView -> {
-                    sensorView.activate()
                     stageRootLayout.removeView(selected!!)
                     launcherRootLayout.stages[0].transferEvent(event, selected!!)
-                    endAction()
-                    launcherRootLayout.dispatchToCurrent = true
+                    endAction(true)
                     // todo remove view from dataset
                 }
                 is ViewPager2 -> {
@@ -231,17 +220,14 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             selected?.let {
                 it.animate().scaleX(1f).scaleY(1f).start()
                 it.visibility = View.VISIBLE
-                it.translationX = 0f
-                it.translationY = 0f
             }
             selected = null
             stageRootLayout.overlayView = null
-            stageRootLayout.invalidate()
         }
 
-        private fun endAction() {
+        private fun endAction(dispatchToCurrent: Boolean = false) {
             unselect()
-            launcherRootLayout.dispatchToCurrent = false
+            launcherRootLayout.dispatchToCurrent = dispatchToCurrent
             action = -1
         }
 
@@ -256,41 +242,5 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             stageViewPager.animate().scaleX(1f).scaleY(1f).start()
             inEditMode = false
         }
-    }
-
-    private var lastHited: View? = null
-    private val hitRect = Rect()
-    private val reusablePoint = Point()
-
-    private fun getHitView(p: Point, view: ViewGroup = stageRootLayout): View? {
-        getLocationOnStage(view, reusablePoint)
-
-        lastHited?.getHitRect(hitRect)
-        if (lastHited != null
-            && view == stageRootLayout
-            && hitRect.contains(p.x - reusablePoint.x, p.y - reusablePoint.y)){
-            return lastHited!!
-        }
-
-        view.children.forEach {
-            it.getHitRect(hitRect)
-            if (hitRect.contains(p.x - reusablePoint.x, p.y - reusablePoint.y)) {
-                lastHited = it
-                return it
-            }
-        }
-
-        return null
-    }
-
-    private fun getLocationOnStage(view: View, p: Point) {
-        p.set(0,0)
-        var v = view as View?
-        // get location on stage
-        while (v != stageRootLayout && v != null) {
-            p.set(p.x + v.left, p.y + v.top)
-            v = v.parent as View?
-        }
-        if (v == null) throw LauncherException("view $view must be a child of stageRootLayout")
     }
 }

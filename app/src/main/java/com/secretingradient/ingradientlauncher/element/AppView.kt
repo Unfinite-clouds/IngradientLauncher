@@ -86,10 +86,11 @@ class AppView : TextView, MenuItem.OnMenuItemClickListener {
         animatorScale.setTarget(this)
     }
 
-    constructor(context: Context) : super(context)
-    constructor(context: Context, appInfo: AppInfo) : super(context) {
-        this.appInfo = appInfo
-        this.icon = appInfo.icon
+    constructor(context: Context, appInfo: AppInfo? = null) : super(context) {
+        if (appInfo != null) {
+            this.appInfo = appInfo
+            this.icon = appInfo.icon
+        }
     }
     constructor(context: Context, attributeSet: AttributeSet) : super(context, attributeSet) {
         val iconId = attributeSet.getAttributeValue(null, "drawableTop")

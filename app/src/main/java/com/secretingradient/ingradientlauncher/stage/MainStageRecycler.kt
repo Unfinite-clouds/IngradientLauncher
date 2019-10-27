@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.secretingradient.ingradientlauncher.DataKeeper
 import com.secretingradient.ingradientlauncher.Preferences
+import com.secretingradient.ingradientlauncher.element.AppInfo
 import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.getPrefs
 import java.util.*
@@ -41,9 +42,7 @@ class MainStageRecycler : RecyclerView {
         override fun getItemCount() = apps.size
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppHolder {
-            return AppHolder(AppView(context).apply {
-                layoutParams = LinearLayout.LayoutParams(widthCell, heightCell)
-            })
+            return AppHolder(createAppView())
         }
 
         override fun onBindViewHolder(holder: AppHolder, position: Int) {
@@ -59,8 +58,24 @@ class MainStageRecycler : RecyclerView {
         }
     }
 
+    fun createAppView(appId: String? = null): AppView {
+        var appInfo: AppInfo? = null
+        if (appId != null)
+            appInfo = DataKeeper.getAppInfoById(appId)
+        return AppView(context, appInfo).apply {
+            layoutParams = LinearLayout.LayoutParams(widthCell, heightCell)
+        }
+    }
+
     class AppHolder(itemView: View) : ViewHolder(itemView) {
         val app = itemView as AppView
+    }
+
+    fun insertViewAt(appView: AppView, x: Float, y: Float): Int {
+        val targetPosition = layoutManager?.getPosition(findChildViewUnder(x, y)!!)!!
+        apps.add(targetPosition, appView.appInfo.id)
+        adapter?.notifyItemInserted(targetPosition)
+        return targetPosition
     }
 
     inner class TouchHelper : ItemTouchHelper.Callback() {
@@ -89,6 +104,7 @@ class MainStageRecycler : RecyclerView {
                 saveListener?.onSaveData()
             }
             selectedAppHolder = viewHolder
+            println("selected: ${selectedAppHolder?.itemView}")
 
             super.onSelectedChanged(viewHolder, actionState)
         }
@@ -102,6 +118,14 @@ class MainStageRecycler : RecyclerView {
         }
 
         override fun getAnimationDuration(recyclerView: RecyclerView, animationType: Int, animateDx: Float, animateDy: Float) = duration
+
+        override fun getMoveThreshold(viewHolder: ViewHolder) = 0.6f
+
+        override fun chooseDropTarget(selected: ViewHolder, dropTargets: MutableList<ViewHolder>, curX: Int, curY: Int): ViewHolder? {
+            if (dropTargets.size > 1)
+                return super.chooseDropTarget(selected, dropTargets, curX, curY)
+            return dropTargets[0]
+        }
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
