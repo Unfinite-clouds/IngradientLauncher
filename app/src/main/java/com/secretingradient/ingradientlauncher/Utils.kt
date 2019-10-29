@@ -1,11 +1,15 @@
 package com.secretingradient.ingradientlauncher
 
 import android.content.Context
+import android.content.Context.VIBRATOR_SERVICE
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
 import androidx.preference.PreferenceManager
 import java.io.ByteArrayOutputStream
 import java.io.InputStreamReader
@@ -61,4 +65,12 @@ fun printFile(context: Context, file: String){
 
 fun MutableList<*>.swap(i: Int, j: Int) {
     Collections.swap(this, i, j)
+}
+
+fun vibrate(context: Context, time: Long = 80L) {
+    if (Build.VERSION.SDK_INT >= 26) {
+        (context.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(VibrationEffect.createOneShot(time, VibrationEffect.DEFAULT_AMPLITUDE))
+    } else {
+        (context.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(time)
+    }
 }

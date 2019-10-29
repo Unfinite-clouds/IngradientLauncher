@@ -16,14 +16,14 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
     val gestureRecognizer = GestureRecognizer(context)
     var needInsert = false
     var insertedPos = -1
-    lateinit var testApp: AppView
     private val touchPoint = Point()
+    private var isDragOnFly = false
     private val startDragOnFlyRunnable = object : Runnable {
         var event: MotionEvent? = null
         override fun run() {
             event?.let {
-                println("try to start drag with position $insertedPos")
                 recyclerView.itemTouchHelper.startDrag(recyclerView.findViewHolderForLayoutPosition(insertedPos)!!)
+                isDragOnFly = true
                 val tmpAction = it.action
                 it.action = MotionEvent.ACTION_DOWN
                 recyclerView.onInterceptTouchEvent(it)
@@ -38,13 +38,9 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
         recyclerView.setHasFixedSize(true)
         recyclerView.apps = apps
         // todo uncomment
-/*
         recyclerView.saveListener = object : MainStageRecycler.OnSaveDataListener {
-            override fun onSaveData() {
-                saveData()
-            }
+            override fun onSaveData() = saveData()
         }
-*/
         recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
 //                TODO scroll wallpaper (dx, dy)
@@ -55,20 +51,15 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
             if (scrollDirection == GestureRecognizer.ScrollDirection.DIRECTION_X)
                 disallowScrollStage()
         }
-        test()
-    }
-
-    private fun test() {
-        testApp = recyclerView.createAppView(apps[2])
-        stageRootLayout.addView(testApp)
-        testApp.visibility = View.INVISIBLE
     }
 
     override fun transferEvent(event: MotionEvent, v: AppView) {
         goToStage(0)
         needInsert = true
-        stageRootLayout.overlayView = testApp
-        launcherRootLayout.dispatchToCurrent = true // we need this. but for now UserStage already set this
+        v.width = recyclerView.widthCell
+        v.height = recyclerView.heightCell
+        stageRootLayout.overlayView = v
+        launcherRootLayout.dispatchToCurrent = true
     }
 
     override fun onTouch(v: View?, event: MotionEvent): Boolean {
@@ -76,7 +67,7 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
 
         if (needInsert) {
             disallowScrollStage()
-            if (tryInsertOnFly(event, testApp)) {
+            if (tryInsertOnFly(event, stageRootLayout.overlayView as AppView)) {
                 startDragOnFly(event)
                 needInsert = false
             }
@@ -90,14 +81,25 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
             Gesture.SCROLL_X -> recyclerView.onTouchEvent(event)
         }
 
-        if (event.action == MotionEvent.ACTION_UP) {
-            launcherRootLayout.dispatchToCurrent = false
-            needInsert = false
-            stageRootLayout.overlayView = null
-            recyclerView.onTouchEvent(event) // make fling
+        if (isDragOnFly && event.action == MotionEvent.ACTION_MOVE) {
+            recyclerView.dispatchTouchEvent(event)
         }
 
+        if (event.action == MotionEvent.ACTION_UP) {
+            recyclerView.onTouchEvent(event) // make fling
+            resetEventState()
+        }
+
+        if (event.action == MotionEvent.ACTION_CANCEL) println("Canceled action selected = ${recyclerView.selectedAppHolder}")
+
         return true
+    }
+
+    private fun resetEventState() {
+        launcherRootLayout.dispatchToCurrent = false
+        needInsert = false
+        isDragOnFly = false
+        stageRootLayout.overlayView = null
     }
 
     private fun saveData() {

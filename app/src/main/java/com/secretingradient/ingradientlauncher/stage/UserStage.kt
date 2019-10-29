@@ -130,8 +130,9 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
             when (sensorView) {
                 is TrashView -> {
-                    stageRootLayout.removeView(selected!!)
+                    currentSnapLayout.removeView(selected!!)
                     launcherRootLayout.stages[0].transferEvent(event, selected!!)
+                    currentSnapLayout.removeView(ghostView)
                     endAction(true)
                     // todo remove view from dataset
                 }
@@ -191,8 +192,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         }
 
         fun onCancel(v: View, event: MotionEvent) {
-            if (selected != null || v is SnapLayout) {
-            }
+
         }
 
         override fun onDown(e: MotionEvent?): Boolean {

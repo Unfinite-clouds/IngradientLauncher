@@ -161,7 +161,6 @@ class GestureRecognizer(val context: Context) {
                     onScrollDirectionRecognizedListener?.onScrollDirectionRecognized(scrollDirection)
                 }
             }
-            println(gesture)
             return true
         }
 
@@ -169,35 +168,29 @@ class GestureRecognizer(val context: Context) {
             flingVelocityX = velocityX
             flingVelocityY = velocityY
             gesture = Gesture.FLING
-            println(gesture)
             return true
         }
 
         override fun onSingleTapUp(e: MotionEvent?): Boolean {
             gesture = Gesture.SINGLE_TAP
-            println(gesture)
             return true
         }
 
         override fun onDoubleTap(e: MotionEvent?): Boolean {
             gesture = Gesture.DOUBLE_TAP
-            println(gesture)
             return true
         }
 
 /*        override fun onShowPress(e: MotionEvent?) {
             gesture = Gesture.SHOW_PRESS
-            println(gesture)
         }*/
 
         override fun onLongPress(e: MotionEvent?) {
             gesture = Gesture.LONG_PRESS
-            println(gesture)
         }
 
         override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
             gesture = Gesture.SINGLE_TAP_CONFIRMED
-            println(gesture)
             return true
         }
     }

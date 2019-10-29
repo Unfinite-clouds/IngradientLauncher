@@ -28,7 +28,7 @@ class StageAdapter(val launcherRootLayout: LauncherRootLayout) : RecyclerView.Ad
             println("inflating stage $position")
             stages.add(inflateStage(position, holder.stageRootLayout))
         } else {
-            holder.stageRootLayout.addView(stages[position].stageRootLayout)
+            holder.stageRootLayout.addView(stages[position].stageRootLayout) // seems buggy
         }
     }
 

@@ -16,6 +16,7 @@ import com.secretingradient.ingradientlauncher.Preferences
 import com.secretingradient.ingradientlauncher.element.AppInfo
 import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.getPrefs
+import com.secretingradient.ingradientlauncher.vibrate
 import java.util.*
 
 class MainStageRecycler : RecyclerView {
@@ -79,7 +80,7 @@ class MainStageRecycler : RecyclerView {
     }
 
     inner class TouchHelper : ItemTouchHelper.Callback() {
-        private val duration = 500L
+        private val duration = 300L
         override fun isItemViewSwipeEnabled() = false
 
         override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: ViewHolder): Int {
@@ -98,6 +99,7 @@ class MainStageRecycler : RecyclerView {
 
         override fun onSelectedChanged(viewHolder: ViewHolder?, actionState: Int) {
             if (viewHolder != null) {
+                vibrate(context)
                 this@MainStageRecycler.clipChildren = false
                 (this@MainStageRecycler.parent as ViewGroup).clipChildren = false
             } else {
@@ -119,13 +121,13 @@ class MainStageRecycler : RecyclerView {
 
         override fun getAnimationDuration(recyclerView: RecyclerView, animationType: Int, animateDx: Float, animateDy: Float) = duration
 
-        override fun getMoveThreshold(viewHolder: ViewHolder) = 0.6f
+//        override fun getMoveThreshold(viewHolder: ViewHolder) = 0.6f
 
-        override fun chooseDropTarget(selected: ViewHolder, dropTargets: MutableList<ViewHolder>, curX: Int, curY: Int): ViewHolder? {
+/*        override fun chooseDropTarget(selected: ViewHolder, dropTargets: MutableList<ViewHolder>, curX: Int, curY: Int): ViewHolder? {
             if (dropTargets.size > 1)
                 return super.chooseDropTarget(selected, dropTargets, curX, curY)
             return dropTargets[0]
-        }
+        }*/
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
