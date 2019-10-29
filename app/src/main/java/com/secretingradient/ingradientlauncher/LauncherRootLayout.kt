@@ -31,12 +31,14 @@ class LauncherRootLayout : FrameLayout {
         // dispatch to proper itemView - it will current viewHolder.itemView
         if (dispatchToCurrent) {
             // attention! when we do that way - we ignore launcherVP scroll listener (for scroll up/down)
-            return getCurrentItemView().stageRootLayout.dispatchTouchEvent(ev)
+            return getCurrentItemView()?.stageRootLayout?.dispatchTouchEvent(ev) ?: super.dispatchTouchEvent(ev).also {
+                    println("Warning: viewHolder for stage ${launcherViewPager.currentItem} was not found, but dispatchToCurrent == true")
+                }
         }
         return super.dispatchTouchEvent(ev)
     }
 
-    fun getCurrentItemView(): StageAdapter.StageHolder {
-        return launcherRecyclerView.findViewHolderForLayoutPosition(launcherViewPager.currentItem) as StageAdapter.StageHolder
+    fun getCurrentItemView(): StageAdapter.StageHolder? {
+        return launcherRecyclerView.findViewHolderForLayoutPosition(launcherViewPager.currentItem) as? StageAdapter.StageHolder
     }
 }

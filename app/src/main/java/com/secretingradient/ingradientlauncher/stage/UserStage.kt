@@ -45,7 +45,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
     override fun onTouch(v: View, event: MotionEvent): Boolean {
         // todo remove
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            println("${MotionEvent.actionToString(event.action)} x = ${event.x} y = ${event.y} selected = ${editModeListener.selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
+//            println("${MotionEvent.actionToString(event.action)} x = ${event.x} y = ${event.y} selected = ${editModeListener.selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
         }
 
 //        stageViewPager.getChildAt(0).onTouchEvent(event)
@@ -82,7 +82,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         private val scaleSelected = 1.4f
         private val selectedPivot = Point()
         private val localPoint = Point()
-        private var newPos = -1
+        private var movePos = -1
         private var action = -1
         private val MOVE = 0
         private val INSERT = 1
@@ -96,7 +96,9 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         }
 
         override fun onSingleTapUp(e: MotionEvent?): Boolean {
-//            println("onSingleTapUp $e")
+            if (inEditMode && selected == null && canEndEditMode) {
+                endEditMode()
+            }
             return true
         }
 
@@ -114,10 +116,16 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                 select(hittedElement, touchPoint)  // save view that was selected for further drag
                 disallowScrollStage()  // prevent launcherVP to be scrolled (up/down)
                 canEndEditMode = true
+                if (selected != null) {
+                    movePos = -1
+                    val lp = selected!!.layoutParams as SnapLayout.SnapLayoutParams
+                    (ghostView.layoutParams as SnapLayout.SnapLayoutParams).set(-1, lp.snapWidth, lp.snapHeight)
+                }
             }
 
         }
 
+        private var lastHittedView: View? = null
         fun onMove(v: View, event: MotionEvent) {
             touchPoint.set(event.x.toInt(), event.y.toInt())
 
@@ -126,35 +134,66 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                 return
             }
 
-            val sensorView = getHitView(touchPoint)
-
-            when (sensorView) {
-                is TrashView -> {
-                    currentSnapLayout.removeView(selected!!)
-                    launcherRootLayout.stages[0].transferEvent(event, selected!!)
-                    currentSnapLayout.removeView(ghostView)
-                    endAction(true)
-                    // todo remove view from dataset
+            val snap = currentSnapLayout
+            var hittedView = getHitView(touchPoint) ?: stageRootLayout
+            if (hittedView == stageViewPager) {
+                hittedView = getHitView(touchPoint, snap) ?: snap
+                if (hittedView == selected || hittedView == ghostView) hittedView = snap
+            }
+            var isNewMovePos = false
+            if (hittedView == snap) {
+                val newPos = getPosSnapped(touchPoint)
+                if (newPos != movePos) {
+                    movePos = newPos
+                    isNewMovePos = true
+                    (ghostView.layoutParams as SnapLayout.SnapLayoutParams).position = newPos
                 }
-                is ViewPager2 -> {
-                    val snap = currentSnapLayout
-                    getLocationOnStage(currentSnapLayout, reusablePoint)
-                    localPoint.set(touchPoint.x - reusablePoint.x, touchPoint.y - reusablePoint.y)
-                    val p = snap.getPosSnapped(localPoint, 2)
-                    if (newPos != p) {
-                        newPos = p
-                        if (snap.canPlaceViewToPos(ghostView, newPos, selected)) {
-                            action = MOVE
+            }
+
+            if (hittedView != lastHittedView || isNewMovePos) {
+                when (lastHittedView) {
+                    // onExited
+                    is TrashView -> {
+                        (lastHittedView as TrashView).deactivate()
+                    }
+                    is AppView -> {
+                        destroyFolder()
+                        println("destroyFolder")
+                    }
+                    is SnapLayout -> {
+                        snap.removeView(ghostView)
+                    }
+                }
+                lastHittedView = hittedView
+                when (hittedView) {
+                    trashView -> {
+                        action = REMOVE
+                        trashView.activate()
+                    }
+                    is TrashView -> {
+                        // flip UP
+                        action = -1
+                        snap.removeView(selected!!)
+                        launcherRootLayout.stages[0].transferEvent(event, selected!!)
+                        snap.removeView(ghostView)
+                        endAction(true)
+                        // todo: remove view from data
+                    }
+                    is SnapLayout -> {
+                        action = MOVE
+                        if (snap.canPlaceViewToPos(ghostView, movePos, selected)) {
+                            // move ghostView
                             if (ghostView.parent == null) {
-                                snap.addNewView(ghostView, newPos, 2, 2)
-                                selected!!.bringToFront()
+                                snap.addView(ghostView)
                             } else {
-                                snap.moveView(ghostView, newPos)
+                                snap.moveView(ghostView, movePos)
                             }
-                        } else {
-                            action = FOLDER
-                            snap.removeView(ghostView)
                         }
+                    }
+                    is AppView -> {
+                        action = FOLDER
+                        createFolder()
+                        println("createFolder")
                     }
                 }
             }
@@ -167,26 +206,25 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                 when (action) {
                     MOVE -> {
                         val oldPos = (selected!!.layoutParams as SnapLayout.SnapLayoutParams).position
-                        snap.moveView(selected!!, newPos)
+                        snap.moveView(selected!!, movePos)
                         // update data
                         apps.remove(oldPos)
-                        apps[newPos] = selected!!.appInfo.id
+                        apps[movePos] = selected!!.appInfo.id
                         DataKeeper.dumpUserStageApps(context)
                     }
                     FOLDER -> {
-                        // create folder at newPos
+                        // create folder at movePos
                     }
                     INSERT -> {
 
                     }
                     REMOVE -> {
-
+                        snap.removeView(selected!!)
+                        // todo: remove view from data
                     }
                 }
             }
-            if (inEditMode && selected == null && canEndEditMode) {
-                endEditMode()
-            }
+
             snap.removeView(ghostView)
             endAction()
         }
@@ -201,6 +239,14 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
         override fun onLongPress(e: MotionEvent) {
             startEditMode()
+        }
+
+        private fun createFolder() {
+
+        }
+
+        private fun destroyFolder() {
+
         }
 
         fun select(v: View?, touchPoint: Point) {
@@ -227,6 +273,8 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
         private fun endAction(dispatchToCurrent: Boolean = false) {
             unselect()
+            lastHittedView = null
+            trashView.deactivate()
             launcherRootLayout.dispatchToCurrent = dispatchToCurrent
             action = -1
         }
@@ -241,6 +289,13 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         private fun endEditMode() {
             stageViewPager.animate().scaleX(1f).scaleY(1f).start()
             inEditMode = false
+        }
+
+        private fun getPosSnapped(touchPoint: Point): Int {
+            val snap = currentSnapLayout
+            getLocationOnStage(snap, reusablePoint)
+            localPoint.set(touchPoint.x - reusablePoint.x, touchPoint.y - reusablePoint.y)
+            return snap.getPosSnapped(localPoint, 2)
         }
     }
 }

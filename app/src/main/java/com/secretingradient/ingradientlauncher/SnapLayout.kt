@@ -51,7 +51,7 @@ class SnapLayout : FrameLayout {
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        println("...onMeasure")
+//        println("...onMeasure")
         verify()
 
         val myWidth = MeasureSpec.getSize(widthMeasureSpec)
@@ -86,7 +86,7 @@ class SnapLayout : FrameLayout {
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        println("...onLayout")
+//        println("...onLayout")
         children.forEach { child: View ->
             val lp = child.layoutParams as SnapLayoutParams
             val l = lp.snapBounds.left * snapStepX
@@ -212,6 +212,12 @@ class SnapLayout : FrameLayout {
 
         override fun toString(): String {
             return "${this.javaClass.simpleName}={ position=$position, snapWidth=$snapWidth, snapHeight=$snapHeight }"
+        }
+
+        fun set(pos: Int, snapWidth: Int, snapHeight: Int) {
+            this.position = pos
+            this.snapWidth = snapWidth
+            this.snapHeight = snapHeight
         }
 
         fun verify() {

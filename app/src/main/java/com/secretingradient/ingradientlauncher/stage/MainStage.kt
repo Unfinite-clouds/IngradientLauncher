@@ -90,8 +90,6 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
             resetEventState()
         }
 
-        if (event.action == MotionEvent.ACTION_CANCEL) println("Canceled action selected = ${recyclerView.selectedAppHolder}")
-
         return true
     }
 
