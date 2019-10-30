@@ -11,6 +11,7 @@ import android.widget.ImageView
 import androidx.viewpager2.widget.ViewPager2
 import com.secretingradient.ingradientlauncher.*
 import com.secretingradient.ingradientlauncher.element.AppView
+import com.secretingradient.ingradientlauncher.element.FolderView
 import com.secretingradient.ingradientlauncher.element.TrashView
 
 class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(launcherRootLayout) {
@@ -89,6 +90,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         private val REMOVE = 2
         private val FOLDER = 3
         private var canEndEditMode = true
+        private var newFolder: FolderView? = null
 
         override fun onShowPress(e: MotionEvent?) {
 //            println("onShowPress $e")
@@ -125,6 +127,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
         }
 
+        // bad performance - heavy calls of onMeasure and onLayout
         private var lastHittedView: View? = null
         fun onMove(v: View, event: MotionEvent) {
             touchPoint.set(event.x.toInt(), event.y.toInt())
@@ -136,18 +139,17 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
             val snap = currentSnapLayout
             var hittedView = getHitView(touchPoint) ?: stageRootLayout
-            if (hittedView == stageViewPager) {
-                hittedView = getHitView(touchPoint, snap) ?: snap
-                if (hittedView == selected || hittedView == ghostView) hittedView = snap
-            }
             var isNewMovePos = false
-            if (hittedView == snap) {
-                val newPos = getPosSnapped(touchPoint)
+            if (hittedView == stageViewPager) {
+                val newPos = getPosSnapped(snap, touchPoint)
                 if (newPos != movePos) {
                     movePos = newPos
                     isNewMovePos = true
-                    (ghostView.layoutParams as SnapLayout.SnapLayoutParams).position = newPos
                 }
+
+                hittedView = getHitView(touchPoint, snap) ?: snap
+                if (hittedView == selected || hittedView == ghostView)
+                    hittedView = snap
             }
 
             if (hittedView != lastHittedView || isNewMovePos) {
@@ -156,12 +158,15 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                     is TrashView -> {
                         (lastHittedView as TrashView).deactivate()
                     }
-                    is AppView -> {
-                        destroyFolder()
-                        println("destroyFolder")
-                    }
                     is SnapLayout -> {
-                        snap.removeView(ghostView)
+                        if (hittedView !is SnapLayout)
+                            snap.removeView(ghostView)
+                    }
+                    is FolderView -> {
+                        snap.removeView(newFolder)
+                        snap.addNewView(newFolder!![0], newFolder!!.layoutParams as SnapLayout.SnapLayoutParams)
+                        newFolder!!.clear()
+                        newFolder = null
                     }
                 }
                 lastHittedView = hittedView
@@ -175,15 +180,15 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                         action = -1
                         snap.removeView(selected!!)
                         launcherRootLayout.stages[0].transferEvent(event, selected!!)
-                        snap.removeView(ghostView)
                         endAction(true)
                         // todo: remove view from data
                     }
                     is SnapLayout -> {
                         action = MOVE
-                        if (snap.canPlaceViewToPos(ghostView, movePos, selected)) {
+                        if (snap.canMoveViewToPos(ghostView, movePos, selected)) {
                             // move ghostView
                             if (ghostView.parent == null) {
+                                (ghostView.layoutParams as SnapLayout.SnapLayoutParams).position = movePos
                                 snap.addView(ghostView)
                             } else {
                                 snap.moveView(ghostView, movePos)
@@ -191,9 +196,14 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                         }
                     }
                     is AppView -> {
+                        println("$selected, $hittedView, ${movePos/2f}")
+                        if (selected == hittedView)
+                            println("oops")
                         action = FOLDER
-                        createFolder()
-                        println("createFolder")
+                        snap.removeView(hittedView)
+                        newFolder = FolderView(context)
+                        newFolder!!.addApps(hittedView)
+                        snap.addNewView(newFolder!!, movePos, 2, 2)
                     }
                 }
             }
@@ -213,7 +223,9 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                         DataKeeper.dumpUserStageApps(context)
                     }
                     FOLDER -> {
-                        // create folder at movePos
+                        snap.removeView(selected!!)
+                        newFolder!!.addApps(selected!!)
+//                        save folder and apps (1 and selected removed)
                     }
                     INSERT -> {
 
@@ -241,7 +253,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             startEditMode()
         }
 
-        private fun createFolder() {
+        private fun createFolder(app1: AppView, app2: AppView) {
 
         }
 
@@ -291,8 +303,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             inEditMode = false
         }
 
-        private fun getPosSnapped(touchPoint: Point): Int {
-            val snap = currentSnapLayout
+        private fun getPosSnapped(snap: SnapLayout, touchPoint: Point): Int {
             getLocationOnStage(snap, reusablePoint)
             localPoint.set(touchPoint.x - reusablePoint.x, touchPoint.y - reusablePoint.y)
             return snap.getPosSnapped(localPoint, 2)

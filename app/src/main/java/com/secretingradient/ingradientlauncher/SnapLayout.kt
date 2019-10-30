@@ -40,6 +40,11 @@ class SnapLayout : FrameLayout {
         lp.computeSnapBounds(snapCountX)
     }
 
+    fun addNewView(child: View, layoutParams: SnapLayoutParams) {
+        child.layoutParams = SnapLayoutParams(layoutParams)
+        addView(child)
+    }
+
     fun addNewView(child: View, layoutInfo: SnapLayoutInfo) {
         child.layoutParams = SnapLayoutParams(layoutInfo)
         addView(child)
@@ -113,7 +118,7 @@ class SnapLayout : FrameLayout {
         return canPlaceHere(SnapLayoutParams(layoutInfo, snapCountX))
     }
 
-    fun canPlaceViewToPos(v: View, pos: Int, excepted: View? = null): Boolean {
+    fun canMoveViewToPos(v: View, pos: Int, excepted: View? = null): Boolean {
         val lp = v.layoutParams as SnapLayoutParams
         val new_lp = SnapLayoutParams(pos, lp.snapWidth, lp.snapHeight, snapCountX)
         return canPlaceHere(new_lp, excepted)
@@ -186,6 +191,7 @@ class SnapLayout : FrameLayout {
         lateinit var snapBounds: Rect // need recompute if any property or snapCountX was change
 
         constructor(info: SnapLayoutInfo) : this(info.position, info.snapWidth, info.snapHeight)
+        constructor(layoutParams: SnapLayoutParams) : this(layoutParams.position, layoutParams.snapWidth, layoutParams.snapHeight)
         constructor(pos: Int, snapWidth: Int, snapHeight: Int, snapCountX: Int) : this(pos, snapWidth, snapHeight) {
             computeSnapBounds(snapCountX)
         }
