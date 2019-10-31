@@ -8,10 +8,13 @@ import android.widget.TextView
 class FolderView(context: Context) : FrameLayout(context) {
     private val apps: MutableList<AppView> = mutableListOf()
     val debugText = TextView(context)
+    val folderSize
+        get() = apps.size
 
     init {
         setBackgroundColor(Color.YELLOW)
         debugText.text = apps.size.toString()
+        debugText.textSize = 32f
         addView(debugText)
     }
 

@@ -220,6 +220,12 @@ class SnapLayout : FrameLayout {
             return "${this.javaClass.simpleName}={ position=$position, snapWidth=$snapWidth, snapHeight=$snapHeight }"
         }
 
+        fun set(lp: SnapLayoutParams) {
+            this.position = lp.position
+            this.snapWidth = lp.snapWidth
+            this.snapHeight = lp.snapHeight
+        }
+
         fun set(pos: Int, snapWidth: Int, snapHeight: Int) {
             this.position = pos
             this.snapWidth = snapWidth
