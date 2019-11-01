@@ -119,6 +119,7 @@ class SnapLayout : FrameLayout {
     }
 
     fun canMoveViewToPos(v: View, pos: Int, excepted: View? = null): Boolean {
+        if (pos < 0) throw LauncherException("position= $pos must be positive")
         val lp = v.layoutParams as SnapLayoutParams
         val new_lp = SnapLayoutParams(pos, lp.snapWidth, lp.snapHeight, snapCountX)
         return canPlaceHere(new_lp, excepted)

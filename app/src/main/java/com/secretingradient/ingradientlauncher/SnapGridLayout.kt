@@ -107,7 +107,7 @@ class SnapGridLayout : GridLayout {
 
     private val flipPageRunnable = Runnable {
         if (stage != null && flipDirection != 0)
-            stage!!.stageViewPager.currentItem += flipDirection
+            stage!!.stageVP.currentItem += flipDirection
         isWaitingForFlip = false
     }
 

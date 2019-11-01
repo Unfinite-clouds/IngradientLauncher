@@ -63,7 +63,7 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
     }
 
     override fun onTouch(v: View?, event: MotionEvent): Boolean {
-        gestureRecognizer.onTouchEvent(event)
+        gestureRecognizer.recognizeTouchEvent(event)
 
         if (needInsert) {
             disallowScrollStage()

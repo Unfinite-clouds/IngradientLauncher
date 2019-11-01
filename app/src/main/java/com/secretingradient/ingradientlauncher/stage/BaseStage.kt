@@ -32,17 +32,24 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
         launcherRootLayout.launcherViewPager.currentItem = number
     }
 
-
     private val hitRect = Rect()
     protected val reusablePoint = Point()
 
-    protected fun getHitView(p: Point, view: ViewGroup = stageRootLayout): View? {
+    protected fun getHitView(p: Point, view: ViewGroup = stageRootLayout, lastHitted: View? = null): View? {
         getLocationOnStage(view, reusablePoint)
 
+        if (lastHitted != null && lastHitted.parent == view) {
+            lastHitted.getHitRect(hitRect)
+            if (hitRect.contains(p.x - reusablePoint.x, p.y - reusablePoint.y))
+                return lastHitted
+        }
+
         view.children.forEach {
-            it.getHitRect(hitRect)
-            if (hitRect.contains(p.x - reusablePoint.x, p.y - reusablePoint.y)) {
-                return it
+            if (it != lastHitted) {
+                it.getHitRect(hitRect)
+                if (hitRect.contains(p.x - reusablePoint.x, p.y - reusablePoint.y)) {
+                    return it
+                }
             }
         }
 

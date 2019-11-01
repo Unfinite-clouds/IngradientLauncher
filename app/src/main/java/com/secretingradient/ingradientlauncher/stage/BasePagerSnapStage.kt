@@ -10,7 +10,9 @@ import com.secretingradient.ingradientlauncher.SnapLayout
 import com.secretingradient.ingradientlauncher.element.FolderInfo
 
 abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRootLayout), View.OnTouchListener {
-    lateinit var stageViewPager: ViewPager2
+    lateinit var stageVP: ViewPager2
+    val stageRV: RecyclerView
+        get() = stageVP.getChildAt(0) as RecyclerView
     protected abstract val pagerAdapter: PagerSnapAdapter
     protected abstract val viewPagerId: Int
     abstract override val stageLayoutId: Int
@@ -20,8 +22,8 @@ abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : Base
 
     override fun initInflate(stageRootLayout: StageRootLayout) {
         super.initInflate(stageRootLayout)
-        stageViewPager = stageRootLayout.findViewById(viewPagerId)
-        stageViewPager.adapter = pagerAdapter
+        stageVP = stageRootLayout.findViewById(viewPagerId)
+        stageVP.adapter = pagerAdapter
     }
 
     // lazy page creating (now its bad)
