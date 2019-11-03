@@ -3,15 +3,18 @@ package com.secretingradient.ingradientlauncher.element
 import android.content.Context
 import android.graphics.Color
 import android.widget.FrameLayout
+import android.widget.GridLayout
 import android.widget.PopupWindow
 import android.widget.TextView
+import kotlin.math.ceil
+import kotlin.math.sqrt
 
 class FolderView(context: Context, vararg newApps: AppView) : FrameLayout(context) {
     private val apps: MutableList<AppView> = mutableListOf()
     val debugText = TextView(context)
     val folderSize
         get() = apps.size
-    var popupWindow: PopupWindow? = null
+    val popupWindow: PopupWindow
 
     init {
         setBackgroundColor(Color.YELLOW)
@@ -19,9 +22,13 @@ class FolderView(context: Context, vararg newApps: AppView) : FrameLayout(contex
         debugText.textSize = 32f
         addView(debugText)
         setOnClickListener {
-            openFolder()
+            getPopupFolder()
         }
         addApps(newApps.asList())
+        popupWindow = PopupWindow(context).apply {
+            animationStyle = -1  // default
+            contentView = GridLayout(context)
+        }
     }
 
     fun addApps(vararg newApps: AppView) {
@@ -44,11 +51,20 @@ class FolderView(context: Context, vararg newApps: AppView) : FrameLayout(contex
         debugText.text = apps.size.toString()
     }
 
-    fun openFolder() {
-        popupWindow = PopupWindow(context).apply {
-            animationStyle = -1  // default
-            this.contentView = this@FolderView
-            showAsDropDown(this@FolderView)
+    fun getPopupFolder(): PopupWindow {
+        val p = IntArray(2)
+        this.getLocationOnScreen(p)
+        val grid = popupWindow.contentView as GridLayout
+        var n = ceil(sqrt(apps.size.toFloat())).toInt()
+        if (n == 1) n = 2
+        else if (n == 2 && apps.size == 4) n = 3
+        grid.removeAllViews()
+        grid.columnCount = n; grid.rowCount = n
+        apps.forEachIndexed {i, appView ->
+            val x = i % n
+            val y = i / n
+            grid.addView(appView, GridLayout.LayoutParams(GridLayout.spec(y), GridLayout.spec(x)))
         }
+        return popupWindow
     }
 }

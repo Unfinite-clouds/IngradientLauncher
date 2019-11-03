@@ -107,7 +107,7 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
     private fun tryInsertOnFly(event: MotionEvent, appView: AppView): Boolean {
         if (event.action == MotionEvent.ACTION_MOVE) {
             touchPoint.set(event.x.toInt(), event.y.toInt())
-            val hitTestResult = getHitView(touchPoint)
+            val hitTestResult = findViewAt(touchPoint)
             if (hitTestResult == recyclerView) {
                 stageRootLayout.overlayView = null
                 insertedPos = recyclerView.insertViewAt(appView, event.x - recyclerView.left, event.y - recyclerView.top)

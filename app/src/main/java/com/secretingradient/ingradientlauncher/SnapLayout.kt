@@ -106,7 +106,7 @@ class SnapLayout : FrameLayout {
     }
 
     fun canPlaceHere(p: Point, snapWidth: Int, snapHeight: Int): Boolean {
-        val pos = getPosSnapped(p, 2)
+        val pos = snapToGrid(p, 2)
         return canPlaceHere(SnapLayoutParams(pos, snapWidth, snapHeight, snapCountX))
     }
 
@@ -146,13 +146,13 @@ class SnapLayout : FrameLayout {
         return Point(p.x / snapStepX * snapStepX, p.y / snapStepY * snapStepY)
     }
 
-    fun getPosSnapped(p: Point, step: Int = 2): Int {
+    fun snapToGrid(p: Point, step: Int = 2): Int {
         // int division! Order does matter
         return p.x / snapStepX / step * step  +  p.y / snapStepY / step * step * snapCountX
     }
 
     fun tryAddView(v: View, lp: SnapLayoutParams, p: Point): Boolean {
-        val pos = getPosSnapped(p)
+        val pos = snapToGrid(p)
         val saved_pos = lp.position  // save
         lp.position = pos
         lp.computeSnapBounds(snapCountX)

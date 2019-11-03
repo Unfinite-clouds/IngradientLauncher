@@ -33,37 +33,51 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
     }
 
     private val hitRect = Rect()
-    protected val reusablePoint = Point()
+    private val reusablePoint = Point()
 
-    protected fun getHitView(p: Point, view: ViewGroup = stageRootLayout, lastHitted: View? = null): View? {
-        getLocationOnStage(view, reusablePoint)
+    protected fun findViewAt(p: Point, lastHoveredView: View? = null, maxDepth: Int = 2): View? {
+        if (lastHoveredView != null && lastHoveredView.parent != null) {
+            getLocationOfViewGlobal(lastHoveredView, reusablePoint)
 
-        if (lastHitted != null && lastHitted.parent == view) {
-            lastHitted.getHitRect(hitRect)
+            lastHoveredView.getHitRect(hitRect)
             if (hitRect.contains(p.x - reusablePoint.x, p.y - reusablePoint.y))
-                return lastHitted
+                return lastHoveredView
         }
 
-        view.children.forEach {
-            if (it != lastHitted) {
-                it.getHitRect(hitRect)
+        var view: View = stageRootLayout
+        var viewGroup: ViewGroup
+
+        for (depth in 1..maxDepth) {
+            viewGroup = view as? ViewGroup ?: break
+            getLocationOfViewGlobal(viewGroup, reusablePoint)
+
+            for (child in viewGroup.children) {
+                if (child == lastHoveredView)
+                    continue
+                child.getHitRect(hitRect)
                 if (hitRect.contains(p.x - reusablePoint.x, p.y - reusablePoint.y)) {
-                    return it
+                    view = child
+                    break
                 }
             }
         }
 
-        return null
+        return if (view != stageRootLayout) view else null
     }
 
-    protected fun getLocationOnStage(view: View, p: Point) {
-        p.set(0,0)
+    fun getLocationOfViewGlobal(view: View, pointOut: Point) {
+        pointOut.set(0,0)
         var v = view as View?
         // get location on stage
         while (v != stageRootLayout && v != null) {
-            p.set(p.x + v.left, p.y + v.top)
+            pointOut.set(pointOut.x + v.left, pointOut.y + v.top)
             v = v.parent as View?
         }
         if (v == null) throw LauncherException("view $view must be a child of stageRootLayout")
+    }
+
+    fun toLocationInView(globalPoint: Point, view: View, pointOut: Point) {
+        getLocationOfViewGlobal(view, reusablePoint)
+        pointOut.set(globalPoint.x - reusablePoint.x, globalPoint.y - reusablePoint.y)
     }
 }
