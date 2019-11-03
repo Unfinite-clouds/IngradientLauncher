@@ -6,7 +6,7 @@ import android.view.MotionEvent
 
 enum class Gesture {
     TAP_UP,
-    EXACTLY_DOUBLE_TAP_UP, // ?
+    EXACTLY_DOUBLE_TAP_DOWN, // ?
     FLING_UP,
     SCROLL_X_MOVE,
     SCROLL_Y_MOVE,
@@ -21,18 +21,26 @@ class GestureHelper(context: Context) {
 
     var gesture: Gesture? = null
 
-    private var isTouchSlopOvercame = false
+    var doOnLongClick: () -> Unit = {}
+
+    private var slopOvercame = false
 
     private var isDownEventCaught = false
+    
+    private var wasLongPress = false
 
     private var scrollDirection: Gesture? = null
 
     fun onTouchEvent(event: MotionEvent) {
-        if (event.action == MotionEvent.ACTION_MOVE && !isTouchSlopOvercame) {
+        val action = event.action
+        if (wasLongPress && action != MotionEvent.ACTION_DOWN) {
+            return
+        }
+        if (action == MotionEvent.ACTION_MOVE && !slopOvercame) {
             gesture = Gesture.WANDERING_MOVE
         }
         gestureDetector.onTouchEvent(event)
-        if (event.action != MotionEvent.ACTION_DOWN && !isDownEventCaught) {
+        if (action != MotionEvent.ACTION_DOWN && !isDownEventCaught) {
             throw LauncherException("can't recognize gesture, because onDown event was not caught")
         }
     }
@@ -41,7 +49,8 @@ class GestureHelper(context: Context) {
         gesture = null
         scrollDirection = null
         isDownEventCaught = false
-        isTouchSlopOvercame = false
+        slopOvercame = false
+        wasLongPress = false
     }
 
     private inner class GestureHelperListener : GestureDetector.SimpleOnGestureListener() {
@@ -53,7 +62,7 @@ class GestureHelper(context: Context) {
 
         override fun onScroll(e1: MotionEvent, e2: MotionEvent, dx: Float, dy: Float): Boolean {
             if (scrollDirection == null) {
-                isTouchSlopOvercame = true
+                slopOvercame = true
                 scrollDirection = if (dx > dy) Gesture.SCROLL_X_MOVE else Gesture.SCROLL_Y_MOVE
             }
             gesture = scrollDirection
@@ -71,14 +80,17 @@ class GestureHelper(context: Context) {
         }
 
         override fun onDoubleTap(e: MotionEvent?): Boolean {
-            println("ensure that onDoubleTap is onDoubleTapUp: $e")
-            gesture = Gesture.EXACTLY_DOUBLE_TAP_UP
+            gesture = Gesture.EXACTLY_DOUBLE_TAP_DOWN
             return true
         }
 
         override fun onLongPress(e: MotionEvent?) {
             // this prevents case when gesture == TAP_UP after long press
-            gesture = null
+            if (!slopOvercame) {
+                gesture = null
+                wasLongPress = true
+                doOnLongClick()
+            }
         }
     }
 }

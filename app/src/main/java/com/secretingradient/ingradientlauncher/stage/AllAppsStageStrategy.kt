@@ -22,7 +22,7 @@ private abstract class AllAppsStageStrategy(layout: LauncherRootLayout) : BaseSt
     fun preDispatch(event: MotionEvent) {
         if (event.action == MotionEvent.ACTION_DOWN) {
             touchPoint.set(event.x.toInt(), event.y.toInt())
-            selectedView = trySelect(findViewAt(touchPoint))
+            selectedView = trySelect(findViewUnder(touchPoint))
             lastHoveredView = selectedView
         }
     }
@@ -36,7 +36,7 @@ private abstract class AllAppsStageStrategy(layout: LauncherRootLayout) : BaseSt
         when (event.action) {
             MotionEvent.ACTION_MOVE -> {
                 if (selectedView != null) {
-                    val hoveredView = findViewAt(touchPoint, lastHoveredView)
+                    val hoveredView = findViewUnder(touchPoint, lastHoveredView)
                     if (hoveredView != lastHoveredView && hoveredView != null) {
                         if (lastHoveredView != null)
                             onExitHover(lastHoveredView!!)
@@ -48,7 +48,7 @@ private abstract class AllAppsStageStrategy(layout: LauncherRootLayout) : BaseSt
 
             MotionEvent.ACTION_UP -> {
                 if (selectedView != null) {
-                    val hoveredView = findViewAt(touchPoint, lastHoveredView)
+                    val hoveredView = findViewUnder(touchPoint, lastHoveredView)
                     if (hoveredView != null) {
                         performAction(selectedView!!, hoveredView)
                     }

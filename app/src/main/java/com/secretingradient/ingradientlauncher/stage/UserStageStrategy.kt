@@ -45,7 +45,7 @@ private abstract class UserStageStrategy(layout: LauncherRootLayout) : BaseStage
     fun preDispatch(event: MotionEvent) {
         if (event.action == MotionEvent.ACTION_DOWN) {
             touchPoint.set(event.x.toInt(), event.y.toInt())
-            selectedView = trySelect(findViewAt(touchPoint))
+            selectedView = trySelect(findViewUnder(touchPoint))
 
             if (isTouchOutsideFolder())
                 closeFolder()
@@ -63,14 +63,14 @@ private abstract class UserStageStrategy(layout: LauncherRootLayout) : BaseStage
             MotionEvent.ACTION_DOWN -> {
                 if (isTouchOutsideFolder())
                     closeFolder()
-                val touchedView = findViewAt(touchPoint)
+                val touchedView = findViewUnder(touchPoint)
                 selectedView = trySelect(touchedView)
                 lastHoveredView = touchedView
             }
 
             MotionEvent.ACTION_MOVE -> {
                 if (selectedView != null) {
-                    val hoveredView = findViewAt(touchPoint, lastHoveredView)
+                    val hoveredView = findViewUnder(touchPoint, lastHoveredView)
                     if (hoveredView != lastHoveredView && hoveredView != null) {
                         if (lastHoveredView != null)
                             onExitHover(lastHoveredView!!)
@@ -82,7 +82,7 @@ private abstract class UserStageStrategy(layout: LauncherRootLayout) : BaseStage
 
             MotionEvent.ACTION_UP -> {
                 if (selectedView != null) {
-                    val hoveredView = findViewAt(touchPoint, lastHoveredView)
+                    val hoveredView = findViewUnder(touchPoint, lastHoveredView)
                     if (hoveredView != null) {
                         onPerformAction(selectedView!!, hoveredView, touchPoint)
                     }

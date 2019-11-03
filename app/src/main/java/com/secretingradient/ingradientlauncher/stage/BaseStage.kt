@@ -35,34 +35,49 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
     private val hitRect = Rect()
     private val reusablePoint = Point()
 
-    protected fun findViewAt(p: Point, lastHoveredView: View? = null, maxDepth: Int = 2): View? {
-        if (lastHoveredView != null && lastHoveredView.parent != null) {
-            getLocationOfViewGlobal(lastHoveredView, reusablePoint)
+    protected fun findViewUnder(p: Point, lastHoveredView: View? = null): View? {
+        var foundView: View? = null
 
-            lastHoveredView.getHitRect(hitRect)
-            if (hitRect.contains(p.x - reusablePoint.x, p.y - reusablePoint.y))
-                return lastHoveredView
-        }
+        if (lastHoveredView != null)
+            foundView = findInnerViewUnderInternal(p, lastHoveredView)
 
-        var view: View = stageRootLayout
-        var viewGroup: ViewGroup
+        if (foundView != null)
+            return foundView
 
-        for (depth in 1..maxDepth) {
-            viewGroup = view as? ViewGroup ?: break
-            getLocationOfViewGlobal(viewGroup, reusablePoint)
+        foundView = findInnerViewUnderInternal(p, stageRootLayout)
 
-            for (child in viewGroup.children) {
-                if (child == lastHoveredView)
-                    continue
+        return if (foundView != stageRootLayout) foundView else null
+    }
+
+    private fun findInnerViewUnderInternal(p: Point, view: View): View? {
+        if (view.parent == null)
+            return null
+
+        var foundView: View
+
+        getLocationOfViewGlobal(view, reusablePoint)
+        view.getHitRect(hitRect)
+        if (hitRect.contains(p.x - reusablePoint.x, p.y - reusablePoint.y)) {
+            foundView = view
+        } else
+            return null
+
+        // view contains point, check children:
+        var foundChild: View? = foundView
+        while (foundChild is ViewGroup) {
+            // here foundChild == foundView
+            foundChild = null
+            getLocationOfViewGlobal(foundView, reusablePoint)
+            for (child in (foundView as ViewGroup).children) {
                 child.getHitRect(hitRect)
                 if (hitRect.contains(p.x - reusablePoint.x, p.y - reusablePoint.y)) {
-                    view = child
+                    foundView = child
+                    foundChild = child
                     break
                 }
             }
         }
-
-        return if (view != stageRootLayout) view else null
+        return foundView
     }
 
     fun getLocationOfViewGlobal(view: View, pointOut: Point) {
