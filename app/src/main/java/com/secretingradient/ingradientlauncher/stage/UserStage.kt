@@ -2,15 +2,13 @@ package com.secretingradient.ingradientlauncher.stage
 
 import android.graphics.Color
 import android.graphics.Point
-import android.os.Build
 import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
 import android.widget.PopupWindow
 import com.secretingradient.ingradientlauncher.*
-import com.secretingradient.ingradientlauncher.element.AppView
-import com.secretingradient.ingradientlauncher.element.FolderView
-import com.secretingradient.ingradientlauncher.element.TrashView
+import com.secretingradient.ingradientlauncher.element.*
+import com.secretingradient.ingradientlauncher.sensor.BaseSensor
 
 class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(launcherRootLayout) {
     val FLIP_ZONE = toPx(40).toInt()
@@ -27,16 +25,19 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
     lateinit var trashView: TrashView
     val currentSnapLayout: SnapLayout
         get() = stageRV.getChildAt(0) as SnapLayout
+    var shouldIntercept
+        set(value) {stageRootLayout.shouldIntercept = value}
+        get() = stageRootLayout.shouldIntercept
 
 //    private val editModeListener = EditModeListener()
 //    private val editModeDetector = GestureDetector(context, editModeListener)
-    private val touchListener = UserStageOnTouch()
+//    private val touchListener = UserStageTouchEvent()
 
     override fun initInflate(stageRootLayout: StageRootLayout) {
         super.initInflate(stageRootLayout)
         trashView = stageRootLayout.findViewById(R.id.trash_view2)
-        stageRootLayout.setOnTouchListener(touchListener)
-        stageRootLayout.shouldIntercept = true
+        stageRootLayout.setOnTouchListener(userStageTouchEvent)
+        stageRootLayout.preDispatchListener = onPreDispatch
 //        trashView.setOnTouchListener(this)
 //        stageVP.offscreenPageLimit = 2
 //        (stageVP.getChildAt(0) as ViewGroup).clipChildren = false
@@ -46,265 +47,192 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         TODO("remove this") //To change body of created functions use File | Settings | File Templates.
     }
 
-    private inner class UserStageOnTouch: View.OnTouchListener {
-        private val longListener = View.OnLongClickListener { startEditMode(); true }
-        val gestureRecognizer = GestureRecognizer(context, longListener).apply {  }
-        var selected: View? = null
-            set(value) { field = value; if (value == null)
-            println("oops")}
-        private val touchPoint = Point()
-        private val ghostView = ImageView(context).apply { setBackgroundColor(Color.LTGRAY); layoutParams = SnapLayout.SnapLayoutParams(-1,2,2) }
-        private var inEditMode = false
-        private val scaleInEditMode = 0.85f
-        private val scaleSelected = 1.4f
-        private val selectedPivot = Point()
-        private val localPoint = Point()
-        private var movePos = -1
-        private var action = -1
-        private val MOVE = 0
-        private val INSERT = 1
-        private val REMOVE = 2
-        private val CREATE_FOLDER = 3
-        private val INSERT_IN_FOLDER = 4
-        private val REMOVE_FROM_FOLDER = 5
-        private var canEndEditMode = true
-        private var lastHittedView: View? = null
-        private var popupFolder: PopupWindow? = null
+    val onPreDispatch = object : OnPreDispatchListener {
+        override fun onPreDispatch(event: MotionEvent) {
+            userStageTouchEvent.preDispatch(event)
+        }
+    }
+    
+    private val userStageTouchEvent = object : View.OnTouchListener, View.OnLongClickListener {
+        var folderPopup: PopupWindow? = null
+        var inEditMode = false
+        val sensorInfo = BaseSensor(context)
+        val sensorRemove = BaseSensor(context)
+        val sensorUninstall = BaseSensor(context)
+        val sensorUp = BaseSensor(context)
+        val sensorLeft = BaseSensor(context)
+        val sensorRight = BaseSensor(context)
+        var selectedView: View? = null
+        var lastHoveredView: View? = null
+        val touchPoint = Point()
+        val reusablePoint = Point()
+        val ghostView = ImageView(context).apply { setBackgroundColor(Color.LTGRAY); layoutParams = SnapLayout.SnapLayoutParams(-1,2,2) }
+        val gestureHelper = GestureHelper(context)
 
-        /* stupid fucking android touch events -_- */
+        fun preDispatch(event: MotionEvent) {
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                touchPoint.set(event.x.toInt(), event.y.toInt())
+                selectedView = trySelect(findViewAt(touchPoint))
+
+                if (isTouchOutsideFolder())
+                    closeFolder()
+            }
+        }
+
         override fun onTouch(v: View, event: MotionEvent): Boolean {
-            val gesture = gestureRecognizer.recognizeTouchEvent(event)
+            if (v !is StageRootLayout && !inEditMode)
+                return false
 
-            // todo remove
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                println("${MotionEvent.actionToString(event.action)}, $gesture, x = ${event.x} y = ${event.y} selected = ${selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
-            }
+            gestureHelper.onTouchEvent(event)
 
-            val snap = currentSnapLayout
             touchPoint.set(event.x.toInt(), event.y.toInt())
-            val hittedViewOnStage = findViewAt(touchPoint, stageRootLayout, lastHittedView)
-            var hittedView = if (hittedViewOnStage == stageVP) findViewAt(touchPoint, currentSnapLayout, lastHittedView) ?: snap else hittedViewOnStage
-            if (hittedView != null && (hittedView == selected || hittedView == ghostView))
-                hittedView = snap
 
-            if (!inEditMode) {
-                // EDIT MODE OFF
-                when {
-                    gesture == Gesture.DOWN -> stageRV.onTouchEvent(event)
+            when (event.action) {
 
-                    gesture == Gesture.TAP -> {
+                MotionEvent.ACTION_DOWN -> {
+                    if (isTouchOutsideFolder())
                         closeFolder()
-                        when (hittedView) {
-                            is FolderView -> popupFolder = hittedView.getPopupFolder().also { println("asd") }
-                            is AppView -> hittedView.performClick() // todo open App
-                        }
-                    }
-
-//                    gesture == Gesture.LONG_PRESS -> startEditMode() // done with listener
-
-                    gesture == Gesture.SCROLL_X -> { disallowScrollStage(); stageRV.onTouchEvent(event) }  // scroll stageVP (left/right)
+                    val touchedView = findViewAt(touchPoint)
+                    selectedView = trySelect(touchedView)
+                    lastHoveredView = touchedView
                 }
-                if (gesture.isUp()) stageRV.onTouchEvent(event)
-            } else {
-                // EDIT MODE ON
-                when {
-                    gesture == Gesture.DOWN -> {
-                        select(hittedView, touchPoint)
-                        disallowScrollStage()  // prevent launcherVP to be scrolled (up/down)
-                        canEndEditMode = true
-                        if (selected != null) {
-                            movePos = -1
-                            val lp = selected!!.layoutParams as SnapLayout.SnapLayoutParams
-                            (ghostView.layoutParams as SnapLayout.SnapLayoutParams).set(lp)
-                        } else {
-                            stageRV.onTouchEvent(event)
+
+                MotionEvent.ACTION_MOVE -> {
+                    if (selectedView != null) {
+                        val hoveredView = findViewAt(touchPoint, lastHoveredView)
+                        if (hoveredView != lastHoveredView && hoveredView != null) {
+                            if (lastHoveredView != null)
+                                onExitHover(lastHoveredView!!)
+                            onHover(selectedView!!, hoveredView, touchPoint)
                         }
-                    }
-
-                    gesture == Gesture.TAP -> endEditMode()
-
-                    gesture.isMove() && selected != null -> {
-                        var isNewMovePos = false
-                        if (hittedViewOnStage == stageVP) {
-                            val newPos = getPosSnapped(snap, touchPoint)
-                            if (newPos != movePos) {
-                                movePos = newPos
-                                isNewMovePos = true
-                            }
-                        }
-
-                        if (hittedView != lastHittedView || isNewMovePos) {
-
-                            when (lastHittedView) {
-                                // onExited
-                                is TrashView -> {
-                                    (lastHittedView as TrashView).deactivate()
-                                }
-                                is SnapLayout -> {
-                                    if (hittedView !is SnapLayout)
-                                        snap.removeView(ghostView)
-                                }
-                                is FolderView -> {
-                                    val folder = lastHittedView as FolderView
-                                    if (folder.folderSize == 1) {
-                                        // revert preview folder
-                                        snap.removeView(folder)
-                                        snap.addNewView(folder[0], folder.layoutParams as SnapLayout.SnapLayoutParams)
-                                        folder.clear()
-                                    }
-                                }
-                            }
-
-                            when (hittedView) {
-                                trashView -> {
-                                    action = REMOVE
-                                    trashView.activate()
-                                }
-                                is TrashView -> {
-                                    // flip UP
-                                    if (selected is AppView) {
-                                        action = -1
-                                        snap.removeView(selected!!)
-                                        launcherRootLayout.stages[0].transferEvent(event, selected!! as AppView)
-                                        endAction(true)
-                                        // todo: data update
-                                    }
-                                }
-                                is SnapLayout -> {
-                                    if (snap.canMoveViewToPos(ghostView, movePos, selected)) {
-                                        action = MOVE
-                                        // move ghostView
-                                        if (ghostView.parent == null) {
-                                            (ghostView.layoutParams as SnapLayout.SnapLayoutParams).position = movePos
-                                            snap.addView(ghostView)
-                                        } else {
-                                            snap.moveView(ghostView, movePos)
-                                        }
-                                    }
-                                }
-                                is AppView -> {
-                                    if (selected is AppView) {
-                                        action = CREATE_FOLDER
-                                        // preview only - don't create folder in data
-                                        snap.removeView(hittedView)
-                                        hittedView = FolderView(context, hittedView)
-                                        snap.addNewView(hittedView, movePos, 2, 2)
-                                    }
-                                }
-                                is FolderView -> {
-                                    if (selected is AppView) {
-                                        action = INSERT_IN_FOLDER
-                                    }
-                                }
-                                else -> { action = -1 }
-                            }
-                        }
-                    }
-
-                    gesture.isUp() -> {
-                        // UP
-                        stageRV.onTouchEvent(event)
-
-                        when (action) {
-                            MOVE -> {
-                                val oldPos = (selected!!.layoutParams as SnapLayout.SnapLayoutParams).position
-                                snap.moveView(selected!!, movePos)
-                                // update data
-                                if (selected is AppView) {
-                                    apps.remove(oldPos)
-                                    apps[movePos] = (selected as AppView).appInfo.id
-                                    DataKeeper.dumpUserStageApps(context)
-                                }
-                                // todo: data update
-                            }
-                            CREATE_FOLDER -> {
-                                if (lastHittedView is FolderView) {
-                                    snap.removeView(selected!!)
-                                    (lastHittedView as FolderView).addApps(selected as AppView)
-//                        save folder and apps (1 and selected removed)
-                                    // todo: data update
-                                }
-                            }
-                            INSERT -> {
-
-                            }
-                            REMOVE -> {
-                                snap.removeView(selected!!)
-                                // todo: data update
-                            }
-                            INSERT_IN_FOLDER -> {
-                                snap.removeView(selected!!)
-                                (lastHittedView as FolderView).addApps(selected as AppView)
-                                // todo: data update
-                            }
-                        }
-                        snap.removeView(ghostView)
-                        endAction()
+                        lastHoveredView = hoveredView
                     }
                 }
-            }
-//            println("hitted= ${hittedView?.javaClass?.simpleName}, selected= ${selected?.javaClass?.simpleName}")
-//            println(" ")
 
-            lastHittedView = hittedView
+                MotionEvent.ACTION_UP -> {
+                    if (selectedView != null) {
+                        val hoveredView = findViewAt(touchPoint, lastHoveredView)
+                        if (hoveredView != null) {
+                            onPerformAction(selectedView!!, hoveredView, touchPoint)
+                        }
+                        lastHoveredView = hoveredView
+                    }
+                    if (gestureHelper.gesture == Gesture.TAP_UP) // not after longPress
+                        endEditMode()
+                }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-//            println("${MotionEvent.actionToString(event.action)} x = ${event.x} y = ${event.y} selected = ${editModeListener.selected?.javaClass?.simpleName}, v = ${v.javaClass.simpleName}")
             }
+
+
+
             return true
         }
 
-        private fun select(v: View?, touchPoint: Point): View? {
-            selected = v as? AppView ?: v as? FolderView
-            selected?.let {
-                //        val dy = ( it.top - (it.parent as ViewGroup).height / 2 ) * (1f - scaleInEditMode)
-                it.animate().scaleX(scaleSelected).scaleY(scaleSelected)/*.translationYBy(dy)*/.start()
-                it.visibility = View.INVISIBLE
-                (it as? AppView)?.animatorScale?.start()
-                selectedPivot.set(touchPoint.x, touchPoint.y)
-                stageRootLayout.overlayView = it
-                launcherRootLayout.dispatchToCurrent = true
+        fun onExitHover(lastHoveredView: View) {
+            when (lastHoveredView) {
+                is BaseSensor -> lastHoveredView.onExitSensor()
+                is FolderView -> previewCancelFolder(lastHoveredView)
             }
-            return selected
         }
 
-        private fun unselect() {
-            selected?.let {
-                it.animate().scaleX(1f).scaleY(1f).start()
-                it.visibility = View.VISIBLE
+        fun onHover(selectedView: View, hoveredView: View, touchPoint: Point) {
+            when {
+                selectedView is AppView && hoveredView is AppView -> previewCreateFolder(hoveredView)
+                isElement(selectedView) && hoveredView is BaseSensor -> hoveredView.onSensored(selectedView)
+                isElement(selectedView) && hoveredView is SnapLayout -> moveElement(ghostView, hoveredView, touchPoint)
             }
-            selected = null
-            stageRootLayout.overlayView = null
         }
 
-        private fun endAction(dispatchToCurrent: Boolean = false) {
-            unselect()
-            lastHittedView = null
-            trashView.deactivate()
-            launcherRootLayout.dispatchToCurrent = dispatchToCurrent
-            action = -1
+        fun onPerformAction(selectedView: View, hoveredView: View, touchPoint: Point) {
+            when {
+                selectedView is AppView && hoveredView is FolderView -> hoveredView.addApps(selectedView)
+                isElement(selectedView) && hoveredView is BaseSensor -> hoveredView.onPerformAction(selectedView)
+                isElement(selectedView) && hoveredView is SnapLayout -> moveElement(selectedView, hoveredView, touchPoint)
+            }
         }
 
-        private fun startEditMode() {
+        fun moveElement(element: View, snapLayout: SnapLayout, touchPoint: Point) {
+            val pos = getTouchPositionOnSnap(snapLayout, touchPoint)
+            snapLayout.moveView(element, pos)
+        }
+
+        fun previewCreateFolder(appView: AppView): FolderView {
+            val folder = FolderView(context, appView)
+            currentSnapLayout.removeView(appView)
+            currentSnapLayout.addNewView(folder, (appView.layoutParams as SnapLayout.SnapLayoutParams).position, 2, 2)
+            return folder
+        }
+
+        fun previewCancelFolder(lastHoveredView: FolderView) {
+            currentSnapLayout.removeView(lastHoveredView)
+            currentSnapLayout.addNewView(lastHoveredView[0], (lastHoveredView.layoutParams as SnapLayout.SnapLayoutParams).position, 2, 2)
+            lastHoveredView.clear()
+        }
+
+        override fun onLongClick(v: View?): Boolean {
+            closeFolder()
+            startEditMode()
+            return true
+        }
+
+        fun startEditMode() {
             inEditMode = true
-            canEndEditMode = false
-            disallowScrollStage()
-            stageVP.animate().scaleX(scaleInEditMode).scaleY(scaleInEditMode).start()
+            disallowVScroll()
+            shouldIntercept = true
+            println("startEditMode")
         }
 
-        private fun endEditMode() {
-            stageVP.animate().scaleX(1f).scaleY(1f).start()
+        fun endEditMode() {
             inEditMode = false
+            shouldIntercept = false
+            println("endEditMode")
         }
 
-        private fun getPosSnapped(snap: SnapLayout, touchPoint: Point): Int {
-            getLocationOfViewGlobal(snap, reusablePoint)
-            localPoint.set(touchPoint.x - reusablePoint.x, touchPoint.y - reusablePoint.y)
-            return snap.snapToGrid(localPoint, 2)
+        fun removeElement(element: Element) {
+            // todo
         }
-        private fun closeFolder() {
-            popupFolder?.dismiss()
-            popupFolder = null
+
+        fun openFolder(folder: FolderView) {
+            // todo
+        }
+
+        fun closeFolder() {
+            folderPopup?.dismiss()
+            folderPopup = null
+        }
+
+        fun isTouchOutsideFolder(): Boolean{
+            // todo
+            return true
+        }
+
+        fun trySelect(v: View?): View? {
+            if (!isElement(v))
+                return null
+            disallowHScroll()
+            when (v) {
+                is AppView -> onAppSelected(v)
+                is FolderView -> onFolderSelected(v)
+                is WidgetView -> onWidgetSelected(v)
+            }
+            return v
+        }
+
+        private fun getTouchPositionOnSnap(snapLayout: SnapLayout, touchPoint: Point): Int {
+            toLocationInView(touchPoint, snapLayout, reusablePoint)
+            return snapLayout.snapToGrid(reusablePoint, 2)
+        }
+
+        fun onAppSelected(v: View) {/*todo*/}
+        fun onFolderSelected(v: View) {/*todo*/}
+        fun onWidgetSelected(v: View) {/*todo*/}
+
+        fun disallowHScroll(disallow: Boolean = true) {
+            /*todo?*/
+        }
+
+        fun isElement(v: View?): Boolean {
+            return v as? AppView ?: v as? FolderView ?: v as? WidgetView != null
         }
     }
 

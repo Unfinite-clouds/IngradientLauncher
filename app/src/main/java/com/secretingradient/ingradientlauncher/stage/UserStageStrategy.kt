@@ -192,7 +192,6 @@ private abstract class UserStageStrategy(layout: LauncherRootLayout) : BaseStage
     abstract fun onWidgetSelected(v: View)
 
     abstract fun disallowHScroll(disallow: Boolean = true)
-    abstract fun disallowVScroll(disallow: Boolean = true)
 
     fun isElement(v: View?): Boolean {
         return v as? AppView ?: v as? FolderView ?: v as? WidgetView != null

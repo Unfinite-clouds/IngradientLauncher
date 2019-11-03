@@ -23,7 +23,7 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
 
     open fun transferEvent(event: MotionEvent, v: AppView) {}
 
-    open fun disallowScrollStage(disallow: Boolean = true) {
+    open fun disallowVScroll(disallow: Boolean = true) {
         stageRootLayout.parent.requestDisallowInterceptTouchEvent(disallow)
     }
 

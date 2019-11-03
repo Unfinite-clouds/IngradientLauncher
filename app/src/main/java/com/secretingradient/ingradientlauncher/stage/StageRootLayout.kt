@@ -8,14 +8,14 @@ import android.view.MotionEvent
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.graphics.withTranslation
-import com.secretingradient.ingradientlauncher.OnDispatchTouchEventListener
+import com.secretingradient.ingradientlauncher.OnPreDispatchListener
 
 class StageRootLayout : ConstraintLayout {
     lateinit var stage: BaseStage
     var shouldIntercept = false
     var overlayView: View? = null
     private val touchPoint = PointF()
-    var onDispatchTouchEventListener: OnDispatchTouchEventListener? = null
+    var preDispatchListener: OnPreDispatchListener? = null
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
@@ -25,7 +25,7 @@ class StageRootLayout : ConstraintLayout {
             touchPoint.set(ev.x, ev.y)
             invalidate()
         }
-        onDispatchTouchEventListener?.onDispatchTouchEvent(ev)
+        preDispatchListener?.onPreDispatch(ev)
         return super.dispatchTouchEvent(ev)
     }
 

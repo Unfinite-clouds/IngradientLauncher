@@ -10,7 +10,7 @@ import android.view.ViewConfiguration
 import kotlin.math.abs
 import kotlin.math.sqrt
 
-enum class Gesture {
+enum class GestureBad {
     NULL,
     DOWN,
     TAP,
@@ -52,7 +52,7 @@ class GestureRecognizer(val context: Context, var onLongListener: View.OnLongCli
             onScrollDirectionRecognizedListener
         }
 
-    var gesture: Gesture = Gesture.NULL
+    var gesture: GestureBad = GestureBad.NULL
 
     var touchSlop = ViewConfiguration.get(context).scaledTouchSlop
         set(value) {
@@ -85,23 +85,23 @@ class GestureRecognizer(val context: Context, var onLongListener: View.OnLongCli
     val distance
         get() = sqrt(distanceSqr)
 
-    fun recognizeTouchEvent(event: MotionEvent): Gesture {
+    fun recognizeTouchEvent(event: MotionEvent): GestureBad {
         gestureDetector.onTouchEvent(event)
         when (event.action) {
             MotionEvent.ACTION_MOVE -> onMove(event)
             MotionEvent.ACTION_UP -> {
-                if (gesture != Gesture.FLING && gesture != Gesture.TAP) gesture = Gesture.UP_NO_GESTURE
+                if (gesture != GestureBad.FLING && gesture != GestureBad.TAP) gesture = GestureBad.UP_NO_GESTURE
                 isDownEventCaught = false
                 handler.removeCallbacks(onLongPressRunnable)
             }
             MotionEvent.ACTION_CANCEL -> {
-                gesture = Gesture.CANCEL
+                gesture = GestureBad.CANCEL
                 isDownEventCaught = false
                 handler.removeCallbacks(onLongPressRunnable)
             }
         }
-        if (gesture == Gesture.NULL)
-            println("WARNING: recognizeTouchEvent returned Gesture.NULL")
+        if (gesture == GestureBad.NULL)
+            println("WARNING: recognizeTouchEvent returned GestureBad.NULL")
 
         return gesture
     }
@@ -118,21 +118,21 @@ class GestureRecognizer(val context: Context, var onLongListener: View.OnLongCli
                 scrollDirectionRecognized = true
                 val scrollDirection: ScrollDirection
                 if (distanceX > distanceY) {
-                    gesture = Gesture.SCROLL_X
+                    gesture = GestureBad.SCROLL_X
                     scrollDirection = ScrollDirection.DIRECTION_X
                 } else {
-                    gesture = Gesture.SCROLL_Y
+                    gesture = GestureBad.SCROLL_Y
                     scrollDirection = ScrollDirection.DIRECTION_Y
                 }
                 onScrollDirectionRecognizedListener?.onScrollDirectionRecognized(scrollDirection)
             } else {
-                gesture = Gesture.WANDERING
+                gesture = GestureBad.WANDERING
             }
         }
     }
 
     fun reset() {
-        gesture = Gesture.NULL
+        gesture = GestureBad.NULL
         scrollDirectionRecognized = false
         distanceX = 0f
         distanceY = 0f
@@ -183,7 +183,7 @@ class GestureRecognizer(val context: Context, var onLongListener: View.OnLongCli
             isDownEventCaught = true
             handler.postDelayed(onLongPressRunnable, longPressTimeOut.toLong())
             downPoint.set(event.x, event.y)
-            gesture = Gesture.DOWN
+            gesture = GestureBad.DOWN
             return true
         }
 
@@ -197,30 +197,30 @@ class GestureRecognizer(val context: Context, var onLongListener: View.OnLongCli
             }
             flingVelocityX = velocityX
             flingVelocityY = velocityY
-            gesture = Gesture.FLING
+            gesture = GestureBad.FLING
             return true
         }
 
         override fun onSingleTapUp(e: MotionEvent?): Boolean {
-            gesture = Gesture.TAP
+            gesture = GestureBad.TAP
             return true
         }
 
         override fun onDoubleTap(e: MotionEvent?): Boolean {
-            gesture = Gesture.DOUBLE_TAP
+            gesture = GestureBad.DOUBLE_TAP
             return true
         }
 
         override fun onShowPress(e: MotionEvent?) {
-            gesture = Gesture.SHOW_PRESS
+            gesture = GestureBad.SHOW_PRESS
         }
 
         override fun onLongPress(e: MotionEvent?) {
-            gesture = Gesture.LONG_PRESS
+            gesture = GestureBad.LONG_PRESS
         }
 
         override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
-            gesture = Gesture.SINGLE_TAP
+            gesture = GestureBad.SINGLE_TAP
             return true
         }
     }

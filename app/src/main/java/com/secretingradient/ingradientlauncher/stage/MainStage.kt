@@ -49,7 +49,7 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
         stageRootLayout.setOnTouchListener(this)
         gestureRecognizer.onScrollDirectionRecognized = { scrollDirection ->
             if (scrollDirection == GestureRecognizer.ScrollDirection.DIRECTION_X)
-                disallowScrollStage()
+                disallowVScroll()
         }
     }
 
@@ -66,7 +66,7 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
         gestureRecognizer.recognizeTouchEvent(event)
 
         if (needInsert) {
-            disallowScrollStage()
+            disallowVScroll()
             if (tryInsertOnFly(event, stageRootLayout.overlayView as AppView)) {
                 startDragOnFly(event)
                 needInsert = false
@@ -78,7 +78,7 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
         }
 
         when(gestureRecognizer.gesture) {
-            Gesture.SCROLL_X -> recyclerView.onTouchEvent(event)
+            GestureBad.SCROLL_X -> recyclerView.onTouchEvent(event)
         }
 
         if (isDragOnFly && event.action == MotionEvent.ACTION_MOVE) {
