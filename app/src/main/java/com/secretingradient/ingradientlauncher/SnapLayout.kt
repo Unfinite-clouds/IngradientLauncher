@@ -9,8 +9,6 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.view.children
 import java.io.Serializable
-import kotlin.math.ceil
-import kotlin.math.floor
 
 class SnapLayout : FrameLayout {
 
@@ -20,7 +18,7 @@ class SnapLayout : FrameLayout {
     var snapStepX = -1
     var snapStepY = -1
 
-    private var paddingInternal = Rect()
+    private val paddingReminder = Rect()
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
@@ -70,12 +68,7 @@ class SnapLayout : FrameLayout {
             val reminderX = myWidth - snapStepX * snapCountX
             val reminderY = myHeight - snapStepY * snapCountY
 
-            paddingInternal.set(
-                floor(reminderX.toFloat() / 2f).toInt(),
-                floor(reminderY.toFloat() / 2f).toInt(),
-                ceil(reminderX.toFloat() / 2f).toInt(),
-                ceil(reminderY.toFloat() / 2f).toInt()
-            )
+            paddingReminder.set(0, 0, reminderX, reminderY)
         }
 
         measureChildren(0, 0)
@@ -147,8 +140,13 @@ class SnapLayout : FrameLayout {
     }
 
     fun snapToGrid(p: Point, step: Int = 2): Int {
-        // int division! Order does matter
-        return p.x / snapStepX / step * step  +  p.y / snapStepY / step * step * snapCountX
+        // int division! Expression's order does matter
+        var pos = p.x / snapStepX / step * step  +  p.y / snapStepY / step * step * snapCountX
+        if (p.x >= width - paddingReminder.right)
+            pos -= step
+        if (p.y >= height - paddingReminder.bottom)
+            pos -= step * snapCountX
+        return pos
     }
 
     fun tryAddView(v: View, lp: SnapLayoutParams, p: Point): Boolean {

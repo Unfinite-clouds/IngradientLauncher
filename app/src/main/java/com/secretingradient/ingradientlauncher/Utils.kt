@@ -74,3 +74,16 @@ fun vibrate(context: Context, time: Long = 80L) {
         (context.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(time)
     }
 }
+
+fun printlnClass(message: String, vararg any: Any?) {
+    print(message)
+    any.forEachIndexed { index, obj ->
+        if (index != 0)
+            print(", ")
+        if (obj is Number || obj is String)
+            print(obj)
+        else
+            println(obj?.javaClass?.simpleName)
+    }
+    println()
+}

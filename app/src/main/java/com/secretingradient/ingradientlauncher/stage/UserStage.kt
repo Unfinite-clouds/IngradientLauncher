@@ -108,7 +108,6 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                 MotionEvent.ACTION_MOVE -> {
                     if (selectedView != null) {
 
-                        // todo wtf!? FolderView is TextView?
                         val hoveredView = findHoveredViewAt(touchPoint, lastHoveredView)
                         if (hoveredView is SnapLayout)
                             movePosition = getTouchPositionOnSnap(hoveredView, touchPoint)
@@ -116,8 +115,8 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                             onExitHover(lastHoveredView)
                             onHover(selectedView!!, hoveredView, movePosition)
                         }
-                        // if it is folder creation, then app was replaced to folder, we set lastHoveredView to null
-                        lastHoveredView = hoveredView
+                        // if it is folder creation, then app was replaced to folder, we set lastHoveredView to folderView
+                        lastHoveredView = if (selectedView is AppView && hoveredView is AppView) previewFolder else hoveredView
                         lastMovePosition = movePosition
                     }
                 }
@@ -126,8 +125,8 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                     if (selectedView != null) {
                         val hoveredView = findHoveredViewAt(touchPoint, lastHoveredView)
                         if (hoveredView != null) {
-                            onExitHover(hoveredView)
                             onPerformAction(selectedView!!, hoveredView, movePosition)
+                            onExitHover(hoveredView)
                         }
                         lastHoveredView = hoveredView
                         lastMovePosition = movePosition
@@ -162,11 +161,11 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             cancelPreviewFolder()
         }
 
-        fun onExitHover(lastHoveredView: View?) {
-            when (lastHoveredView) {
-                is BaseSensor -> lastHoveredView.onExitSensor()
+        fun onExitHover(view: View?) {
+            when (view) {
+                is BaseSensor -> view.onExitSensor()
                 is FolderView -> cancelPreviewFolder()
-                is SnapLayout -> lastHoveredView.removeView(ghostView)
+                is SnapLayout -> view.removeView(ghostView)
             }
         }
 
@@ -181,7 +180,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
         fun onPerformAction(selectedView: View, hoveredView: View, movePosition: Int) {
             when {
-                selectedView is AppView && hoveredView is FolderView -> hoveredView.addApps(selectedView)
+                selectedView is AppView && hoveredView is FolderView -> { hoveredView.addApps(selectedView); previewFolder = null }
                 isElement(selectedView) && hoveredView is BaseSensor -> hoveredView.onPerformAction(selectedView)
                 isElement(selectedView) && hoveredView is SnapLayout -> hoveredView.moveView(selectedView, movePosition)
             }

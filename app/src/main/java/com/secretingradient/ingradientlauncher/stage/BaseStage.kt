@@ -10,6 +10,7 @@ import androidx.core.view.children
 import com.secretingradient.ingradientlauncher.LauncherException
 import com.secretingradient.ingradientlauncher.LauncherRootLayout
 import com.secretingradient.ingradientlauncher.element.AppView
+import com.secretingradient.ingradientlauncher.element.isElement
 
 abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
     val context = launcherRootLayout.context
@@ -50,6 +51,7 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
     }
 
     private fun findInnerViewUnderInternal(p: Point, view: View): View? {
+        // don't search in element's children. Suppose the Element is what we want to find
         if (view.parent == null)
             return null
 
@@ -64,7 +66,7 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
 
         // view contains point, check children:
         var foundChild: View? = foundView
-        while (foundChild is ViewGroup) {
+        while (foundChild is ViewGroup && !isElement(foundChild)) {
             // here foundChild == foundView
             foundChild = null
             getLocationOfViewGlobal(foundView, reusablePoint)
