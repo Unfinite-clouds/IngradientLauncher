@@ -3,7 +3,6 @@ package com.secretingradient.ingradientlauncher.stage
 import android.graphics.Point
 import android.graphics.Rect
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.children
@@ -22,7 +21,7 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
         this.stageRootLayout.stage = this
     }
 
-    open fun transferEvent(event: MotionEvent, v: AppView) {}
+    open fun receiveTransferredElement(element: AppView) {} // todo make for any Element, not only for AppView
 
     open fun disallowVScroll(disallow: Boolean = true) {
         stageRootLayout.parent.requestDisallowInterceptTouchEvent(disallow)

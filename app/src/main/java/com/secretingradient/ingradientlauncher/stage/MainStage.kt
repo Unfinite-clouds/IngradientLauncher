@@ -4,21 +4,23 @@ import android.graphics.Point
 import android.view.MotionEvent
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import com.secretingradient.ingradientlauncher.*
+import com.secretingradient.ingradientlauncher.DataKeeper
+import com.secretingradient.ingradientlauncher.LauncherRootLayout
+import com.secretingradient.ingradientlauncher.R
 import com.secretingradient.ingradientlauncher.element.AppView
+import com.secretingradient.ingradientlauncher.toPx
 
 class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRootLayout), View.OnTouchListener {
     val FLIP_ZONE = toPx(40).toInt()
 
     var apps = DataKeeper.mainStageAppsData
     override val stageLayoutId = R.layout.stage_0_main
-    lateinit var recyclerView: MainStageRecycler
-    val gestureRecognizer = GestureRecognizer(context)
-    var needInsert = false
-    var insertedPos = -1
+    private lateinit var recyclerView: MainStageRecycler
+    private var isTransferring = false
     private val touchPoint = Point()
     private var isDragOnFly = false
     private val startDragOnFlyRunnable = object : Runnable {
+        var insertedPos = -1
         var event: MotionEvent? = null
         override fun run() {
             event?.let {
@@ -37,7 +39,6 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
         recyclerView = stageRootLayout.findViewById(R.id.stage_0_recycler)
         recyclerView.setHasFixedSize(true)
         recyclerView.apps = apps
-        // todo uncomment
         recyclerView.saveListener = object : MainStageRecycler.OnSaveDataListener {
             override fun onSaveData() = saveData()
         }
@@ -47,55 +48,49 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
             }
         })
         stageRootLayout.setOnTouchListener(this)
-        gestureRecognizer.onScrollDirectionRecognized = { scrollDirection ->
-            if (scrollDirection == GestureRecognizer.ScrollDirection.DIRECTION_X)
-                disallowVScroll()
-        }
     }
 
-    override fun transferEvent(event: MotionEvent, v: AppView) {
+    override fun receiveTransferredElement(element: AppView) {
         goToStage(0)
-        needInsert = true
-        v.width = recyclerView.widthCell
-        v.height = recyclerView.heightCell
-        stageRootLayout.overlayView = v
-        launcherRootLayout.dispatchToCurrent = true
+        isTransferring = true
+        element.width = recyclerView.widthCell
+        element.height = recyclerView.heightCell
+        stageRootLayout.overlayView = element
+        launcherRootLayout.dispatchToCurrentStage = true
     }
 
     override fun onTouch(v: View?, event: MotionEvent): Boolean {
-        gestureRecognizer.recognizeTouchEvent(event)
-
-        if (needInsert) {
-            disallowVScroll()
-            if (tryInsertOnFly(event, stageRootLayout.overlayView as AppView)) {
-                startDragOnFly(event)
-                needInsert = false
-            }
-        }
-
-        if (event.action == MotionEvent.ACTION_DOWN) {
+        if (!isTransferring) {
             recyclerView.onTouchEvent(event)
-        }
 
-        when(gestureRecognizer.gesture) {
-            GestureBad.SCROLL_X -> recyclerView.onTouchEvent(event)
-        }
+        } else if (handleInsertOnTransferring(event))
+                isTransferring = false
 
-        if (isDragOnFly && event.action == MotionEvent.ACTION_MOVE) {
-            recyclerView.dispatchTouchEvent(event)
-        }
-
-        if (event.action == MotionEvent.ACTION_UP) {
-            recyclerView.onTouchEvent(event) // make fling
+        if (event.action == MotionEvent.ACTION_UP)
             resetEventState()
-        }
 
         return true
     }
 
+    private fun handleInsertOnTransferring(event: MotionEvent): Boolean {
+        disallowVScroll()
+        touchPoint.set(event.x.toInt(), event.y.toInt())
+        val hoveredView = findViewUnder(touchPoint)
+        // hoveredView will one of appViews in RecyclerView
+        if (hoveredView is AppView) {
+            startDragOnFlyRunnable.insertedPos = recyclerView.insertViewUnder(stageRootLayout.overlayView as AppView, event.x - recyclerView.left, event.y - recyclerView.top)
+            startDragOnFlyRunnable.event = event
+            stageRootLayout.handler.post(startDragOnFlyRunnable)
+            stageRootLayout.overlayView = null
+            return true
+        }
+
+        return false
+    }
+
     private fun resetEventState() {
-        launcherRootLayout.dispatchToCurrent = false
-        needInsert = false
+        launcherRootLayout.dispatchToCurrentStage = false
+        isTransferring = false
         isDragOnFly = false
         stageRootLayout.overlayView = null
     }
@@ -104,21 +99,4 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
         DataKeeper.dumpMainStageApps(context)
     }
 
-    private fun tryInsertOnFly(event: MotionEvent, appView: AppView): Boolean {
-        if (event.action == MotionEvent.ACTION_MOVE) {
-            touchPoint.set(event.x.toInt(), event.y.toInt())
-            val hitTestResult = findViewUnder(touchPoint)
-            if (hitTestResult == recyclerView) {
-                stageRootLayout.overlayView = null
-                insertedPos = recyclerView.insertViewAt(appView, event.x - recyclerView.left, event.y - recyclerView.top)
-                return true
-            }
-        }
-        return false
-    }
-
-    private fun startDragOnFly(event: MotionEvent) {
-        startDragOnFlyRunnable.event = event
-        stageRootLayout.handler.post(startDragOnFlyRunnable)
-    }
 }

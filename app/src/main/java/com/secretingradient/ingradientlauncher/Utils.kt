@@ -67,7 +67,7 @@ fun MutableList<*>.swap(i: Int, j: Int) {
     Collections.swap(this, i, j)
 }
 
-fun vibrate(context: Context, time: Long = 80L) {
+fun vibrate(context: Context, time: Long = 70L) {
     if (Build.VERSION.SDK_INT >= 26) {
         (context.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(VibrationEffect.createOneShot(time, VibrationEffect.DEFAULT_AMPLITUDE))
     } else {

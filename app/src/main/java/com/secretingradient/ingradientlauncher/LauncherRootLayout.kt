@@ -7,6 +7,7 @@ import android.widget.FrameLayout
 import androidx.core.view.get
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
+import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.stage.BaseStage
 import com.secretingradient.ingradientlauncher.stage.StageAdapter
 
@@ -16,7 +17,7 @@ class LauncherRootLayout : FrameLayout {
     lateinit var launcherRecyclerView: RecyclerView
         private set
     val stages = mutableListOf<BaseStage>()
-    var dispatchToCurrent = false
+    var dispatchToCurrentStage = false
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
@@ -29,10 +30,10 @@ class LauncherRootLayout : FrameLayout {
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         // dispatch to proper itemView - it will current viewHolder.itemView
-        if (dispatchToCurrent) {
+        if (dispatchToCurrentStage) {
             // attention! when we do that way - we ignore launcherVP scroll listener (for scroll up/down)
             return getCurrentItemView()?.stageRootLayout?.dispatchTouchEvent(ev) ?: super.dispatchTouchEvent(ev).also {
-                    println("Warning: viewHolder for stage ${launcherViewPager.currentItem} was not found, but dispatchToCurrent == true")
+                    println("Warning: viewHolder for stage ${launcherViewPager.currentItem} was not found, but dispatchToCurrentStage == true")
                 }
         }
         return super.dispatchTouchEvent(ev)
@@ -40,5 +41,9 @@ class LauncherRootLayout : FrameLayout {
 
     fun getCurrentItemView(): StageAdapter.StageHolder? {
         return launcherRecyclerView.findViewHolderForLayoutPosition(launcherViewPager.currentItem) as? StageAdapter.StageHolder
+    }
+
+    fun transferEvent(stage: Int, appView: AppView) {
+        stages[stage].receiveTransferredElement(appView)
     }
 }

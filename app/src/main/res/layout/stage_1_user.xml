@@ -4,12 +4,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.secretingradient.ingradientlauncher.element.TrashView
-        android:id="@+id/trash_view1"
+    <com.secretingradient.ingradientlauncher.sensor.UpSensor
+        android:id="@+id/up_sensor"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:padding="15dp"
-        android:src="@drawable/ic_delete"
+        android:layout_height="@dimen/sensor_height"
+        android:padding="@dimen/sensor_padding"
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.viewpager2.widget.ViewPager2
@@ -18,14 +17,33 @@
         android:layout_height="0dp"
         android:clipChildren="true"
         android:scrollbars="horizontal"
-        app:layout_constraintBottom_toTopOf="@id/trash_view2"
-        app:layout_constraintTop_toBottomOf="@+id/trash_view1" />
+        app:layout_constraintBottom_toTopOf="@id/info_sensor"
+        app:layout_constraintTop_toBottomOf="@+id/up_sensor" />
 
-    <com.secretingradient.ingradientlauncher.element.TrashView
-        android:id="@+id/trash_view2"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:padding="15dp"
-        android:src="@drawable/ic_delete"
-        app:layout_constraintBottom_toBottomOf="parent" />
+    <com.secretingradient.ingradientlauncher.sensor.InfoSensor
+        android:id="@+id/info_sensor"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/sensor_height"
+        android:padding="@dimen/sensor_padding"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/remove_sensor"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.secretingradient.ingradientlauncher.sensor.RemoveSensor
+        android:id="@+id/remove_sensor"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/sensor_height"
+        android:padding="@dimen/sensor_padding"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/uninstall_sensor"
+        app:layout_constraintStart_toEndOf="@+id/info_sensor" />
+
+    <com.secretingradient.ingradientlauncher.sensor.UninstallSensor
+        android:id="@+id/uninstall_sensor"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/sensor_height"
+        android:padding="@dimen/sensor_padding"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/remove_sensor"/>
 </merge>

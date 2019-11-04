@@ -25,12 +25,6 @@ private abstract class UserStageStrategy(layout: LauncherRootLayout) : BaseStage
     var shouldIntercept = false
     var folderPopup: PopupWindow? = null
     var inEditMode = false
-    val sensorInfo = BaseSensor(context)
-    val sensorRemove = BaseSensor(context)
-    val sensorUninstall = BaseSensor(context)
-    val sensorUp = BaseSensor(context)
-    val sensorLeft = BaseSensor(context)
-    val sensorRight = BaseSensor(context)
     var selectedView: View? = null
     var lastHoveredView: View? = null
     val touchPoint = Point()
@@ -111,7 +105,7 @@ private abstract class UserStageStrategy(layout: LauncherRootLayout) : BaseStage
     fun onHover(selectedView: View, hoveredView: View, touchPoint: Point) {
         when {
             selectedView is AppView && hoveredView is AppView -> previewCreateFolder(hoveredView)
-            isElement(selectedView) && hoveredView is BaseSensor -> hoveredView.onSensored(selectedView)
+            isElement(selectedView) && hoveredView is BaseSensor -> hoveredView.onSensor(selectedView)
             isElement(selectedView) && hoveredView is SnapLayout -> moveElement(ghostView, hoveredView, touchPoint)
         }
     }

@@ -72,7 +72,7 @@ class MainStageRecycler : RecyclerView {
         val app = itemView as AppView
     }
 
-    fun insertViewAt(appView: AppView, x: Float, y: Float): Int {
+    fun insertViewUnder(appView: AppView, x: Float, y: Float): Int {
         val targetPosition = layoutManager?.getPosition(findChildViewUnder(x, y)!!)!!
         apps.add(targetPosition, appView.appInfo.id)
         adapter?.notifyItemInserted(targetPosition)

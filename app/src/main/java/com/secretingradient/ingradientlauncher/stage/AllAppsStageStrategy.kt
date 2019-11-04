@@ -11,9 +11,6 @@ import com.secretingradient.ingradientlauncher.sensor.BaseSensor
 private abstract class AllAppsStageStrategy(layout: LauncherRootLayout) : BaseStage(layout), View.OnTouchListener, View.OnLongClickListener {
     lateinit var currentSnapLayout: SnapLayout
     var shouldIntercept = false
-    val sensorInfo = BaseSensor(context)
-    val sensorUninstall = BaseSensor(context)
-    val sensorUp = BaseSensor(context)
     var selectedView: View? = null
     var lastHoveredView: View? = null
     val touchPoint = Point()
@@ -88,7 +85,7 @@ private abstract class AllAppsStageStrategy(layout: LauncherRootLayout) : BaseSt
 
     fun onHover(selectedView: View, hoveredView: View) {
         when (hoveredView) {
-            is BaseSensor -> hoveredView.onSensored(selectedView)
+            is BaseSensor -> hoveredView.onSensor(selectedView)
         }
     }
     fun onExitHover(hoveredView: View) {

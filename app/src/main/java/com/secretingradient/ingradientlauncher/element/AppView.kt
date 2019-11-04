@@ -157,24 +157,30 @@ class AppView : TextView, MenuItem.OnMenuItemClickListener {
 
     override fun onMenuItemClick(item: MenuItem?): Boolean {
         when (item?.itemId) {
-            R.id.popup_menu_info -> context.startActivity(intentToInfo())
-            R.id.popup_menu_uninstall -> context.startActivity(intentToUninstall())
+            R.id.popup_menu_info -> intentToInfo()
+            R.id.popup_menu_uninstall -> intentToUninstall()
         }
         return true
     }
 
-    private fun intentToInfo(): Intent {
+    fun startActivity() {
+        context.startActivity(context.packageManager.getLaunchIntentForPackage(appInfo.packageName))
+    }
+
+    fun intentToInfo() {
         val uri = Uri.fromParts("package", appInfo.packageName, null)
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, uri)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        return intent
+        context.startActivity(intent)
+//        return intent
     }
 
-    private fun intentToUninstall(): Intent {
+    fun intentToUninstall() {
         val uri = Uri.fromParts("package", appInfo.packageName, null)
         val intent = Intent(Intent.ACTION_DELETE, uri)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        return intent
+        context.startActivity(intent)
+//        return intent
     }
 
     private fun rasterize(drawable: Drawable, bitmap: Bitmap, canvas: Canvas, size: Int) {
