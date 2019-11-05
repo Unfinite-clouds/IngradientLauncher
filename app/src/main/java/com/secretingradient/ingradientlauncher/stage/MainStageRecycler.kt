@@ -135,7 +135,7 @@ class MainStageRecycler : RecyclerView {
         bounds.set(0,0,w,h)
     }
 
-    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+    override fun onTouchEvent(ev: MotionEvent): Boolean {
         if (ev.action == MotionEvent.ACTION_UP && selectedAppHolder != null) {
             if (!hitPoint(ev.x, ev.y)) {
                 val pos = selectedAppHolder!!.adapterPosition
@@ -144,7 +144,7 @@ class MainStageRecycler : RecyclerView {
                 return true
             }
         }
-        return super.dispatchTouchEvent(ev)
+        return super.onTouchEvent(ev)
     }
 
     private fun <T: Number> hitPoint(x: T, y: T): Boolean {

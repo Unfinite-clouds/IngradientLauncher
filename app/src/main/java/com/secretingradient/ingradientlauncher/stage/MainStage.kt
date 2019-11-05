@@ -8,10 +8,8 @@ import com.secretingradient.ingradientlauncher.DataKeeper
 import com.secretingradient.ingradientlauncher.LauncherRootLayout
 import com.secretingradient.ingradientlauncher.R
 import com.secretingradient.ingradientlauncher.element.AppView
-import com.secretingradient.ingradientlauncher.toPx
 
 class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRootLayout), View.OnTouchListener {
-    val FLIP_ZONE = toPx(40).toInt()
 
     var apps = DataKeeper.mainStageAppsData
     override val stageLayoutId = R.layout.stage_0_main

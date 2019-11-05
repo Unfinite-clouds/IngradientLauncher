@@ -51,6 +51,7 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
 
     private fun findInnerViewUnderInternal(p: Point, view: View): View? {
         // don't search in element's children. Suppose the Element is what we want to find
+
         if (view.parent == null)
             return null
 
@@ -89,7 +90,8 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
             pointOut.set(pointOut.x + v.left, pointOut.y + v.top)
             v = v.parent as View?
         }
-        if (v == null) throw LauncherException("view $view must be a child of stageRootLayout")
+        if (v == null)
+            throw LauncherException("view $view must be a child of stageRootLayout")
     }
 
     fun toLocationInView(globalPoint: Point, view: View, pointOut: Point) {
