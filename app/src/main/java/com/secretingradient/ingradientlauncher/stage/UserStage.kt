@@ -34,28 +34,28 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
     var shouldIntercept
         set(value) {stageRootLayout.shouldIntercept = value}
         get() = stageRootLayout.shouldIntercept
-    private lateinit var userStageTouchEvent: UserStageTouchEvent
+    private lateinit var touchHandler: TouchHandler
     private var sensors = mutableListOf<BaseSensor>()
     private val defaultAppSize = toPx(70).toInt()
 
     override fun initInflate(stageRootLayout: StageRootLayout) {
         super.initInflate(stageRootLayout)
-        userStageTouchEvent = UserStageTouchEvent()
-        stageRootLayout.setOnTouchListener(userStageTouchEvent)
+        touchHandler = TouchHandler()
+        stageRootLayout.setOnTouchListener(touchHandler)
         stageRootLayout.preDispatchListener = object : OnPreDispatchListener {
             override fun onPreDispatch(event: MotionEvent) {
-                userStageTouchEvent.preDispatch(event)
+                touchHandler.preDispatch(event)
             }
         }
 
         stageRootLayout.apply {
-            sensors.add(up_sensor.apply { sensorListener = userStageTouchEvent.upSensorListener})
+            sensors.add(up_sensor.apply { sensorListener = touchHandler.upSensorListener})
             sensors.add(info_sensor)
             sensors.add(remove_sensor)
             sensors.add(uninstall_sensor)
         }
 
-        userStageTouchEvent.hideSensors()
+        touchHandler.hideSensors()
 
 //        stageVP.offscreenPageLimit = 2
     }
@@ -64,7 +64,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         TODO("remove this") //To change body of created functions use File | Settings | File Templates.
     }
 
-    private inner class UserStageTouchEvent : View.OnTouchListener {
+    private inner class TouchHandler : View.OnTouchListener {
         var inEditMode = false
         var selectedView: View? = null
         var lastHoveredView: View? = null
@@ -77,7 +77,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         var lastMovePosition = -1
         var previewFolder: FolderView? = null
         var flipPageDone = false
-        var folderPopup = PopupWindow(context)
+        var folderPopup = PopupWindow(context).apply { isClippingEnabled = false }
         var wasMoveAfterStartEditMode = false  // crutch
 
         val upSensorListener = object : BaseSensor.SensorListener {
@@ -301,24 +301,21 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         fun setFolderContent(folder: FolderView, folderPopup: PopupWindow) {
             // currently set Grid sizes 2 x 2 and 3 x 3
             val size = folder.folderSize
-            var n = ceil(sqrt(size.toFloat())).toInt()
-            if (n == 1) n = 2
-            else if (n == 2 && size == 4) n = 3
+            var columnsCount = ceil(sqrt(size.toFloat())).toInt()
+            if (columnsCount == 1) columnsCount = 2
+            else if (columnsCount == 2 && size == 4) columnsCount = 3
 
             val appSize = defaultAppSize
 
-            val snap = SnapLayout(context, n, n)
+            val grid = FolderLayout(context)
+            grid.apps = folder.getApps()
+            grid.appSize = appSize
+            grid.columnsCount = columnsCount
 
-            folder.getApps().forEachIndexed {i, app ->
-                val x = i % n
-                val y = i / n
-                snap.addNewView(app.createView(context), i, 1, 1)
-            }
+            folderPopup.width = appSize * columnsCount
+            folderPopup.height = appSize * columnsCount
 
-            folderPopup.width = appSize * n
-            folderPopup.height = appSize * n
-
-            folderPopup.contentView = snap
+            folderPopup.contentView = grid
         }
 
         fun closeFolder() {

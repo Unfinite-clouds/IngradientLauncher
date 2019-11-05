@@ -132,7 +132,7 @@ class MainStageRecycler : RecyclerView {
 
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         if (ev.action == MotionEvent.ACTION_UP && selectedAppHolder != null) {
-            if (!hitPoint(ev.x, ev.y)) {
+            if (!bounds.contains(x.toInt(), y.toInt())) {
                 val pos = selectedAppHolder!!.adapterPosition
                 apps.removeAt(pos)
                 adapter?.notifyItemRemoved(pos)
@@ -140,10 +140,6 @@ class MainStageRecycler : RecyclerView {
             }
         }
         return super.onTouchEvent(ev)
-    }
-
-    private fun <T: Number> hitPoint(x: T, y: T): Boolean {
-        return bounds.contains(x.toInt(), y.toInt())
     }
 
     interface OnSaveDataListener {

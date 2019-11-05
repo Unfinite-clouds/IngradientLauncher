@@ -30,7 +30,7 @@ class FolderView(context: Context, vararg newApps: AppInfo) : FrameLayout(contex
 
     fun getApp(i: Int) = apps[i]
 
-    fun getApps() = apps as List<AppInfo>
+    fun getApps() = apps
 
     fun clear() {
         apps.clear()
