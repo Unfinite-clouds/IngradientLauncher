@@ -7,11 +7,10 @@
     android:orientation="vertical"
     tools:context=".ResearchActivity">
 
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/research_vp"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/research_rv"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        />
+        android:layout_height="match_parent"/>
 
 </com.secretingradient.ingradientlauncher.MyRoot>
 

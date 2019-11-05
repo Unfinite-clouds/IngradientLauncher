@@ -5,7 +5,7 @@ import android.view.View
 
 class WidgetInfo(override var snapWidth: Int, override var snapHeight: Int) : ElementInfo() {
 
-    override fun createView(context: Context): View {
+    fun createView(context: Context): View {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

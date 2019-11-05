@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.MotionEvent
-import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.core.view.postDelayed
@@ -47,14 +46,14 @@ class MainStageRecycler : RecyclerView {
         }
 
         override fun onBindViewHolder(holder: AppHolder, position: Int) {
-            holder.app.appInfo = DataKeeper.getAppInfoById(apps[position])!!
-            holder.app.setOnClickListener(AppView)
+            holder.appView.appInfo = DataKeeper.getAppInfoById(apps[position])!!
+            holder.appView.setOnClickListener(AppView)
         }
 
         override fun onViewAttachedToWindow(holder: AppHolder) {
-            holder.app.translationX = 0f
-            holder.app.translationY = 0f
-            holder.app.animatorScale.start()
+            holder.appView.translationX = 0f
+            holder.appView.translationY = 0f
+            holder.appView.animatorScale.start()
             super.onViewAttachedToWindow(holder)
         }
     }
@@ -66,10 +65,6 @@ class MainStageRecycler : RecyclerView {
         return AppView(context, appInfo).apply {
             layoutParams = LinearLayout.LayoutParams(widthCell, heightCell)
         }
-    }
-
-    class AppHolder(itemView: View) : ViewHolder(itemView) {
-        val app = itemView as AppView
     }
 
     fun insertViewUnder(appView: AppView, x: Float, y: Float): Int {

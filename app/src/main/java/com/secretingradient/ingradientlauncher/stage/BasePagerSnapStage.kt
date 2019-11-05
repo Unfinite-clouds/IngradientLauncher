@@ -7,7 +7,6 @@ import androidx.viewpager2.widget.ViewPager2
 import com.secretingradient.ingradientlauncher.DataKeeper
 import com.secretingradient.ingradientlauncher.LauncherRootLayout
 import com.secretingradient.ingradientlauncher.SnapLayout
-import com.secretingradient.ingradientlauncher.element.FolderInfo
 
 abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRootLayout), View.OnTouchListener {
     lateinit var stageVP: ViewPager2
@@ -76,10 +75,11 @@ abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : Base
             }
             folders.forEach {
                 if (isPosInPage(it.key, page)) {
-                    holder.snapLayout.addNewView(
-                        FolderInfo.createView(context, it.value).apply { /*setOnTouchListener(this@BasePagerSnapStage)*/ },
-                        it.key, 2, 2
-                    )
+//                    todo create folders from dataset
+//                    holder.snapLayout.addNewView(
+//                        FolderInfo.createView(context, it.value).apply { /*setOnTouchListener(this@BasePagerSnapStage)*/ },
+//                        it.key, 2, 2
+//                    )
                 }
             }
 

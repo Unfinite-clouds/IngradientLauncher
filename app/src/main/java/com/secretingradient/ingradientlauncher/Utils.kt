@@ -87,3 +87,7 @@ fun printlnClass(message: String, vararg any: Any?) {
     }
     println()
 }
+
+fun Any?.className(): String? {
+    return this?.javaClass?.simpleName
+}

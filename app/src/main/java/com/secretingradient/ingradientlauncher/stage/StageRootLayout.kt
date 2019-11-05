@@ -14,16 +14,21 @@ class StageRootLayout : ConstraintLayout {
     lateinit var stage: BaseStage
     var shouldIntercept = false
     var overlayView: View? = null
-    private val touchPoint = PointF()
+        set(value) {field = value; invalidate()}
+    private val overlayTranslation = PointF()
     var preDispatchListener: OnPreDispatchListener? = null
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
+    fun setOverlayTranslation(x: Float, y: Float) {
+        overlayTranslation.set(x, y)
+        invalidate()
+    }
+
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         if (overlayView != null) {
-            touchPoint.set(ev.x, ev.y)
-            invalidate()
+            setOverlayTranslation(ev.x, ev.y)
         }
         preDispatchListener?.onPreDispatch(ev)
         return super.dispatchTouchEvent(ev)
@@ -36,7 +41,7 @@ class StageRootLayout : ConstraintLayout {
     override fun dispatchDraw(canvas: Canvas?) {
         super.dispatchDraw(canvas)
         overlayView?.let {
-            canvas?.withTranslation(touchPoint.x - it.width / 2, touchPoint.y - it.height / 2) {
+            canvas?.withTranslation(overlayTranslation.x - it.width / 2, overlayTranslation.y - it.height / 2) {
                 it.draw(canvas)
             }
         }

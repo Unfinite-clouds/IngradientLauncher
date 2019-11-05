@@ -36,7 +36,7 @@ class AppInfo(packageName: String? = null, name: String? = null, label: String? 
     override val snapHeight
         get() = 2
 
-    override fun createView(context: Context): View {
+    fun createView(context: Context): View {
         return AppView(context, this)
     }
 

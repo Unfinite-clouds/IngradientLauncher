@@ -1,7 +1,6 @@
 package com.secretingradient.ingradientlauncher.element
 
 import android.content.Context
-import android.view.View
 
 class FolderInfo(val apps: MutableList<AppInfo>) : ElementInfo() {
     companion object {
@@ -16,7 +15,9 @@ class FolderInfo(val apps: MutableList<AppInfo>) : ElementInfo() {
     override val snapHeight
         get() = 2
 
-    override fun createView(context: Context): View {
-        TODO("not implemented")
+    fun createView(context: Context): FolderView {
+        val f = FolderView(context)
+        f.addApps(apps)
+        return f
     }
 }
