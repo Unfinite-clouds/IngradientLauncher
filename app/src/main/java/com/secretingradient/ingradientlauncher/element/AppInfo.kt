@@ -2,12 +2,8 @@ package com.secretingradient.ingradientlauncher.element
 
 import android.content.Context
 import android.content.pm.ResolveInfo
-import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.view.View
-import androidx.core.graphics.drawable.toBitmap
-import com.secretingradient.ingradientlauncher.decodeBitmap
-import com.secretingradient.ingradientlauncher.encodeBitmap
 
 // Can only store Bitmap icons (Adaptive icons is not supported)
 class AppInfo(packageName: String? = null, name: String? = null, label: String? = null, icon: Drawable? = null) :
@@ -64,11 +60,11 @@ class AppInfo(packageName: String? = null, name: String? = null, label: String? 
     }
 
     fun prepareIconToDump(size: Int?) {
-        iconByteArray = encodeBitmap(if (size == null) icon!!.toBitmap() else icon!!.toBitmap(size, size))
+//        iconByteArray = encodeBitmap(if (size == null) icon!!.toBitmap() else icon!!.toBitmap(size, size))
     }
 
     fun loadIconFromDump(context: Context) {
-        icon = BitmapDrawable(context.resources, decodeBitmap(iconByteArray!!))
+//        icon = BitmapDrawable(context.resources, decodeBitmap(iconByteArray!!))
     }
 
 }

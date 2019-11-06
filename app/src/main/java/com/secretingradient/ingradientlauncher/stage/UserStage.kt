@@ -259,7 +259,9 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                 parent?.removeView(element)
                 snapLayout.addView(element)
             }
+            val from = (element.layoutParams as SnapLayout.SnapLayoutParams).position
             snapLayout.moveView(element, movePosition)
+            DataKeeper2.onUserStageDataChangedListener.onMoved(context, from, movePosition)
         }
 
         private fun getPositionOnSnapUnder(snapLayout: SnapLayout, touchPoint: Point): Int {

@@ -5,6 +5,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.viewpager2.widget.ViewPager2
+import com.secretingradient.ingradientlauncher.element.AppData
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,6 +18,7 @@ class MainActivity : AppCompatActivity() {
 //        DataKeeper.deleteFile(this, DataKeeper.USER_STAGE_APPS)
 
         DataKeeper.init(this)
+        DataKeeper2.init(this)
 
 //        val apps = DataKeeper.allApps
 //
@@ -30,6 +32,13 @@ class MainActivity : AppCompatActivity() {
 //        }
 //        DataKeeper.dumpUserStageApps(this)
 
+
+        val apps = DataKeeper2.allAppsIds
+
+        for (i in 0..10) {
+            DataKeeper2.userStageData[i / 2 * 2] = AppData(apps[i])
+        }
+        DataKeeper2.dumpFile(this, DataKeeper2.userStageData, DataKeeper2.USER_STAGE_DATA)
 
 
         getPrefs(this).edit {putBoolean(Preferences.FIRST_LOAD, true)}

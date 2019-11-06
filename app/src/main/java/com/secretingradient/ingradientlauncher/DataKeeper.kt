@@ -3,10 +3,7 @@ package com.secretingradient.ingradientlauncher
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ResolveInfo
-import com.secretingradient.ingradientlauncher.element.AppInfo
-import com.secretingradient.ingradientlauncher.element.ElementInfo
-import com.secretingradient.ingradientlauncher.element.FolderInfo
-import com.secretingradient.ingradientlauncher.element.WidgetInfo
+import com.secretingradient.ingradientlauncher.element.*
 import java.io.*
 
 typealias AppPoolT = MutableMap<String, AppInfo>
@@ -35,7 +32,7 @@ fun UserStageFoldersT(): UserStageFoldersT {
 object DataKeeper {
     data class FileInfo<T>(val fileName: String)
 
-    //    val TEST = FileInfo2<MutableMap<String, AppInfo>>("test")
+        val TEST = FileInfo<List<ElementData>>("test")
     val ALL_APPS = FileInfo<AppPoolT>("ALL_APPS")
     val MAIN_STAGE_APPS = FileInfo<MainStageAppsT>("MAIN_STAGE_APPS")
     val USER_STAGE_APPS = FileInfo<UserStageAppsT>("USER_STAGE_APPS")
@@ -224,7 +221,7 @@ object DataKeeper {
         return loaded
     }
 
-    private fun <T> loadFile(context: Context, fileInfo: FileInfo<T>): T? {
+    fun <T> loadFile(context: Context, fileInfo: FileInfo<T>): T? {
         val a: T?
         var inputStream: InputStream? = null
         try {
@@ -239,7 +236,7 @@ object DataKeeper {
         return a
     }
 
-    private fun <T> dumpFile(context: Context, obj: T, fileInfo: FileInfo<T>) {
+    fun <T> dumpFile(context: Context, obj: T, fileInfo: FileInfo<T>) {
         ObjectOutputStream(context.openFileOutput(fileInfo.fileName, Context.MODE_PRIVATE)).use { it.writeObject(obj) }
     }
 

@@ -12,13 +12,14 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.PopupWindow
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.secretingradient.ingradientlauncher.element.ElementInfo
+import com.secretingradient.ingradientlauncher.element.FolderData
+import com.secretingradient.ingradientlauncher.element.FolderView
 import kotlinx.android.synthetic.main._research_layout.*
 
 
@@ -34,7 +35,11 @@ class ResearchActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout._research_layout)
 
-//        fillApps()
+        fillApps()
+
+        for (i in 0..10)
+            DataKeeper2.onUserStageDataChangedListener.onInserted(this, FolderData(DataKeeper2.allAppsIds.subList(0,5)), i)
+
         research_rv.adapter = object : RecyclerView.Adapter<MyVH>() {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyVH {
                 return MyVH(LayoutInflater.from(this@ResearchActivity).inflate(R.layout._research_item, parent, false))
@@ -43,7 +48,8 @@ class ResearchActivity : AppCompatActivity() {
             override fun getItemCount() = 6
 
             override fun onBindViewHolder(holder: MyVH, position: Int) {
-                holder.tv.text = position.toString()
+                holder.folderView.clear()
+//                holder.folderView.addApps((DataKeeper2.userStageData[position] as FolderData).ids)
             }
 
         }
@@ -69,7 +75,7 @@ class ResearchActivity : AppCompatActivity() {
     }
 
     class MyVH(view: View): RecyclerView.ViewHolder(view) {
-        val tv = view.findViewById<TextView>(R.id.research_item)
+        val folderView = view.findViewById<FolderView>(R.id.research_item)
     }
 
     fun hideKeyboard() {
@@ -78,8 +84,8 @@ class ResearchActivity : AppCompatActivity() {
     }
 
     fun fillApps() {
-        DataKeeper.init(this)
-//        val allApps = DataKeeper.allApps.values.toList()
+        DataKeeper2.init(this)
+//        val allApps = DataKeeper2.allAppsIds
         for (i in 0..6) {
 //            apps.add(i, ElementInfo(allApps[i], SnapLayout.SnapLayoutInfo(i*2 + (i*2/8)*8, 2, 2)))
         }

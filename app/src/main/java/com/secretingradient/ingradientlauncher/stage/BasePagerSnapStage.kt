@@ -4,7 +4,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
-import com.secretingradient.ingradientlauncher.DataKeeper
+import com.secretingradient.ingradientlauncher.DataKeeper2
 import com.secretingradient.ingradientlauncher.LauncherRootLayout
 import com.secretingradient.ingradientlauncher.SnapLayout
 
@@ -65,21 +65,27 @@ abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : Base
                     )
                 }
             }*/
-            apps.forEach {
-                if (isPosInPage(it.key, page)) {
-                    holder.snapLayout.addNewView(
-                        DataKeeper.getAppInfoById(it.value)!!.createView(context).apply { /*setOnTouchListener(this@BasePagerSnapStage)*/ },
-                        it.key, 2, 2
-                    )
-                }
-            }
-            folders.forEach {
-                if (isPosInPage(it.key, page)) {
-//                    todo create folders from dataset
+//            apps.forEach {
+//                if (isPosInPage(it.key, page)) {
 //                    holder.snapLayout.addNewView(
-//                        FolderInfo.createView(context, it.value).apply { /*setOnTouchListener(this@BasePagerSnapStage)*/ },
+//                        DataKeeper.getAppInfoById(it.value)!!.createView(context).apply { /*setOnTouchListener(this@BasePagerSnapStage)*/ },
 //                        it.key, 2, 2
 //                    )
+//                }
+//            }
+//            folders.forEach {
+//                if (isPosInPage(it.key, page)) {
+////                    todo create folders from dataset
+////                    holder.snapLayout.addNewView(
+////                        FolderInfo.createView(context, it.value).apply { /*setOnTouchListener(this@BasePagerSnapStage)*/ },
+////                        it.key, 2, 2
+////                    )
+//                }
+//            }
+
+            DataKeeper2.createViews(context).forEach {
+                if (isPosInPage((it.layoutParams as SnapLayout.SnapLayoutParams).position, page)) {
+                    holder.snapLayout.addView(it)
                 }
             }
 
