@@ -12,14 +12,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.launcher_root)
 
-
-//        DataKeeper.deleteFile(this, DataKeeper.ALL_APPS)
-//        DataKeeper.deleteFile(this, DataKeeper.MAIN_STAGE_APPS)
-//        DataKeeper.deleteFile(this, DataKeeper.USER_STAGE_APPS)
-
-        DataKeeper.init(this)
-        DataKeeper2.init(this)
-
 //        val apps = DataKeeper.allApps
 //
 //        for (i in 0..12) {
@@ -32,21 +24,23 @@ class MainActivity : AppCompatActivity() {
 //        }
 //        DataKeeper.dumpUserStageApps(this)
 
+//        DataKeeper.init(this)
 
-        val apps = DataKeeper2.allAppsIds
+        val dk = DataKeeper2(this)
+        val appIds = dk.allAppsIds
 
+        // filling
         for (i in 0..10) {
-            DataKeeper2.userStageData[i / 2 * 2] = AppData(apps[i])
+            dk.userStageData.onInserted(i / 2 * 2, AppData(appIds[i]), true)
         }
-        DataKeeper2.dumpFile(this, DataKeeper2.userStageData, DataKeeper2.USER_STAGE_DATA)
 
 
         getPrefs(this).edit {putBoolean(Preferences.FIRST_LOAD, true)}
         if (getPrefs(this).getBoolean(Preferences.FIRST_LOAD, true))
             Preferences.loadDefaultPreferences(this)
 
-        val root = findViewById<LauncherRootLayout>(R.id.launcher_root)
-        root.initViewPager(findViewById(R.id.root_viewpager))
+        val launcher = findViewById<LauncherRootLayout>(R.id.launcher_root)
+        launcher.initViewPager(findViewById(R.id.root_viewpager), dk)
 
     }
 

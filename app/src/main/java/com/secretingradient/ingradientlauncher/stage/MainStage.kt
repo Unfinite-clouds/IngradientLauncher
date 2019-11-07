@@ -4,19 +4,18 @@ import android.graphics.Point
 import android.view.MotionEvent
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import com.secretingradient.ingradientlauncher.DataKeeper
 import com.secretingradient.ingradientlauncher.LauncherRootLayout
 import com.secretingradient.ingradientlauncher.R
 import com.secretingradient.ingradientlauncher.element.AppView
 
 class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRootLayout), View.OnTouchListener {
 
-    var apps = DataKeeper.mainStageAppsData
     override val stageLayoutId = R.layout.stage_0_main
     private lateinit var recyclerView: MainStageRecycler
     private var isTransferring = false
     private val touchPoint = Point()
     private var isDragOnFly = false
+
     private val startDragOnFlyRunnable = object : Runnable {
         var insertedPos = -1
         var event: MotionEvent? = null
@@ -35,11 +34,10 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
     override fun initInflate(stageRootLayout: StageRootLayout) {
         super.initInflate(stageRootLayout)
         recyclerView = stageRootLayout.findViewById(R.id.stage_0_recycler)
-        recyclerView.setHasFixedSize(true)
-        recyclerView.apps = apps
-        recyclerView.saveListener = object : MainStageRecycler.OnSaveDataListener {
-            override fun onSaveData() = saveData()
-        }
+        recyclerView.init(dataKeeper)
+//        recyclerView.saveListener = object : MainStageRecycler.OnSaveDataListener {
+//            override fun onSaveData() = saveData()
+//        }
         recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
 //                TODO scroll wallpaper (dx, dy)
@@ -93,8 +91,8 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
         stageRootLayout.overlayView = null
     }
 
-    private fun saveData() {
-        DataKeeper.dumpMainStageApps(context)
-    }
+//    private fun saveData() {
+//        dataKeeper
+//    }
 
 }

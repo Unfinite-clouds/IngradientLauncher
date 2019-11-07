@@ -4,7 +4,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
-import com.secretingradient.ingradientlauncher.DataKeeper2
 import com.secretingradient.ingradientlauncher.LauncherRootLayout
 import com.secretingradient.ingradientlauncher.SnapLayout
 
@@ -25,8 +24,8 @@ abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : Base
         stageVP.adapter = pagerAdapter
     }
 
-    // lazy page creating (now its bad)
-    inner class PagerSnapAdapter(val apps: Map<Int, String>, val folders: Map<Int, MutableList<String>>):
+    // lazy page creating is bad
+    inner class PagerSnapAdapter:
         RecyclerView.Adapter<SnapLayoutHolder>() {
         private val pageSize = columnCount*rowCount*2
         lateinit var currentViewHolder: SnapLayoutHolder
@@ -83,7 +82,7 @@ abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : Base
 //                }
 //            }
 
-            DataKeeper2.createViews(context).forEach {
+            dataKeeper.createViews().forEach {
                 if (isPosInPage((it.layoutParams as SnapLayout.SnapLayoutParams).position, page)) {
                     holder.snapLayout.addView(it)
                 }

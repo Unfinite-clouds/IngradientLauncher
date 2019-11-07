@@ -13,7 +13,7 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
     var cellPadding = toPx(6).toInt()
     override val stageLayoutId = R.layout.stage_2_all_apps
     override val viewPagerId = R.id.all_apps_vp
-    override val pagerAdapter = PagerSnapAdapter(apps, mapOf())
+    override val pagerAdapter = PagerSnapAdapter()
 
     override fun initInflate(stageRootLayout: StageRootLayout) {
         super.initInflate(stageRootLayout)

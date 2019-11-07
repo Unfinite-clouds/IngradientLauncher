@@ -14,123 +14,19 @@ import java.io.ObjectOutputStream
 import java.io.Serializable
 
 class DataKeeper2(val context: Context) {
-    interface OnDataChangedListener <K, V>{
-        fun onInserted(index: K, item: V)
-        fun onRemoved(index: K)
-        fun onMoved(from: K, to: K)
-        fun onChanged(newData: MutableMap<K, V>)
-    }
+    var autoDumpEnabled = true
 
-    class DataHolder <K, V> (val context: Context, val fileName: String): OnDataChangedListener<K, V> {
-        lateinit var data: MutableMap<K, V>
+    // this is pool for Bitmaps and data needed to create AppInfo
+    /*private*/ val allAppsCacheData = DataHolder<String, AppCache>(context, "all_apps_cache_data", autoDumpEnabled)
 
-        override fun onInserted(index: K, item: V) {
-            if (data.containsKey(index))
-                throw LauncherException("attempt to rewrite element ${data[index]} at index $index")
-            data[index] = item
-            dumpData()
-        }
+    val mainStageData = DataHolder<Int, String>(context, "main_stage_data", autoDumpEnabled)
+    val userStageData = DataHolder<Int, ElementData>(context, "user_stage_data", autoDumpEnabled)
 
-        override fun onRemoved(index: K) {
-            data.remove(index)
-            dumpData()
-        }
-
-        override fun onMoved(from: K, to: K) {
-            if (data.containsKey(to))
-                throw LauncherException("attempt to rewrite element ${data[to]} at index $to")
-            if (!data.containsKey(from))
-                throw LauncherException("attempt to move null element at index $from")
-            data[to] = data[from]!!
-            dumpData()
-        }
-
-        override fun onChanged(newData: MutableMap<K, V>) {
-            data.clear()
-            data.putAll(newData)
-        }
-
-        fun dumpData() {
-            ObjectOutputStream(context.openFileOutput(fileName, Context.MODE_PRIVATE)).use { it.writeObject(data) }
-        }
-
-        fun loadData() {
-            var stream: ObjectInputStream? = null
-            try {
-                stream = ObjectInputStream(context.openFileInput(fileName))
-                val loaded = stream.readObject() as? MutableMap<K, V>
-                if (loaded != null)
-                    data = loaded
-            } catch (e: FileNotFoundException) {
-                e.printStackTrace()
-            }
-            stream?.close()
-        }
-
-        fun deleteFile() {
-            context.deleteFile(fileName)
-        }
-    }
-
-    private class AppCache(packageName: String? = null, name: String? = null, label: String? = null, icon: Drawable? = null) : Serializable {
-        lateinit var packageName: String
-        lateinit var name: String
-        lateinit var label: String
-        @Transient var icon: Drawable? = null
-        private var iconByteArray: ByteArray? = null
-
-        init {
-            if (packageName != null) this.packageName = packageName
-            if (name != null) this.name = name
-            if (label != null) this.label = label
-            if (icon != null) this.icon = icon
-        }
-
-        val id: String
-            get() = "${packageName}_$name" // .split('_')
-
-        fun set(appInfo: AppInfo) {
-            this.packageName = appInfo.packageName
-            this.name = appInfo.name
-            this.label = appInfo.label
-            this.icon = appInfo.icon
-        }
-
-        fun encodeIcon(size: Int?) {
-            iconByteArray = encodeBitmap(if (size == null) icon!!.toBitmap() else icon!!.toBitmap(size, size))
-        }
-
-        fun decodeIcon(context: Context) {
-            icon = BitmapDrawable(context.resources, decodeBitmap(iconByteArray!!))
-        }
-
-        companion object {
-            private const val serialVersionUID = 44010L
-
-            fun createFromResolveInfo(context: Context, resolveInfo: ResolveInfo): AppCache {
-                val pm = context.packageManager
-                val ai = resolveInfo.activityInfo
-                return AppCache(
-                    ai.packageName,
-                    ai.name,
-                    ai.loadLabel(pm).toString(),
-                    ai.loadIcon(pm)
-                )
-            }
-
-            fun getIdFromResolveInfo(resolveInfo: ResolveInfo): String {
-                return "${resolveInfo.activityInfo.packageName}_${resolveInfo.activityInfo.name}"
-            }
-        }
-    }
-
-    private var allAppsCacheData = DataHolder<String, AppCache>(context, "all_apps_cache_data")
-    var userStageData = DataHolder<Int, ElementData>(context, "user_stage_data")
-    var allAppsIds: MutableList<String>
+    val allAppsIds: MutableList<String>
 
     init {
         allAppsCacheData.loadData()
-        // mainScreen
+        mainStageData.loadData()
         userStageData.loadData()
         // widgets
 
@@ -169,7 +65,7 @@ class DataKeeper2(val context: Context) {
 
             newApps.forEach {
                 val resolveInfo = realAppMap[it]
-                allAppsCacheData.data[it] = AppCache.createFromResolveInfo(context, resolveInfo!!).apply {encodeIcon(size)}
+                allAppsCacheData.data[it] = AppCache(context, resolveInfo!!)
             }
 
             println("newApps: ${newApps.size}, oldApps: ${oldApps.size}, now: ${allAppsCacheData.data.size} apps")
@@ -184,20 +80,138 @@ class DataKeeper2(val context: Context) {
 
     }
 
+    private fun getAppCache(id: String): AppCache {
+        if (allAppsCacheData.data[id] == null) throw LauncherException("id $id for App not found in allAppsCacheData")
+        return allAppsCacheData.data[id]!!
+    }
+
     fun createViews(): List<View> {
-        return List(userStageData.data.size) { i ->
-            val elementData = userStageData.data[i]!!
+        val iter = userStageData.data.iterator()
+        return List(userStageData.data.size) { _ ->
+            val pair = iter.next()
+            val position = pair.key
+            val elementData = pair.value
             when (elementData) {
-                is AppData -> AppView(context, createAppInfo(elementData.id)).apply { layoutParams = SnapLayout.SnapLayoutParams(i, 2, 2) }
-                is FolderData -> FolderView(context).apply { addApps(List(elementData.ids.size) { createAppInfo(elementData.ids[it]) })
-                    layoutParams = SnapLayout.SnapLayoutParams(i, 2, 2) }
+                is AppData -> AppView(context, getAppCache(elementData.id).createAppInfo(context))
+                    .apply { layoutParams = SnapLayout.SnapLayoutParams(position, 2, 2) }
+                is FolderData -> FolderView(context).apply { addApps(List(elementData.ids.size) { getAppCache(elementData.ids[it]).createAppInfo(context) })
+                    layoutParams = SnapLayout.SnapLayoutParams(position, 2, 2) }
                 is WidgetData -> TODO()
             }
         }
     }
 
-    fun createAppInfo(id: String): AppInfo {
-        val app = allAppsCacheData.data[id] ?: throw LauncherException("id $id is absent in cached allApps")
-        return AppInfo(app.packageName, app.name, app.label, app.icon)
+    interface OnDataChangedListener <K, V>{
+        fun onInserted(index: K, item: V, replace: Boolean = false)
+        fun onRemoved(index: K)
+        fun onMoved(from: K, to: K)
+        fun onChanged(newData: MutableMap<K, V>)
     }
+
+    fun createAppInfo(id: String): AppInfo {
+        return getAppCache(id).createAppInfo(context)
+    }
+
+    class DataHolder <K, V> (val context: Context, val fileName: String, var autoDumpEnabled: Boolean = true): OnDataChangedListener<K, V> {
+        lateinit var data: MutableMap<K, V>
+
+        override fun onInserted(index: K, item: V, replace: Boolean) {
+            if (!replace && data.containsKey(index))
+                throw LauncherException("attempt to rewrite element ${data[index]} at index $index")
+
+            data[index] = item
+
+            if (autoDumpEnabled)
+                dumpData()
+        }
+
+        override fun onRemoved(index: K) {
+            data.remove(index)
+
+            if (autoDumpEnabled)
+                dumpData()
+        }
+
+        override fun onMoved(from: K, to: K) {
+            if (from == to)
+                return
+            if (data.containsKey(to))
+                throw LauncherException("attempt to rewrite element ${data[to]} at index $to")
+            if (!data.containsKey(from))
+                throw LauncherException("attempt to move null element at index $from")
+
+            data[to] = data[from]!!
+            data.remove(from)
+
+            if (autoDumpEnabled)
+                dumpData()
+        }
+
+        override fun onChanged(newData: MutableMap<K, V>) {
+            data.clear()
+            data.putAll(newData)
+        }
+
+        fun dumpData() {
+            ObjectOutputStream(context.openFileOutput(fileName, Context.MODE_PRIVATE)).use { it.writeObject(data) }
+        }
+
+        fun loadData() {
+            var stream: ObjectInputStream? = null
+            var loaded: MutableMap<K, V>? = null
+            try {
+                stream = ObjectInputStream(context.openFileInput(fileName))
+                loaded = stream.readObject() as? MutableMap<K, V>
+            } catch (e: FileNotFoundException) {
+                if (BuildConfig.DEBUG) println("file not found ${context.filesDir.absolutePath}/$fileName")
+            }
+            data = loaded ?: mutableMapOf()
+
+            stream?.close()
+        }
+
+        fun deleteFile() {
+            context.deleteFile(fileName)
+        }
+    }
+
+    class AppCache(context: Context, resolveInfo: ResolveInfo) : Serializable {
+        companion object {private const val serialVersionUID = 44010L}
+
+         val id: String
+         val packageName: String
+         val name: String
+         val label: String
+         var iconByteArray: ByteArray
+
+        init {
+            val pm = context.packageManager
+            val activity = resolveInfo.activityInfo
+
+            packageName = activity.packageName
+            name = activity.name
+            id = "${packageName}_$name" // .split('_')
+            label = activity.loadLabel(pm).toString()
+            iconByteArray = encodeIcon(activity.loadIcon(pm))
+        }
+
+        private fun encodeIcon(bitmap: Drawable, size: Int? = null): ByteArray {
+            return encodeBitmap(if (size == null) bitmap.toBitmap() else bitmap.toBitmap(size, size))
+        }
+
+        fun decodeIcon(context: Context): BitmapDrawable {
+            return BitmapDrawable(context.resources, decodeBitmap(iconByteArray))
+        }
+
+        fun createAppInfo(context: Context): AppInfo {
+            return AppInfo(packageName, name, label, decodeIcon(context))
+        }
+
+/*        fun getIdFromResolveInfo(resolveInfo: ResolveInfo): String {
+            return "${resolveInfo.activityInfo.packageName}_${resolveInfo.activityInfo.name}"
+        }*/
+    }
+
+
+
 }

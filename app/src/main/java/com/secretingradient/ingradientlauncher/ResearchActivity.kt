@@ -18,7 +18,6 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.secretingradient.ingradientlauncher.element.ElementInfo
-import com.secretingradient.ingradientlauncher.element.FolderData
 import com.secretingradient.ingradientlauncher.element.FolderView
 import kotlinx.android.synthetic.main._research_layout.*
 
@@ -28,6 +27,7 @@ class ResearchActivity : AppCompatActivity() {
     var value = 0
     val apps = mutableListOf<ElementInfo>()
     val stages = mutableListOf<Stage>()
+    lateinit var dk: DataKeeper2
 
     lateinit var popupWindow: PopupWindow
 
@@ -35,10 +35,9 @@ class ResearchActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout._research_layout)
 
-        fillApps()
+        dk = DataKeeper2(this)
 
-        for (i in 0..10)
-            DataKeeper2.onUserStageDataChangedListener.onInserted(this, FolderData(DataKeeper2.allAppsIds.subList(0,5)), i)
+        fillApps()
 
         research_rv.adapter = object : RecyclerView.Adapter<MyVH>() {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyVH {
@@ -84,7 +83,6 @@ class ResearchActivity : AppCompatActivity() {
     }
 
     fun fillApps() {
-        DataKeeper2.init(this)
 //        val allApps = DataKeeper2.allAppsIds
         for (i in 0..6) {
 //            apps.add(i, ElementInfo(allApps[i], SnapLayout.SnapLayoutInfo(i*2 + (i*2/8)*8, 2, 2)))

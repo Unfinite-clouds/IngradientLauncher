@@ -1,5 +1,6 @@
 package com.secretingradient.ingradientlauncher.stage
 
+import android.content.Context
 import android.graphics.Point
 import android.graphics.Rect
 import android.view.LayoutInflater
@@ -12,7 +13,8 @@ import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.element.isElement
 
 abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
-    val context = launcherRootLayout.context
+    val context: Context = launcherRootLayout.context
+    val dataKeeper = launcherRootLayout.dataKeeper
     protected abstract val stageLayoutId: Int
     lateinit var stageRootLayout: StageRootLayout
 

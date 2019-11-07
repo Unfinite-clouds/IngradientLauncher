@@ -10,22 +10,19 @@ import androidx.core.view.postDelayed
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.secretingradient.ingradientlauncher.DataKeeper
-import com.secretingradient.ingradientlauncher.Preferences
+import com.secretingradient.ingradientlauncher.*
 import com.secretingradient.ingradientlauncher.element.AppInfo
 import com.secretingradient.ingradientlauncher.element.AppView
-import com.secretingradient.ingradientlauncher.getPrefs
-import com.secretingradient.ingradientlauncher.vibrate
-import java.util.*
 
 class MainStageRecycler : RecyclerView {
     var widthCell = getPrefs(context).getInt(Preferences.MAIN_STAGE_WIDTH_CELL, -1)
     var heightCell = getPrefs(context).getInt(Preferences.MAIN_STAGE_HEIGHT_CELL, -1)
-    lateinit var apps: MutableList<String>
+    lateinit var dataKeeper: DataKeeper2
     var itemTouchHelper: ItemTouchHelper
     var saveListener: OnSaveDataListener? = null
     var selectedAppHolder: ViewHolder? = null
     private val bounds = Rect()
+
 
     init {
         setHasFixedSize(true)
@@ -38,15 +35,19 @@ class MainStageRecycler : RecyclerView {
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
+    fun init(dataKeeper: DataKeeper2) {
+        this.dataKeeper = dataKeeper
+    }
+
     inner class RecyclerListAdapter : RecyclerView.Adapter<AppHolder>() {
-        override fun getItemCount() = apps.size
+        override fun getItemCount() = dataKeeper.mainStageData.data.size
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppHolder {
             return AppHolder(createAppView())
         }
 
         override fun onBindViewHolder(holder: AppHolder, position: Int) {
-            holder.appView.appInfo = DataKeeper.getAppInfoById(apps[position])!!
+            holder.appView.appInfo = dataKeeper.createAppInfo(dataKeeper.mainStageData.data[position]!!)
             holder.appView.setOnClickListener(AppView)
         }
 
@@ -69,7 +70,7 @@ class MainStageRecycler : RecyclerView {
 
     fun insertViewUnder(appView: AppView, x: Float, y: Float): Int {
         val targetPosition = layoutManager?.getPosition(findChildViewUnder(x, y)!!)!!
-        apps.add(targetPosition, appView.appInfo.id)
+        dataKeeper.mainStageData.onInserted(targetPosition, appView.appInfo.id)
         adapter?.notifyItemInserted(targetPosition)
         return targetPosition
     }
@@ -85,8 +86,10 @@ class MainStageRecycler : RecyclerView {
         }
 
         override fun onMove(recyclerView: RecyclerView, viewHolder: ViewHolder, target: ViewHolder): Boolean {
-            Collections.swap(apps, viewHolder.adapterPosition, target.adapterPosition)
-            recyclerView.adapter?.notifyItemMoved(viewHolder.adapterPosition, target.adapterPosition)
+            val from = viewHolder.adapterPosition
+            val to = target.adapterPosition
+            dataKeeper.mainStageData.onMoved(from, to)
+            recyclerView.adapter?.notifyItemMoved(from, to)
             return true
         }
 
@@ -134,7 +137,7 @@ class MainStageRecycler : RecyclerView {
         if (ev.action == MotionEvent.ACTION_UP && selectedAppHolder != null) {
             if (!bounds.contains(x.toInt(), y.toInt())) {
                 val pos = selectedAppHolder!!.adapterPosition
-                apps.removeAt(pos)
+                dataKeeper.mainStageData.onRemoved(pos)
                 adapter?.notifyItemRemoved(pos)
                 return true
             }

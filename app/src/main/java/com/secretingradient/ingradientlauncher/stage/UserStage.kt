@@ -20,15 +20,13 @@ import kotlin.math.sqrt
 class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(launcherRootLayout) {
     val FLIP_WIDTH = toPx(25).toInt()
 
-    var apps = DataKeeper.userStageAppsData
-    var folders = DataKeeper.userStageFoldersData
     override var columnCount = getPrefs(context).getInt(Preferences.USER_STAGE_COLUMN_COUNT, -1)
     override var rowCount = getPrefs(context).getInt(Preferences.USER_STAGE_ROW_COUNT, -1)
     override var pageCount = getPrefs(context).getInt(Preferences.USER_STAGE_PAGE_COUNT, -1)
     var cellPadding = toPx(6).toInt()
     override val stageLayoutId = R.layout.stage_1_user
     override val viewPagerId = R.id.user_stage_pager
-    override val pagerAdapter = PagerSnapAdapter(apps, folders)
+    override val pagerAdapter = PagerSnapAdapter()
     val currentSnapLayout: SnapLayout
         get() = stageRV.getChildAt(0) as SnapLayout
     var shouldIntercept
@@ -261,7 +259,8 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             }
             val from = (element.layoutParams as SnapLayout.SnapLayoutParams).position
             snapLayout.moveView(element, movePosition)
-            DataKeeper2.onUserStageDataChangedListener.onMoved(context, from, movePosition)
+            if (element != ghostView)
+                dataKeeper.userStageData.onMoved(from, movePosition)
         }
 
         private fun getPositionOnSnapUnder(snapLayout: SnapLayout, touchPoint: Point): Int {
@@ -278,9 +277,11 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         }
 
         private fun addToFolder(folder: FolderView, appView: AppView) {
+            val pos = (appView.layoutParams as SnapLayout.SnapLayoutParams).position
             folder.addApps(appView.appInfo)
             (appView.parent as ViewGroup?)?.removeView(appView)
             previewFolder = null
+            dataKeeper.userStageData.onRemoved(pos)
         }
 
         fun cancelPreviewFolder() {

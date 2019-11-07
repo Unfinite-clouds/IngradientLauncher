@@ -12,21 +12,17 @@ import android.provider.Settings
 import android.text.TextUtils
 import android.util.AttributeSet
 import android.view.Gravity
-import android.view.MenuInflater
-import android.view.MenuItem
 import android.view.View
-import android.view.ViewGroup.LayoutParams
 import android.widget.TextView
-import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.view.menu.MenuPopupHelper
 import androidx.core.content.ContextCompat
-import androidx.core.view.iterator
 import com.secretingradient.ingradientlauncher.R
+import com.secretingradient.ingradientlauncher.SnapLayout
 import com.secretingradient.ingradientlauncher.toPx
 import kotlin.math.min
 
 
-class AppView : TextView, MenuItem.OnMenuItemClickListener {
+class AppView : TextView {
     var appInfo: AppInfo = AppInfo()
         set(value) {
             field = value
@@ -43,9 +39,10 @@ class AppView : TextView, MenuItem.OnMenuItemClickListener {
         }
 
     private var iconBounds = Rect()
-
     private var iconPaddingBottom = toPx(5).toInt()
     private var menuHelper: MenuPopupHelper? = null
+    val snapWidth = 2
+    val snapHeight = 2
 
     var desiredIconSize = Int.MAX_VALUE
     var animator: ObjectAnimator
@@ -71,7 +68,7 @@ class AppView : TextView, MenuItem.OnMenuItemClickListener {
     }
 
     init {
-        layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
+        layoutParams = SnapLayout.SnapLayoutParams(-1, snapWidth, snapHeight)
         gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
         includeFontPadding = false
 //        maxLines = 1
@@ -120,50 +117,14 @@ class AppView : TextView, MenuItem.OnMenuItemClickListener {
         super.onSizeChanged(w, h, oldw, oldh)
     }
 
-    companion object : OnClickListener{
-        override fun onClick(v: View?) {
+    companion object : OnClickListener {
+        override fun onClick(v: View) {
             if (v is AppView)
-                v.context.startActivity(v.context.packageManager.getLaunchIntentForPackage(v.appInfo.packageName))
+                v.launchApp()
         }
     }
 
-    fun createDragShadow(): DragShadowBuilder {
-        return object : DragShadowBuilder(this) {
-            val paint = Paint().apply { colorFilter = PorterDuffColorFilter(Color.rgb(181, 232, 255), PorterDuff.Mode.MULTIPLY) }
-            override fun onDrawShadow(canvas: Canvas?) {
-                val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
-                val c = Canvas(bitmap)
-                view.draw(c)
-                canvas?.drawBitmap(bitmap, 0f,0f, paint)
-            }
-        }
-    }
-
-    fun showMenu() {
-        val builder = MenuBuilder(this.context)
-        val inflater = MenuInflater(this.context)
-        inflater.inflate(R.menu.shortcut_popup_menu, builder)
-        for (item in builder.iterator()) {
-            item.setOnMenuItemClickListener(this)
-        }
-        menuHelper = MenuPopupHelper(this.context, builder, this)
-        menuHelper?.setForceShowIcon(true)
-        menuHelper?.show()
-    }
-
-    fun dismissMenu() {
-        menuHelper?.dismiss()
-    }
-
-    override fun onMenuItemClick(item: MenuItem?): Boolean {
-        when (item?.itemId) {
-            R.id.popup_menu_info -> intentToInfo()
-            R.id.popup_menu_uninstall -> intentToUninstall()
-        }
-        return true
-    }
-
-    fun startActivity() {
+    fun launchApp() {
         context.startActivity(context.packageManager.getLaunchIntentForPackage(appInfo.packageName))
     }
 
@@ -192,4 +153,32 @@ class AppView : TextView, MenuItem.OnMenuItemClickListener {
     override fun toString(): String {
         return "${this.hashCode().toString(16)} - ${appInfo.label}, icon_bounds: ${icon?.bounds}, parent: $parent"
     }
+
+/*    class AppInfo(packageName: String? = null, name: String? = null, label: String? = null, icon: Drawable? = null) : ElementInfo {
+        lateinit var packageName: String
+        lateinit var name: String
+        lateinit var label: String
+        var icon: Drawable? = null
+
+        val id: String
+            get() = "${packageName}_$name" // .split('_')
+
+        init {
+            if (packageName != null) this.packageName = packageName
+            if (name != null) this.name = name
+            if (label != null) this.label = label
+            if (icon != null) this.icon = icon
+        }
+
+        fun set(appInfo: com.secretingradient.ingradientlauncher.element.AppInfo) {
+            this.packageName = appInfo.packageName
+            this.name = appInfo.name
+            this.label = appInfo.label
+            this.icon = appInfo.icon
+        }
+
+        fun createView(context: Context): AppView {
+            return AppView(context, this)
+        }
+    }*/
 }

@@ -16,16 +16,19 @@ class LauncherRootLayout : FrameLayout {
         private set
     lateinit var launcherRecyclerView: RecyclerView
         private set
+    lateinit var dataKeeper: DataKeeper2
+        private set
     val stages = mutableListOf<BaseStage>()
     var dispatchToCurrentStage = false
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
-    fun initViewPager(viewPager: ViewPager2) {
+    fun initViewPager(viewPager: ViewPager2, dataKeeper: DataKeeper2) {
         launcherViewPager = viewPager
         launcherViewPager.adapter = StageAdapter(this)
         launcherRecyclerView = launcherViewPager[0] as RecyclerView
+        this.dataKeeper = dataKeeper
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
