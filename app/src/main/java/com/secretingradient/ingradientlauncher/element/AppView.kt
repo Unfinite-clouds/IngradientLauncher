@@ -10,24 +10,25 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.provider.Settings
 import android.text.TextUtils
-import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.view.menu.MenuPopupHelper
-import androidx.core.content.ContextCompat
 import com.secretingradient.ingradientlauncher.R
 import com.secretingradient.ingradientlauncher.SnapLayout
+import com.secretingradient.ingradientlauncher.stage.MainStage
 import com.secretingradient.ingradientlauncher.toPx
 import kotlin.math.min
 
 
 class AppView : TextView {
-    var appInfo: AppInfo = AppInfo()
+    var state: MainStage.AppState? = null
         set(value) {
             field = value
-            text = field.label
-            icon = field.icon
+            value?.let {
+                text = value.info.label
+                icon = value.info.icon
+            }
         }
 
     var icon: Drawable?
@@ -83,18 +84,17 @@ class AppView : TextView {
         animatorScale.setTarget(this)
     }
 
-    constructor(context: Context, appInfo: AppInfo? = null) : super(context) {
-        if (appInfo != null) {
-            this.appInfo = appInfo
-            this.icon = appInfo.icon
+    constructor(context: Context, appState: MainStage.AppState? = null) : super(context) {
+        if (appState != null) {
+            this.state = appState
         }
     }
-    constructor(context: Context, attributeSet: AttributeSet) : super(context, attributeSet) {
+/*    constructor(context: Context, attributeSet: AttributeSet) : super(context, attributeSet) {
         val iconId = attributeSet.getAttributeValue(null, "drawableTop")
-        this.appInfo = AppInfo("package", "name",
+        this.state = MainStage.AppState("package", "name",
             attributeSet.getAttributeValue(null, "text") ?: "label",
             ContextCompat.getDrawable(context, iconId?.toInt() ?: R.mipmap.ic_launcher_round))
-    }
+    }*/
 
     private fun computeIconBounds(width: Int, height: Int) {
         val w = width - paddingLeft - paddingRight
@@ -125,11 +125,11 @@ class AppView : TextView {
     }
 
     fun launchApp() {
-        context.startActivity(context.packageManager.getLaunchIntentForPackage(appInfo.packageName))
+        context.startActivity(context.packageManager.getLaunchIntentForPackage(state!!.info.packageName))
     }
 
     fun intentToInfo() {
-        val uri = Uri.fromParts("package", appInfo.packageName, null)
+        val uri = Uri.fromParts("package", state!!.info.packageName, null)
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, uri)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(intent)
@@ -137,7 +137,7 @@ class AppView : TextView {
     }
 
     fun intentToUninstall() {
-        val uri = Uri.fromParts("package", appInfo.packageName, null)
+        val uri = Uri.fromParts("package", state!!.info.packageName, null)
         val intent = Intent(Intent.ACTION_DELETE, uri)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(intent)
@@ -151,8 +151,10 @@ class AppView : TextView {
     }
 
     override fun toString(): String {
-        return "${this.hashCode().toString(16)} - ${appInfo.label}, icon_bounds: ${icon?.bounds}, parent: $parent"
+        return "${this.hashCode().toString(16)} - ${state!!.info.label}, icon_bounds: ${icon?.bounds}, parent: $parent"
     }
+
+    class AppInfo2
 
 /*    class AppInfo(packageName: String? = null, name: String? = null, label: String? = null, icon: Drawable? = null) : ElementInfo {
         lateinit var packageName: String

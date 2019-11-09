@@ -5,6 +5,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.viewpager2.widget.ViewPager2
+import com.secretingradient.ingradientlauncher.data.DataKeeper
 import com.secretingradient.ingradientlauncher.element.AppData
 
 class MainActivity : AppCompatActivity() {
@@ -26,7 +27,7 @@ class MainActivity : AppCompatActivity() {
 
 //        DataKeeper.init(this)
 
-        val dk = DataKeeper2(this)
+        val dk = DataKeeper(this)
         val appIds = dk.allAppsIds
 
         // filling

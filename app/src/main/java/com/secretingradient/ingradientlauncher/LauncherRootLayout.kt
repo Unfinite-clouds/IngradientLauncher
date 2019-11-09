@@ -7,6 +7,7 @@ import android.widget.FrameLayout
 import androidx.core.view.get
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
+import com.secretingradient.ingradientlauncher.data.DataKeeper
 import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.stage.BaseStage
 import com.secretingradient.ingradientlauncher.stage.StageAdapter
@@ -16,7 +17,7 @@ class LauncherRootLayout : FrameLayout {
         private set
     lateinit var launcherRecyclerView: RecyclerView
         private set
-    lateinit var dataKeeper: DataKeeper2
+    lateinit var dataKeeper: DataKeeper
         private set
     val stages = mutableListOf<BaseStage>()
     var dispatchToCurrentStage = false
@@ -24,7 +25,7 @@ class LauncherRootLayout : FrameLayout {
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
-    fun initViewPager(viewPager: ViewPager2, dataKeeper: DataKeeper2) {
+    fun initViewPager(viewPager: ViewPager2, dataKeeper: DataKeeper) {
         launcherViewPager = viewPager
         launcherViewPager.adapter = StageAdapter(this)
         launcherRecyclerView = launcherViewPager[0] as RecyclerView

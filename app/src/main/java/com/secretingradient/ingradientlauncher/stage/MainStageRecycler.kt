@@ -10,14 +10,16 @@ import androidx.core.view.postDelayed
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.secretingradient.ingradientlauncher.*
-import com.secretingradient.ingradientlauncher.element.AppInfo
+import com.secretingradient.ingradientlauncher.Preferences
+import com.secretingradient.ingradientlauncher.data.Dataset
 import com.secretingradient.ingradientlauncher.element.AppView
+import com.secretingradient.ingradientlauncher.getPrefs
+import com.secretingradient.ingradientlauncher.vibrate
 
 class MainStageRecycler : RecyclerView {
     var widthCell = getPrefs(context).getInt(Preferences.MAIN_STAGE_WIDTH_CELL, -1)
     var heightCell = getPrefs(context).getInt(Preferences.MAIN_STAGE_HEIGHT_CELL, -1)
-    lateinit var dataKeeper: DataKeeper2
+    lateinit var dataset: Dataset<MainStage.AppData, MainStage.AppState>
     var itemTouchHelper: ItemTouchHelper
     var saveListener: OnSaveDataListener? = null
     var selectedAppHolder: ViewHolder? = null
@@ -35,19 +37,19 @@ class MainStageRecycler : RecyclerView {
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
-    fun init(dataKeeper: DataKeeper2) {
-        this.dataKeeper = dataKeeper
+    fun init(dataset: Dataset<MainStage.AppData, MainStage.AppState>) {
+        this.dataset = dataset
     }
 
     inner class RecyclerListAdapter : RecyclerView.Adapter<AppHolder>() {
-        override fun getItemCount() = dataKeeper.mainStageData.data.size
+        override fun getItemCount() = dataset.dataset.size
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppHolder {
             return AppHolder(createAppView())
         }
 
         override fun onBindViewHolder(holder: AppHolder, position: Int) {
-            holder.appView.appInfo = dataKeeper.createAppInfo(dataKeeper.mainStageData.data[position]!!)
+            holder.appView.state = dataset.dataset[position]
             holder.appView.setOnClickListener(AppView)
         }
 
@@ -60,17 +62,17 @@ class MainStageRecycler : RecyclerView {
     }
 
     fun createAppView(appId: String? = null): AppView {
-        var appInfo: AppInfo? = null
-        if (appId != null)
-            appInfo = DataKeeper.getAppInfoById(appId)
-        return AppView(context, appInfo).apply {
+//        var appInfo: AppInfo? = null
+//        if (appId != null)
+//            appInfo = DataKeeper.getAppInfoById(appId)
+        return AppView(context/*, appInfo*/).apply {
             layoutParams = LinearLayout.LayoutParams(widthCell, heightCell)
         }
     }
 
     fun insertViewUnder(appView: AppView, x: Float, y: Float): Int {
         val targetPosition = layoutManager?.getPosition(findChildViewUnder(x, y)!!)!!
-        dataKeeper.mainStageData.onInserted(targetPosition, appView.appInfo.id)
+        dataset.insertItem(targetPosition, appView.state)
         adapter?.notifyItemInserted(targetPosition)
         return targetPosition
     }

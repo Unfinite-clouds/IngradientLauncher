@@ -284,6 +284,18 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             dataKeeper.userStageData.onRemoved(pos)
         }
 
+        fun removeView(v: View) {
+            val parent = v.parent as ViewGroup? ?: return
+
+            parent.removeView(v)
+            onViewRemoved(v)
+        }
+
+        fun onViewRemoved(v: View) {
+            val pos = (v.layoutParams as SnapLayout.SnapLayoutParams).position
+            dataKeeper.userStageData.onRemoved(pos)
+        }
+
         fun cancelPreviewFolder() {
             previewFolder?.let {
                 currentSnapLayout.removeView(it)

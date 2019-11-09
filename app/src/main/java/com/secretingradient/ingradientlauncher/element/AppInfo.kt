@@ -1,15 +1,12 @@
 package com.secretingradient.ingradientlauncher.element
 
-import android.content.Context
-import android.content.pm.ResolveInfo
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
-import androidx.core.graphics.drawable.toBitmap
-import com.secretingradient.ingradientlauncher.decodeBitmap
-import com.secretingradient.ingradientlauncher.encodeBitmap
-
 // Can only store Bitmap icons (Adaptive icons is not supported)
-class AppInfo(packageName: String? = null, name: String? = null, label: String? = null, icon: Drawable? = null) : ElementInfo {
+/*
+class AppInfo(packageName: String? = null, name: String? = null, label: String? = null, icon: Drawable? = null) : ElementInfo <Int, String> {
+    override fun getIndex(): Int = 0
+
+    override fun getData(): String = id
+
     lateinit var packageName: String
     lateinit var name: String
     lateinit var label: String
@@ -47,21 +44,4 @@ class AppInfo(packageName: String? = null, name: String? = null, label: String? 
         icon = BitmapDrawable(context.resources, decodeBitmap(iconByteArray!!))
     }
 
-    companion object {
-        fun createFromResolveInfo(context: Context, resolveInfo: ResolveInfo): AppInfo {
-            val pm = context.packageManager
-            val ai = resolveInfo.activityInfo
-            return AppInfo(
-                ai.packageName,
-                ai.name,
-                ai.loadLabel(pm).toString(),
-                ai.loadIcon(pm)
-            )
-        }
-
-        fun getIdFromResolveInfo(resolveInfo: ResolveInfo): String {
-            return "${resolveInfo.activityInfo.packageName}_${resolveInfo.activityInfo.name}"
-        }
-    }
-
-}
+}*/

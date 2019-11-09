@@ -7,13 +7,13 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.secretingradient.ingradientlauncher.DataKeeper
 import com.secretingradient.ingradientlauncher.element.AppInfo
 import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.vibrate
 
 class FolderLayout : RecyclerView {
     lateinit var apps: MutableList<AppInfo>
+//    lateinit var dataKeeper: DataKeeper
     var appSize = -1
     var columnsCount = 2
         set(value) {
@@ -31,6 +31,22 @@ class FolderLayout : RecyclerView {
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
 
+
+    override fun onTouchEvent(ev: MotionEvent): Boolean {
+        if (ev.action == MotionEvent.ACTION_UP && selectedAppHolder != null) {
+            val x = ev.x.toInt()
+            val y = ev.y.toInt()
+            if (x < left || x > right || y < top || y > bottom) {
+                val pos = selectedAppHolder!!.adapterPosition
+                apps.removeAt(pos)
+                adapter?.notifyItemRemoved(pos)
+                return true
+            }
+        }
+        return super.onTouchEvent(ev)
+    }
+
+
     inner class FolderAdapter : RecyclerView.Adapter<AppHolder>() {
         override fun getItemCount() = apps.size
 
@@ -41,9 +57,10 @@ class FolderLayout : RecyclerView {
         }
 
         override fun onBindViewHolder(holder: AppHolder, position: Int) {
-            holder.appView.appInfo = DataKeeper.getAppInfoById(apps[position].id)!!
+            holder.appView.appInfo = apps[position]
         }
     }
+
 
     inner class ItemDragger : ItemTouchHelper.SimpleCallback(ItemTouchHelper.RIGHT or ItemTouchHelper.LEFT or ItemTouchHelper.DOWN or ItemTouchHelper.UP, 0) {
         override fun onMove(recyclerView: RecyclerView, viewHolder: ViewHolder, target: ViewHolder): Boolean {
@@ -65,19 +82,5 @@ class FolderLayout : RecyclerView {
             }
             super.onSelectedChanged(viewHolder, actionState)
         }
-    }
-
-    override fun onTouchEvent(ev: MotionEvent): Boolean {
-        if (ev.action == MotionEvent.ACTION_UP && selectedAppHolder != null) {
-            val x = ev.x.toInt()
-            val y = ev.y.toInt()
-            if (x < left || x > right || y < top || y > bottom) {
-                val pos = selectedAppHolder!!.adapterPosition
-                apps.removeAt(pos)
-                adapter?.notifyItemRemoved(pos)
-                return true
-            }
-        }
-        return super.onTouchEvent(ev)
     }
 }

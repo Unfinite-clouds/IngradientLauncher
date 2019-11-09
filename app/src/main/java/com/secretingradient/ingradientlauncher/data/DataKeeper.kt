@@ -1,26 +1,29 @@
-package com.secretingradient.ingradientlauncher
+package com.secretingradient.ingradientlauncher.data
 
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ResolveInfo
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.view.View
 import androidx.core.graphics.drawable.toBitmap
-import com.secretingradient.ingradientlauncher.element.*
+import com.secretingradient.ingradientlauncher.BuildConfig
+import com.secretingradient.ingradientlauncher.LauncherException
+import com.secretingradient.ingradientlauncher.decodeBitmap
+import com.secretingradient.ingradientlauncher.encodeBitmap
 import java.io.FileNotFoundException
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.io.Serializable
 
-class DataKeeper2(val context: Context) {
+class DataKeeper(val context: Context) {
     var autoDumpEnabled = true
 
     // this is pool for Bitmaps and data needed to create AppInfo
-    /*private*/ val allAppsCacheData = DataHolder<String, AppCache>(context, "all_apps_cache_data", autoDumpEnabled)
+    private val allAppsCacheData = DataHolder<String, AppCache>( "all_apps_cache_data", autoDumpEnabled)
 
-    val mainStageData = DataHolder<Int, String>(context, "main_stage_data", autoDumpEnabled)
-    val userStageData = DataHolder<Int, ElementData>(context, "user_stage_data", autoDumpEnabled)
+    val mainStageData = DataHolder<Int, AppData>("main_stage_data", autoDumpEnabled)
+    val mainStageDataset = Dataset<AppData, AppState>(mainStageData, this)
+    val userStageData = DataHolder<Int, Data>("user_stage_data", autoDumpEnabled)
 
     val allAppsIds: MutableList<String>
 
@@ -32,7 +35,7 @@ class DataKeeper2(val context: Context) {
 
         fetchUpdates()
 
-        allAppsCacheData.data.forEach { it.value.decodeIcon(context) }
+        allAppsCacheData.data.forEach { it.value.loadIcon(context) }
         allAppsIds = allAppsCacheData.data.keys.toMutableList()
     }
 
@@ -40,7 +43,6 @@ class DataKeeper2(val context: Context) {
         val pm = context.packageManager
         val launcherIntent = Intent(Intent.ACTION_MAIN, null)
         launcherIntent.addCategory(Intent.CATEGORY_LAUNCHER)
-
         return pm.queryIntentActivities(launcherIntent, 0)
     }
 
@@ -48,36 +50,28 @@ class DataKeeper2(val context: Context) {
         println("fetching updates...")
         val realAppInfo = getLaunchableApps()
         val realAppMap = mutableMapOf<String, ResolveInfo>()
-        realAppInfo.forEach {realAppMap[AppInfo.getIdFromResolveInfo(it)] = it}
+        realAppInfo.forEach {realAppMap[AppCache.getIdFromResolveInfo(it)] = it}
         val realApps = realAppMap.keys
-
         val cachedApps = allAppsCacheData.data.keys as Set<String>
-
         if (realApps != cachedApps) {
             val newApps = realApps - cachedApps
             val oldApps = cachedApps - realApps
-
             oldApps.forEach {
                 allAppsCacheData.data.remove(it)
-//                mainStageAppsData.remove(it)
             }
 //            userStageData.filterValues { it !in oldApps }
-
+//            mainStageAppsData.remove(it)
             newApps.forEach {
                 val resolveInfo = realAppMap[it]
                 allAppsCacheData.data[it] = AppCache(context, resolveInfo!!)
             }
-
             println("newApps: ${newApps.size}, oldApps: ${oldApps.size}, now: ${allAppsCacheData.data.size} apps")
-
             allAppsCacheData.dumpData()
-
             if (oldApps.isNotEmpty()) {
                 userStageData.dumpData()
-//                dumpFile(context, mainStageAppsData, MAIN_STAGE_APPS)
+                mainStageData.dumpData()
             }
         }
-
     }
 
     private fun getAppCache(id: String): AppCache {
@@ -85,20 +79,24 @@ class DataKeeper2(val context: Context) {
         return allAppsCacheData.data[id]!!
     }
 
-    fun createViews(): List<View> {
+/*    fun createViews(): List<View> {
         val iter = userStageData.data.iterator()
         return List(userStageData.data.size) { _ ->
             val pair = iter.next()
             val position = pair.key
             val elementData = pair.value
             when (elementData) {
-                is AppData -> AppView(context, getAppCache(elementData.id).createAppInfo(context))
+                is AppData -> AppView(context, getAppCache(elementData.appId).createAppInfo(context))
                     .apply { layoutParams = SnapLayout.SnapLayoutParams(position, 2, 2) }
                 is FolderData -> FolderView(context).apply { addApps(List(elementData.ids.size) { getAppCache(elementData.ids[it]).createAppInfo(context) })
                     layoutParams = SnapLayout.SnapLayoutParams(position, 2, 2) }
                 is WidgetData -> TODO()
             }
         }
+    }*/
+
+    fun createAppInfo(id: String): AppInfo {
+        return getAppCache(id).createAppInfo()
     }
 
     interface OnDataChangedListener <K, V>{
@@ -108,11 +106,11 @@ class DataKeeper2(val context: Context) {
         fun onChanged(newData: MutableMap<K, V>)
     }
 
-    fun createAppInfo(id: String): AppInfo {
-        return getAppCache(id).createAppInfo(context)
-    }
+    inner class DataHolder <K, V: Serializable> (
+        val fileName: String,
+        var autoDumpEnabled: Boolean = true
+    ): OnDataChangedListener<K, V> {
 
-    class DataHolder <K, V> (val context: Context, val fileName: String, var autoDumpEnabled: Boolean = true): OnDataChangedListener<K, V> {
         lateinit var data: MutableMap<K, V>
 
         override fun onInserted(index: K, item: V, replace: Boolean) {
@@ -176,40 +174,47 @@ class DataKeeper2(val context: Context) {
     }
 
     class AppCache(context: Context, resolveInfo: ResolveInfo) : Serializable {
-        companion object {private const val serialVersionUID = 44010L}
-
-         val id: String
-         val packageName: String
-         val name: String
-         val label: String
-         var iconByteArray: ByteArray
+        private val packageName: String
+        private val name: String
+        private val label: String
+        private var iconByteArray: ByteArray?
+        private var icon: Drawable? = null
 
         init {
+            // +prepare for dump
             val pm = context.packageManager
             val activity = resolveInfo.activityInfo
 
             packageName = activity.packageName
             name = activity.name
-            id = "${packageName}_$name" // .split('_')
             label = activity.loadLabel(pm).toString()
             iconByteArray = encodeIcon(activity.loadIcon(pm))
+        }
+
+        fun loadIcon(context: Context) {
+            icon = decodeIcon(context)
+            iconByteArray = null
+        }
+
+        fun createAppInfo(): AppInfo {
+            return AppInfo(packageName, name, label, icon!!)
         }
 
         private fun encodeIcon(bitmap: Drawable, size: Int? = null): ByteArray {
             return encodeBitmap(if (size == null) bitmap.toBitmap() else bitmap.toBitmap(size, size))
         }
 
-        fun decodeIcon(context: Context): BitmapDrawable {
-            return BitmapDrawable(context.resources, decodeBitmap(iconByteArray))
+        private fun decodeIcon(context: Context): BitmapDrawable {
+            return BitmapDrawable(context.resources, decodeBitmap(iconByteArray!!))
         }
 
-        fun createAppInfo(context: Context): AppInfo {
-            return AppInfo(packageName, name, label, decodeIcon(context))
-        }
+        companion object {
+            private const val serialVersionUID = 44010L
 
-/*        fun getIdFromResolveInfo(resolveInfo: ResolveInfo): String {
-            return "${resolveInfo.activityInfo.packageName}_${resolveInfo.activityInfo.name}"
-        }*/
+            fun getIdFromResolveInfo(resolveInfo: ResolveInfo): String {
+                return "${resolveInfo.activityInfo.packageName}_${resolveInfo.activityInfo.name}"
+            }
+        }
     }
 
 

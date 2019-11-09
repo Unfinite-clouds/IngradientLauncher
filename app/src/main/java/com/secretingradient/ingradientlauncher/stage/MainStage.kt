@@ -15,6 +15,7 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
     private var isTransferring = false
     private val touchPoint = Point()
     private var isDragOnFly = false
+    private val dataset = dataKeeper.mainStageDataset
 
     private val startDragOnFlyRunnable = object : Runnable {
         var insertedPos = -1
@@ -34,7 +35,7 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
     override fun initInflate(stageRootLayout: StageRootLayout) {
         super.initInflate(stageRootLayout)
         recyclerView = stageRootLayout.findViewById(R.id.stage_0_recycler)
-        recyclerView.init(dataKeeper)
+        recyclerView.init(dataset)
 //        recyclerView.saveListener = object : MainStageRecycler.OnSaveDataListener {
 //            override fun onSaveData() = saveData()
 //        }
@@ -94,5 +95,6 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
 //    private fun saveData() {
 //        dataKeeper
 //    }
+
 
 }

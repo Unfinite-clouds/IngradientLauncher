@@ -6,10 +6,9 @@ import com.secretingradient.ingradientlauncher.*
 import kotlin.math.ceil
 
 class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(launcherRootLayout){
-    var apps = DataKeeper.allApps
     override var rowCount = getPrefs(context).getInt(Preferences.ALLAPPS_STAGE_ROW_COUNT, -1)
     override var columnCount = getPrefs(context).getInt(Preferences.ALLAPPS_STAGE_COLUMN_COUNT, -1)
-    override var pageCount = ceil(apps.size.toFloat() / (rowCount*columnCount)).toInt()
+    override var pageCount = ceil(dataKeeper.allAppsIds.size.toFloat() / (rowCount*columnCount)).toInt()
     var cellPadding = toPx(6).toInt()
     override val stageLayoutId = R.layout.stage_2_all_apps
     override val viewPagerId = R.id.all_apps_vp
