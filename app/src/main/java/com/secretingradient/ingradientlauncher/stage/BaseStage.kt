@@ -10,7 +10,7 @@ import androidx.core.view.children
 import com.secretingradient.ingradientlauncher.LauncherException
 import com.secretingradient.ingradientlauncher.LauncherRootLayout
 import com.secretingradient.ingradientlauncher.element.AppView
-import com.secretingradient.ingradientlauncher.element.isElement
+import com.secretingradient.ingradientlauncher.isElement
 
 abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
     val context: Context = launcherRootLayout.context

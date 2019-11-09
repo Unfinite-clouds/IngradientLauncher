@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.util.AttributeSet
 import android.widget.FrameLayout
 import android.widget.TextView
+import com.secretingradient.ingradientlauncher.data.AppInfo
 
 class FolderView : FrameLayout {
     private val apps: MutableList<AppInfo> = mutableListOf()
@@ -20,8 +21,11 @@ class FolderView : FrameLayout {
         addView(debugText)
     }
 
-    constructor(context: Context, vararg newApps: AppInfo) : super(context){
-        addApps(newApps.asList())
+    constructor(context: Context, vararg apps: AppInfo) : super(context){
+        addApps(apps.asList())
+    }
+    constructor(context: Context, apps: Collection<AppInfo>) : super(context){
+        addApps(apps)
     }
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 

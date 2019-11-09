@@ -36,9 +36,6 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
         super.initInflate(stageRootLayout)
         recyclerView = stageRootLayout.findViewById(R.id.stage_0_recycler)
         recyclerView.init(dataset)
-//        recyclerView.saveListener = object : MainStageRecycler.OnSaveDataListener {
-//            override fun onSaveData() = saveData()
-//        }
         recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
 //                TODO scroll wallpaper (dx, dy)
@@ -91,10 +88,4 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
         isDragOnFly = false
         stageRootLayout.overlayView = null
     }
-
-//    private fun saveData() {
-//        dataKeeper
-//    }
-
-
 }

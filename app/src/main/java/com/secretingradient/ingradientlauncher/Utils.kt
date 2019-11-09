@@ -10,7 +10,11 @@ import android.graphics.Color
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.view.View
 import androidx.preference.PreferenceManager
+import com.secretingradient.ingradientlauncher.element.AppView
+import com.secretingradient.ingradientlauncher.element.FolderView
+import com.secretingradient.ingradientlauncher.element.WidgetView
 import java.io.ByteArrayOutputStream
 import java.io.InputStreamReader
 import java.util.*
@@ -90,4 +94,18 @@ fun printlnClass(message: String, vararg any: Any?) {
 
 fun Any?.className(): String? {
     return this?.javaClass?.simpleName
+}
+
+fun <K, V> MutableMap<K, V>.swap(from: K, to: K) {
+    val tmp = this[to]
+    this[to] = this[from]!!
+    this[from] = tmp!!
+}
+
+fun isElement(v: View?): Boolean {
+    return v as? AppView ?: v as? FolderView ?: v as? WidgetView != null
+}
+
+fun View.setSnapLayoutParams(position: Int, snapW: Int = 2, snapH: Int = 2) {
+    layoutParams = SnapLayout.SnapLayoutParams(position, snapW, snapH)
 }

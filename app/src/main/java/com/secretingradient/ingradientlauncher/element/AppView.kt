@@ -10,24 +10,24 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.provider.Settings
 import android.text.TextUtils
+import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
 import android.widget.TextView
-import androidx.appcompat.view.menu.MenuPopupHelper
 import com.secretingradient.ingradientlauncher.R
 import com.secretingradient.ingradientlauncher.SnapLayout
-import com.secretingradient.ingradientlauncher.stage.MainStage
+import com.secretingradient.ingradientlauncher.data.AppInfo
 import com.secretingradient.ingradientlauncher.toPx
 import kotlin.math.min
 
 
 class AppView : TextView {
-    var state: MainStage.AppState? = null
+    var info: AppInfo? = null
         set(value) {
             field = value
             value?.let {
-                text = value.info.label
-                icon = value.info.icon
+                text = value.label
+                icon = value.icon
             }
         }
 
@@ -41,7 +41,6 @@ class AppView : TextView {
 
     private var iconBounds = Rect()
     private var iconPaddingBottom = toPx(5).toInt()
-    private var menuHelper: MenuPopupHelper? = null
     val snapWidth = 2
     val snapHeight = 2
 
@@ -69,7 +68,6 @@ class AppView : TextView {
     }
 
     init {
-        layoutParams = SnapLayout.SnapLayoutParams(-1, snapWidth, snapHeight)
         gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
         includeFontPadding = false
 //        maxLines = 1
@@ -84,17 +82,10 @@ class AppView : TextView {
         animatorScale.setTarget(this)
     }
 
-    constructor(context: Context, appState: MainStage.AppState? = null) : super(context) {
-        if (appState != null) {
-            this.state = appState
-        }
+    constructor(context: Context, info: AppInfo? = null) : super(context) {
+        this.info = info
     }
-/*    constructor(context: Context, attributeSet: AttributeSet) : super(context, attributeSet) {
-        val iconId = attributeSet.getAttributeValue(null, "drawableTop")
-        this.state = MainStage.AppState("package", "name",
-            attributeSet.getAttributeValue(null, "text") ?: "label",
-            ContextCompat.getDrawable(context, iconId?.toInt() ?: R.mipmap.ic_launcher_round))
-    }*/
+    constructor(context: Context, attributeSet: AttributeSet) : super(context, attributeSet)
 
     private fun computeIconBounds(width: Int, height: Int) {
         val w = width - paddingLeft - paddingRight
@@ -125,11 +116,11 @@ class AppView : TextView {
     }
 
     fun launchApp() {
-        context.startActivity(context.packageManager.getLaunchIntentForPackage(state!!.info.packageName))
+        context.startActivity(context.packageManager.getLaunchIntentForPackage(info!!.packageName))
     }
 
     fun intentToInfo() {
-        val uri = Uri.fromParts("package", state!!.info.packageName, null)
+        val uri = Uri.fromParts("package", info!!.packageName, null)
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, uri)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(intent)
@@ -137,7 +128,7 @@ class AppView : TextView {
     }
 
     fun intentToUninstall() {
-        val uri = Uri.fromParts("package", state!!.info.packageName, null)
+        val uri = Uri.fromParts("package", info!!.packageName, null)
         val intent = Intent(Intent.ACTION_DELETE, uri)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(intent)
@@ -151,36 +142,6 @@ class AppView : TextView {
     }
 
     override fun toString(): String {
-        return "${this.hashCode().toString(16)} - ${state!!.info.label}, icon_bounds: ${icon?.bounds}, parent: $parent"
+        return "${this.hashCode().toString(16)} - ${info!!.label}, icon_bounds: ${icon?.bounds}, parent: $parent"
     }
-
-    class AppInfo2
-
-/*    class AppInfo(packageName: String? = null, name: String? = null, label: String? = null, icon: Drawable? = null) : ElementInfo {
-        lateinit var packageName: String
-        lateinit var name: String
-        lateinit var label: String
-        var icon: Drawable? = null
-
-        val id: String
-            get() = "${packageName}_$name" // .split('_')
-
-        init {
-            if (packageName != null) this.packageName = packageName
-            if (name != null) this.name = name
-            if (label != null) this.label = label
-            if (icon != null) this.icon = icon
-        }
-
-        fun set(appInfo: com.secretingradient.ingradientlauncher.element.AppInfo) {
-            this.packageName = appInfo.packageName
-            this.name = appInfo.name
-            this.label = appInfo.label
-            this.icon = appInfo.icon
-        }
-
-        fun createView(context: Context): AppView {
-            return AppView(context, this)
-        }
-    }*/
 }

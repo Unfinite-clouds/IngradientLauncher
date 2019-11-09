@@ -8,25 +8,28 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.PopupWindow
 import com.secretingradient.ingradientlauncher.*
-import com.secretingradient.ingradientlauncher.element.AppView
-import com.secretingradient.ingradientlauncher.element.FolderView
-import com.secretingradient.ingradientlauncher.element.WidgetView
-import com.secretingradient.ingradientlauncher.element.isElement
+import com.secretingradient.ingradientlauncher.data.Data
+import com.secretingradient.ingradientlauncher.data.Dataset
+import com.secretingradient.ingradientlauncher.data.Info
+import com.secretingradient.ingradientlauncher.element.*
 import com.secretingradient.ingradientlauncher.sensor.BaseSensor
 import kotlinx.android.synthetic.main.stage_1_user.view.*
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
 class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(launcherRootLayout) {
-    val FLIP_WIDTH = toPx(25).toInt()
+    private val FLIP_WIDTH = toPx(25).toInt()
+    private val defaultAppSize = toPx(70).toInt()
+
+    override val stageLayoutId = R.layout.stage_1_user
+    override val viewPagerId = R.id.user_stage_pager
 
     override var columnCount = getPrefs(context).getInt(Preferences.USER_STAGE_COLUMN_COUNT, -1)
     override var rowCount = getPrefs(context).getInt(Preferences.USER_STAGE_ROW_COUNT, -1)
     override var pageCount = getPrefs(context).getInt(Preferences.USER_STAGE_PAGE_COUNT, -1)
-    var cellPadding = toPx(6).toInt()
-    override val stageLayoutId = R.layout.stage_1_user
-    override val viewPagerId = R.id.user_stage_pager
+
     override val pagerAdapter = PagerSnapAdapter()
+    override val dataset: Dataset<Data, Info> = dataKeeper.userStageDataset
     val currentSnapLayout: SnapLayout
         get() = stageRV.getChildAt(0) as SnapLayout
     var shouldIntercept
@@ -34,7 +37,6 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         get() = stageRootLayout.shouldIntercept
     private lateinit var touchHandler: TouchHandler
     private var sensors = mutableListOf<BaseSensor>()
-    private val defaultAppSize = toPx(70).toInt()
 
     override fun initInflate(stageRootLayout: StageRootLayout) {
         super.initInflate(stageRootLayout)
@@ -260,7 +262,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             val from = (element.layoutParams as SnapLayout.SnapLayoutParams).position
             snapLayout.moveView(element, movePosition)
             if (element != ghostView)
-                dataKeeper.userStageData.onMoved(from, movePosition)
+                dataKeeper.userStageDataset.move(from, movePosition)
         }
 
         private fun getPositionOnSnapUnder(snapLayout: SnapLayout, touchPoint: Point): Int {
@@ -270,7 +272,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
         fun createPreviewFolder(appView: AppView) {
             cancelPreviewFolder()
-            val folder = FolderView(context, appView.appInfo)
+            val folder = FolderView(context, appView.info!!)
             currentSnapLayout.removeView(appView)
             currentSnapLayout.addNewView(folder, (appView.layoutParams as SnapLayout.SnapLayoutParams).position, 2, 2)
             previewFolder = folder
@@ -278,10 +280,10 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
         private fun addToFolder(folder: FolderView, appView: AppView) {
             val pos = (appView.layoutParams as SnapLayout.SnapLayoutParams).position
-            folder.addApps(appView.appInfo)
+            folder.addApps(appView.info!!)
             (appView.parent as ViewGroup?)?.removeView(appView)
             previewFolder = null
-            dataKeeper.userStageData.onRemoved(pos)
+            dataKeeper.userStageDataset.remove(pos)
         }
 
         fun removeView(v: View) {
@@ -293,13 +295,13 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
         fun onViewRemoved(v: View) {
             val pos = (v.layoutParams as SnapLayout.SnapLayoutParams).position
-            dataKeeper.userStageData.onRemoved(pos)
+            dataKeeper.userStageDataset.remove(pos)
         }
 
         fun cancelPreviewFolder() {
             previewFolder?.let {
                 currentSnapLayout.removeView(it)
-                val appView = it.getApp(0).createView(context)
+                val appView = AppView(context, it.getApp(0))
                 currentSnapLayout.addNewView(appView, (it.layoutParams as SnapLayout.SnapLayoutParams).position, 2, 2)
                 lastHoveredView = appView
                 it.clear()

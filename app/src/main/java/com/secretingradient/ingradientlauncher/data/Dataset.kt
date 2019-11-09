@@ -1,77 +1,54 @@
 package com.secretingradient.ingradientlauncher.data
 
-import com.secretingradient.ingradientlauncher.LauncherException
+import com.secretingradient.ingradientlauncher.swap
 
-class Dataset <D: Data, S: State> (val dataHolder: DataKeeper.DataHolder<Int, D>, dataKeeper: DataKeeper) {
-    val dataset: MutableMap<Int, S>
+class Dataset<D: Data, I: Info>(val dataKeeper: DataKeeper, fileName: String) : FileDataset<Int, D>(dataKeeper.context, fileName), MutableIterable<MutableMap.MutableEntry<Int, I>> {
+
+    override fun iterator(): MutableIterator<MutableMap.MutableEntry<Int, I>> {
+        return dataset.iterator()
+    }
+
+    private val dataset: MutableMap<Int, I> = mutableMapOf()
 
     init {
-        dataset = mutableMapOf()
-        dataHolder.data.forEach {
-            val d = it.value.extract(dataKeeper)
-            dataset[d.datasetPosition]
+        reloadDataset()
+    }
+
+    private fun reloadDataset() {
+        dataset.clear()
+        rawDataset.forEach {
+            dataset[it.key] = it.value.createInfo(dataKeeper) as I
         }
     }
 
-    fun insertItem(item: S, replace: Boolean = false, dump: Boolean = true) {
-        val index = item.datasetPosition
-
-        if (!replace && dataset.containsKey(index))
-            throw LauncherException("attempt to rewrite element ${dataset[index]} at index $index")
-
-        dataset[index] = item
-
+    fun insert(index: Int, info: I, dump: Boolean = true) {
+        dataset[index] = info
+        rawDataset[index] = info.createData(index) as D
         if (dump)
-            dataHolder.dumpData()
+            dumpFileData()
     }
 
-    fun removeItem(index: Int, dump: Boolean = true) {
+    fun move(from: Int, to: Int, dump: Boolean = true) {
+        dataset.swap(from, to)
+        rawDataset.swap(from, to)
+        if (dump)
+            dumpFileData()
+    }
+
+    fun remove(index: Int, dump: Boolean = true) {
         dataset.remove(index)
-
+        rawDataset.remove(index)
         if (dump)
-            dataHolder.dumpData()
+            dumpFileData()
     }
 
-    fun moveItem(from: Int, to: Int, dump: Boolean = true) {
-        if (from == to)
-            return
-        if (dataset.containsKey(to))
-            throw LauncherException("attempt to rewrite element ${dataset[to]} at index $to")
-        if (!dataset.containsKey(from))
-            throw LauncherException("attempt to move null element at index $from")
-
-        dataset[to] = dataset[from]!!
-        dataset[to]!!.datasetPosition = to
-        dataset.remove(from)
-
-        if (dump)
-            dataHolder.dumpData()
+    override fun loadFileData() {
+        super.loadFileData()
+        reloadDataset()
     }
 
-    operator fun get(index: Int): S {
-        return dataset[index]!!
-    }
-/*
-    fun dumpData() {
-        ObjectOutputStream(context.openFileOutput(fileName, Context.MODE_PRIVATE)).use { it.writeObject(data) }
-    }
+    operator fun get(index: Int): I = dataset[index]!!
 
-    fun loadData() {
-        var stream: ObjectInputStream? = null
-        var loaded: MutableMap<Int, S>? = null
-        try {
-            stream = ObjectInputStream(context.openFileInput(fileName))
-            loaded = stream.readObject() as? MutableMap<Int, S>
-        } catch (e: FileNotFoundException) {
-            if (BuildConfig.DEBUG) println("file not found ${context.filesDir.absolutePath}/$fileName")
-        }
-        data = loaded ?: mutableMapOf()
-
-        stream?.close()
-    }
-
-    fun deleteFile() {
-        context.deleteFile(fileName)
-    }
-*/
+    val size: Int
+        get() = dataset.size
 }

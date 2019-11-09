@@ -5,5 +5,5 @@ import androidx.recyclerview.widget.RecyclerView
 import com.secretingradient.ingradientlauncher.element.AppView
 
 class AppHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    val appView = itemView as AppView
+    val app = itemView as AppView
 }

@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.secretingradient.ingradientlauncher.data.AppData
-import com.secretingradient.ingradientlauncher.data.AppState
+import com.secretingradient.ingradientlauncher.data.AppInfo
 import com.secretingradient.ingradientlauncher.data.DataKeeper
 import com.secretingradient.ingradientlauncher.data.Dataset
 import com.secretingradient.ingradientlauncher.element.AppView
@@ -56,7 +56,7 @@ class MyRoot : ConstraintLayout {
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 }
 
-class ResearchAdapter(val dataset: Dataset<AppData, AppState>) : RecyclerView.Adapter<AppHolder>() {
+class ResearchAdapter(val dataset: Dataset<AppData, AppInfo>) : RecyclerView.Adapter<AppHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppHolder {
         return AppHolder(AppView(parent.context))
@@ -65,7 +65,7 @@ class ResearchAdapter(val dataset: Dataset<AppData, AppState>) : RecyclerView.Ad
     override fun getItemCount() = 6
 
     override fun onBindViewHolder(holder: AppHolder, position: Int) {
-        holder.appView.state = dataset[position]
+        holder.app.info = dataset[position]
     }
 
 }

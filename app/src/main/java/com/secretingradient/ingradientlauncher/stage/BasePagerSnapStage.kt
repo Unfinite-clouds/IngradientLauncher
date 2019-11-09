@@ -6,6 +6,8 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.secretingradient.ingradientlauncher.LauncherRootLayout
 import com.secretingradient.ingradientlauncher.SnapLayout
+import com.secretingradient.ingradientlauncher.data.Dataset
+import com.secretingradient.ingradientlauncher.setSnapLayoutParams
 
 abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRootLayout), View.OnTouchListener {
     lateinit var stageVP: ViewPager2
@@ -17,6 +19,7 @@ abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : Base
     abstract var columnCount: Int
     abstract var rowCount: Int
     abstract var pageCount: Int
+    abstract val dataset: Dataset<*, *>
 
     override fun initInflate(stageRootLayout: StageRootLayout) {
         super.initInflate(stageRootLayout)
@@ -25,15 +28,13 @@ abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : Base
     }
 
     // lazy page creating is bad
-    inner class PagerSnapAdapter:
-        RecyclerView.Adapter<SnapLayoutHolder>() {
+    inner class PagerSnapAdapter : RecyclerView.Adapter<SnapLayoutHolder>() {
         private val pageSize = columnCount*rowCount*2
         lateinit var currentViewHolder: SnapLayoutHolder
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SnapLayoutHolder {
             return SnapLayoutHolder(SnapLayout(context, columnCount*2, rowCount*2 ).apply {
-                layoutParams =
-                    ViewGroup.LayoutParams(
+                layoutParams = ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
@@ -54,37 +55,15 @@ abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : Base
             val pageState = pageStates[page]
 */
             holder.snapLayout.removeAllViews()
-/*            data.forEach{
-                val pos = it.key
-                val element = it.value
-                if (isPosInPage(it.key, page)) {
-                    holder.snapLayout.addNewView( // avoid creating here
-                        element.createView(context).apply { setOnTouchListener(this@BasePagerSnapStage) },
-                        pos, element.snapWidth, element.snapHeight
-                    )
-                }
-            }*/
-//            apps.forEach {
-//                if (isPosInPage(it.key, page)) {
-//                    holder.snapLayout.addNewView(
-//                        DataKeeper.getAppInfoById(it.value)!!.createView(context).apply { /*setOnTouchListener(this@BasePagerSnapStage)*/ },
-//                        it.key, 2, 2
-//                    )
-//                }
-//            }
-//            folders.forEach {
-//                if (isPosInPage(it.key, page)) {
-////                    todo create folders from dataset
-////                    holder.snapLayout.addNewView(
-////                        FolderInfo.createView(context, it.value).apply { /*setOnTouchListener(this@BasePagerSnapStage)*/ },
-////                        it.key, 2, 2
-////                    )
-//                }
-//            }
 
-            dataKeeper.createViews().forEach {
-                if (isPosInPage((it.layoutParams as SnapLayout.SnapLayoutParams).position, page)) {
-                    holder.snapLayout.addView(it)
+
+
+
+            // WTF why all AppViews is null??
+            dataset.forEach {
+                if (isPosInPage(it.key, page)) {
+                    holder.snapLayout.addView(it.value.createView(context) // avoid creating here
+                        .apply { setSnapLayoutParams(it.key)}) // bad way
                 }
             }
 

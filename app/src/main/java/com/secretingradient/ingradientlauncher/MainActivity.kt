@@ -6,35 +6,21 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.viewpager2.widget.ViewPager2
 import com.secretingradient.ingradientlauncher.data.DataKeeper
-import com.secretingradient.ingradientlauncher.element.AppData
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.launcher_root)
 
-//        val apps = DataKeeper.allApps
-//
-//        for (i in 0..12) {
-//            DataKeeper.mainStageAppsData.add(apps[i]!!)
-//        }
-//        DataKeeper.dumpMainStageApps(this)
-//
-//        for (i in 0..12) {
-//            DataKeeper.userStageAppsData[i/2*2] = apps[i]!!
-//        }
-//        DataKeeper.dumpUserStageApps(this)
-
-//        DataKeeper.init(this)
-
         val dk = DataKeeper(this)
-        val appIds = dk.allAppsIds
 
         // filling
-        for (i in 0..10) {
-            dk.userStageData.onInserted(i / 2 * 2, AppData(appIds[i]), true)
+        for (i in 0 until 12) {
+            dk.mainStageDataset.insert(i, dk.createAppInfo(i), false)
         }
-
+        for (i in 0 until 24) {
+            dk.userStageDataset.insert(i / 2 * 2, dk.createAppInfo(i), false)
+        }
 
         getPrefs(this).edit {putBoolean(Preferences.FIRST_LOAD, true)}
         if (getPrefs(this).getBoolean(Preferences.FIRST_LOAD, true))

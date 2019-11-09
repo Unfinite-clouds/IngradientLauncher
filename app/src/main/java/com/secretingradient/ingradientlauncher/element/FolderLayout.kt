@@ -1,4 +1,4 @@
-package com.secretingradient.ingradientlauncher.stage
+package com.secretingradient.ingradientlauncher.element
 
 import android.content.Context
 import android.util.AttributeSet
@@ -7,8 +7,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.secretingradient.ingradientlauncher.element.AppInfo
-import com.secretingradient.ingradientlauncher.element.AppView
+import com.secretingradient.ingradientlauncher.data.AppInfo
+import com.secretingradient.ingradientlauncher.stage.AppHolder
 import com.secretingradient.ingradientlauncher.vibrate
 
 class FolderLayout : RecyclerView {
@@ -57,7 +57,7 @@ class FolderLayout : RecyclerView {
         }
 
         override fun onBindViewHolder(holder: AppHolder, position: Int) {
-            holder.appView.appInfo = apps[position]
+            holder.app.info = apps[position]
         }
     }
 

@@ -16,21 +16,21 @@ class Dataset<D: Data, I: Info>(val dataKeeper: DataKeeper, fileName: String) : 
         }
     }
 
-    fun insert(index: Int, info: I, dump: Boolean = false) {
+    fun insert(index: Int, info: I, dump: Boolean = true) {
         dataset[index] = info
         rawDataset[index] = info.createData(index) as D
         if (dump)
             dumpFileData()
     }
 
-    fun move(from: Int, to: Int, dump: Boolean = false) {
+    fun move(from: Int, to: Int, dump: Boolean = true) {
         dataset.swap(from, to)
         rawDataset.swap(from, to)
         if (dump)
             dumpFileData()
     }
 
-    fun remove(index: Int, dump: Boolean = false) {
+    fun remove(index: Int, dump: Boolean = true) {
         dataset.remove(index)
         rawDataset.remove(index)
         if (dump)

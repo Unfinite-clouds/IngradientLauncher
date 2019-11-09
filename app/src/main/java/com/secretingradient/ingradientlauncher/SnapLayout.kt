@@ -250,7 +250,7 @@ class SnapLayout : FrameLayout {
         var snapHeight: Int = -1
     ) : Serializable {
         companion object {
-            private const val serialVersionUID = 4401L
+            private const val serialVersionUID = 33000L
         }
 
         constructor(info: SnapLayoutInfo) : this (info.position, info.snapWidth, info.snapHeight)
