@@ -1,10 +1,9 @@
 package com.secretingradient.launchertest.data
 
-import com.secretingradient.launchertest.AppView
 import com.secretingradient.launchertest.swap
 
-class DataHelper(val dataKeeper: DataKeeper, fileName: String) : FileDataset<Int, AppData>(dataKeeper.context, fileName) {
-    private val dataset: MutableMap<Int, AppView.AppInfo> = mutableMapOf()
+class Dataset<D: Data, I: Info>(val dataKeeper: DataKeeper, fileName: String) : FileDataset<Int, D>(dataKeeper.context, fileName) {
+    private val dataset: MutableMap<Int, I> = mutableMapOf()
 
     init {
         reloadDataset()
@@ -13,13 +12,13 @@ class DataHelper(val dataKeeper: DataKeeper, fileName: String) : FileDataset<Int
     private fun reloadDataset() {
         dataset.clear()
         rawDataset.forEach {
-            dataset[it.key] = it.value.extract(dataKeeper)
+            dataset[it.key] = it.value.createInfo(dataKeeper) as I
         }
     }
 
-    fun insert(index: Int, info: AppView.AppInfo, dump: Boolean = false) {
+    fun insert(index: Int, info: I, dump: Boolean = false) {
         dataset[index] = info
-        rawDataset[index] = AppData(index, info.id)
+        rawDataset[index] = info.createData(index) as D
         if (dump)
             dumpFileData()
     }
@@ -31,14 +30,20 @@ class DataHelper(val dataKeeper: DataKeeper, fileName: String) : FileDataset<Int
             dumpFileData()
     }
 
+    fun remove(index: Int, dump: Boolean = false) {
+        dataset.remove(index)
+        rawDataset.remove(index)
+        if (dump)
+            dumpFileData()
+    }
+
     override fun loadFileData() {
         super.loadFileData()
         reloadDataset()
     }
 
-    operator fun get(index: Int): AppView.AppInfo = dataset[index]!!
+    operator fun get(index: Int): I = dataset[index]!!
 
     val size: Int
         get() = dataset.size
 }
-

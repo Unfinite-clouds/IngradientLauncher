@@ -6,7 +6,6 @@ import android.content.pm.ResolveInfo
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import androidx.core.graphics.drawable.toBitmap
-import com.secretingradient.launchertest.AppView
 import com.secretingradient.launchertest.LauncherException
 import com.secretingradient.launchertest.decodeBitmap
 import com.secretingradient.launchertest.encodeBitmap
@@ -16,7 +15,8 @@ class DataKeeper(val context: Context) {
 
     // this is pool for Bitmaps and data needed to create AppInfo
     private val allAppsCacheData: FileDataset<String, AppCache>
-    val dataHelper: DataHelper
+    val appDataset: Dataset<AppData, AppInfo>
+    val folderDataset: Dataset<FolderData, FolderInfo>
     val allAppsIds: MutableList<String>
 
     init {
@@ -24,7 +24,8 @@ class DataKeeper(val context: Context) {
         fetchUpdates()
         allAppsCacheData.rawDataset.forEach { it.value.loadIcon(context) }
         allAppsIds = allAppsCacheData.rawDataset.keys.toMutableList()
-        dataHelper = DataHelper(this, "test")
+        appDataset = Dataset(this, "test")
+        folderDataset = Dataset(this, "test2")
     }
 
     private fun getLaunchableApps(): List<ResolveInfo> {
@@ -54,7 +55,7 @@ class DataKeeper(val context: Context) {
             println("newApps: ${newApps.size}, oldApps: ${oldApps.size}, now: ${allAppsCacheData.rawDataset.size} apps")
             allAppsCacheData.dumpFileData()
             if (oldApps.isNotEmpty()) {
-                dataHelper.dumpFileData()
+                appDataset.dumpFileData()
             }
         }
     }
@@ -64,23 +65,7 @@ class DataKeeper(val context: Context) {
         return allAppsCacheData.rawDataset[id]!!
     }
 
-/*    fun createViews(): List<View> {
-        val iter = userStageData.data.iterator()
-        return List(userStageData.data.size) { _ ->
-            val pair = iter.next()
-            val position = pair.key
-            val elementData = pair.value
-            when (elementData) {
-                is AppData -> AppView(context, getAppCache(elementData.appId).createAppInfo(context))
-                    .apply { layoutParams = SnapLayout.SnapLayoutParams(position, 2, 2) }
-                is FolderData -> FolderView(context).apply { addApps(List(elementData.ids.size) { getAppCache(elementData.ids[it]).createAppInfo(context) })
-                    layoutParams = SnapLayout.SnapLayoutParams(position, 2, 2) }
-                is WidgetData -> TODO()
-            }
-        }
-    }*/
-
-    fun createAppInfo(id: String): AppView.AppInfo {
+    fun createAppInfo(id: String): AppInfo {
         return getAppCache(id).createAppInfo()
     }
 
@@ -106,8 +91,8 @@ class DataKeeper(val context: Context) {
             iconByteArray = null
         }
 
-        fun createAppInfo(): AppView.AppInfo {
-            return AppView.AppInfo(packageName, name, label, icon!!)
+        fun createAppInfo(): AppInfo {
+            return AppInfo(packageName, name, label, icon!!)
         }
 
         private fun encodeIcon(bitmap: Drawable, size: Int? = null): ByteArray {

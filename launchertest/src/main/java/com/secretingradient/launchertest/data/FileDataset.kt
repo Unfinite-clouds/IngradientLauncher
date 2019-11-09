@@ -10,12 +10,6 @@ import java.io.Serializable
 open class FileDataset <Index, Data: Serializable> (val context: Context, val fileName: String) {
     open val rawDataset: MutableMap<Index, Data> = getFileData() ?: mutableMapOf()
 
-/*
-    open operator fun get(index: Index): Data = rawDataset[index]!!
-    open operator fun set(index: Index, item: Data) {
-        rawDataset[index] = item
-    }*/
-
     fun dumpFileData() {
         ObjectOutputStream(context.openFileOutput(fileName, Context.MODE_PRIVATE)).use { it.writeObject(rawDataset) }
     }

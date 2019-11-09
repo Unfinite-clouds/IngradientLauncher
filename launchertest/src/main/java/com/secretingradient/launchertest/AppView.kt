@@ -16,7 +16,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.view.menu.MenuPopupHelper
-import com.secretingradient.launchertest.data.Info
+import com.secretingradient.launchertest.data.AppInfo
 import kotlin.math.min
 
 
@@ -121,13 +121,4 @@ class AppView : TextView {
         return "${this.hashCode().toString(16)} - ${info!!.label}, icon_bounds: ${icon?.bounds}, parent: $parent"
     }
 
-    class AppInfo(
-        val packageName: String,
-        val name: String,
-        val label: String,
-        val icon: Drawable
-    ) : Info {
-        val id: String
-            get() = "${packageName}_$name"
-    }
 }

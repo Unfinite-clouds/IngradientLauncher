@@ -3,7 +3,7 @@ package com.secretingradient.launchertest.data
 import java.io.Serializable
 
 interface Data : Serializable {
-    fun extract(dataKeeper: DataKeeper) : Info
+    fun createInfo(dataKeeper: DataKeeper) : Info
 }
 
 // its all for UserStage:

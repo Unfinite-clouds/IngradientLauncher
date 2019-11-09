@@ -13,8 +13,10 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.secretingradient.launchertest.data.DataHelper
+import com.secretingradient.launchertest.data.AppData
+import com.secretingradient.launchertest.data.AppInfo
 import com.secretingradient.launchertest.data.DataKeeper
+import com.secretingradient.launchertest.data.Dataset
 import kotlinx.android.synthetic.main.research_layout.*
 
 
@@ -26,7 +28,7 @@ class ResearchActivity : AppCompatActivity(), View.OnClickListener {
         setContentView(R.layout.research_layout)
 
         dk = DataKeeper(this)
-        val dh = dk.dataHelper
+        val dh = dk.appDataset
 
 //        dk.allAppsIds.forEachIndexed {i, s ->
 //            if (i < 50)
@@ -58,21 +60,21 @@ class MyRoot : ConstraintLayout {
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 }
 
-class ResearchAdapter(val dataHelper: DataHelper) : RecyclerView.Adapter<AppHolder>() {
+class ResearchAdapter(val dataset: Dataset<AppData, AppInfo>) : RecyclerView.Adapter<AppHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppHolder {
         return AppHolder(AppView(parent.context))
     }
     override fun onBindViewHolder(holder: AppHolder, position: Int) {
-        holder.appView.info = dataHelper[position]
+        holder.appView.info = dataset[position]
     }
-    override fun getItemCount() = dataHelper.size
+    override fun getItemCount() = dataset.size
 }
 
-class ItemDragger(val dataHelper: DataHelper) : ItemTouchHelper.SimpleCallback(ItemTouchHelper.RIGHT or ItemTouchHelper.LEFT or ItemTouchHelper.DOWN or ItemTouchHelper.UP, 0) {
+class ItemDragger(val dataset: Dataset<AppData, AppInfo>) : ItemTouchHelper.SimpleCallback(ItemTouchHelper.RIGHT or ItemTouchHelper.LEFT or ItemTouchHelper.DOWN or ItemTouchHelper.UP, 0) {
     override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
         val from = viewHolder.adapterPosition
         val to = target.adapterPosition
-        dataHelper.move(from, to, true)
+        dataset.move(from, to, true)
         recyclerView.adapter?.notifyDataSetChanged()
         return true
     }
