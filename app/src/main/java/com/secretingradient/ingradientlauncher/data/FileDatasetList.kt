@@ -7,19 +7,19 @@ import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.io.Serializable
 
-open class FileDataset <I, D: Serializable> (val context: Context, val fileName: String) {
-    open val rawDataset: MutableMap<I, D> = getFileData() ?: mutableMapOf()
+open class FileDatasetList <D: Serializable> (val context: Context, val fileName: String) {
+    open val rawDataset: MutableList<D> = getFileData() ?: mutableListOf()
 
     fun dumpData() {
         ObjectOutputStream(context.openFileOutput(fileName, Context.MODE_PRIVATE)).use { it.writeObject(rawDataset) }
     }
 
-    fun getFileData(): MutableMap<I, D>? {
+    fun getFileData(): MutableList<D>? {
         var stream: ObjectInputStream? = null
-        var loaded: MutableMap<I, D>? = null
+        var loaded: MutableList<D>? = null
         try {
             stream = ObjectInputStream(context.openFileInput(fileName))
-            loaded = stream.readObject() as? MutableMap<I, D>
+            loaded = stream.readObject() as? MutableList<D>
         } catch (e: FileNotFoundException) {
             if (BuildConfig.DEBUG) println("file not found ${context.filesDir.absolutePath}/$fileName")
         }
@@ -32,7 +32,7 @@ open class FileDataset <I, D: Serializable> (val context: Context, val fileName:
         val data = getFileData()
         if (data != null) {
             rawDataset.clear()
-            rawDataset.putAll(data)
+            rawDataset.addAll(data)
         }
     }
 

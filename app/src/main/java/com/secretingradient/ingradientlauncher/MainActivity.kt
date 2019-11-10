@@ -13,7 +13,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.launcher_root)
 
         val dk = DataKeeper(this)
-//        fillStages(dk)
+        fillStages(dk)
 
         getPrefs(this).edit {putBoolean(Preferences.FIRST_LOAD, true)}
         if (getPrefs(this).getBoolean(Preferences.FIRST_LOAD, true))
@@ -25,17 +25,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun fillStages(dk: DataKeeper) {
+        dk.mainStageDataset.deleteFile()
         for (i in 0 until 12) {
-            dk.mainStageDataset.insert(i, dk.createAppInfo(i), false)
+            dk.mainStageDataset.add(i, dk.createAppInfo(i))
         }
-        dk.mainStageDataset.dumpData()
 
-//        dk.userStageDataset.deleteFile()
+        dk.userStageDataset.deleteFile()
         for (i in 0 until 24) {
             val v = i / 2 * 2 + i/14*14
-            dk.userStageDataset.insert(v, dk.createAppInfo(i), false)
+            dk.userStageDataset.put(v, dk.createAppInfo(i), true)
         }
-        dk.userStageDataset.dumpData()
     }
 
     override fun onBackPressed() {

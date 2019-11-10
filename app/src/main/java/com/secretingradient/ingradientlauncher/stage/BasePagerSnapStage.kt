@@ -58,7 +58,7 @@ abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : Base
             dataset.forEach {
                 if (isPosInPage(it.key, page)) {
                     holder.snapLayout.addView(it.value.createView(context) // avoid creating here
-                        .apply { setSnapLayoutParams(it.key % pageSize)}) // bad way
+                        .apply { setSnapLayoutParams(it.key % pageSize, 2, 2)}) // bad way
                 }
             }
         }

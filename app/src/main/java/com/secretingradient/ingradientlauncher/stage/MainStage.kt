@@ -55,10 +55,12 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
 
     override fun onTouch(v: View?, event: MotionEvent): Boolean {
         if (!isTransferring) {
+            bug:
+            event.offsetLocation(recyclerView.left.toFloat(), recyclerView.top.toFloat())
             recyclerView.onTouchEvent(event)
-
+            event.offsetLocation(-recyclerView.left.toFloat(), -recyclerView.top.toFloat())
         } else if (handleInsertOnTransferring(event))
-                isTransferring = false
+            isTransferring = false
 
         if (event.action == MotionEvent.ACTION_UP)
             resetEventState()

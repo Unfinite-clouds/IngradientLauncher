@@ -96,6 +96,14 @@ fun Any?.className(): String? {
     return this?.javaClass?.simpleName
 }
 
+fun isElement(v: View?): Boolean {
+    return v as? AppView ?: v as? FolderView ?: v as? WidgetView != null
+}
+
+fun View.setSnapLayoutParams(position: Int, snapW: Int = 2, snapH: Int = 2) {
+    layoutParams = SnapLayout.SnapLayoutParams(position, snapW, snapH)
+}
+
 fun <K, V> MutableMap<K, V>.move(from: K, to: K) {
     if (from == to)
         return
@@ -104,6 +112,16 @@ fun <K, V> MutableMap<K, V>.move(from: K, to: K) {
 
     this[to] = this[from]!!
     this.remove(from)
+}
+
+fun <T> MutableList<T>.move(from: Int, to: Int) {
+    if (from == to)
+        return
+    if (this[from] == null) throw LauncherException("item at index $from is absent")
+    if (this[to] != null) throw LauncherException("item at index $to is busy. attempt to rewrite")
+
+    this[to] = this[from]!!
+    this.removeAt(from)
 }
 
 fun <K, V> MutableMap<K, V>.swap(from: K, to: K) {
@@ -115,12 +133,4 @@ fun <K, V> MutableMap<K, V>.swap(from: K, to: K) {
     val tmp = this[to]
     this[to] = this[from]!!
     this[from] = tmp!!
-}
-
-fun isElement(v: View?): Boolean {
-    return v as? AppView ?: v as? FolderView ?: v as? WidgetView != null
-}
-
-fun View.setSnapLayoutParams(position: Int, snapW: Int = 2, snapH: Int = 2) {
-    layoutParams = SnapLayout.SnapLayoutParams(position, snapW, snapH)
 }

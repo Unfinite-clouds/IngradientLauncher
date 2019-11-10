@@ -15,7 +15,7 @@ class DataKeeper(val context: Context) {
 
     // this is pool for Bitmaps and data needed to create AppInfo
     private val allAppsCacheData: FileDataset<String, AppCache>
-    val mainStageDataset: Dataset<AppData, AppInfo>
+    val mainStageDataset: DatasetList<AppData, AppInfo>
     val userStageDataset: Dataset<Data, Info>
     val allAppsDataset: Dataset<AppData, AppInfo>
 
@@ -27,7 +27,7 @@ class DataKeeper(val context: Context) {
         allAppsCacheData.rawDataset.forEach { it.value.loadIcon(context) }
         allAppsIds = allAppsCacheData.rawDataset.keys.toMutableList()
 
-        mainStageDataset = Dataset(this, "main_stage_data")
+        mainStageDataset = DatasetList(this, "main_stage_data")
         userStageDataset = Dataset(this, "user_stage_data")
         allAppsDataset = Dataset(this, "all_apps_data")
     }

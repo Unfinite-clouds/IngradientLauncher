@@ -32,7 +32,7 @@ class ResearchActivity : AppCompatActivity(), View.OnClickListener {
 
         dk = DataKeeper(this)
 
-        research_rv.adapter = ResearchAdapter(dk.mainStageDataset)
+//        research_rv.adapter = ResearchAdapter(dk.mainStageDataset)
         research_rv.layoutManager = GridLayoutManager(this, 3)
         ItemTouchHelper(ItemDragger()).attachToRecyclerView(research_rv)
     }

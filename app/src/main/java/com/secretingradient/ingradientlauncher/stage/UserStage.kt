@@ -100,6 +100,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                 removeView(v)
             }
         }
+
         init {
             gestureHelper.doOnLongClick = {
                 startEditMode()
@@ -316,12 +317,13 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         }
 
         fun addToFolder(folder: FolderView, appView: AppView) {
-            if (appView != selectedView) throw LauncherException("debug oops")
+            val appPos = getPagedPositionOfView(appView)
+            val folderPos = getPagedPositionOfView(folder)
             folder.addApps(appView.info!!)
             (appView.parent as ViewGroup?)?.removeView(appView)
             previewFolder = null
-            val pos = getPagedPositionOfView(folder)
-            dataKeeper.userStageDataset.remove(pos)
+            dataKeeper.userStageDataset.remove(appPos)
+            dataKeeper.userStageDataset.put(folderPos, folder.info, true)
         }
 
         fun removeView(v: View) {
@@ -378,7 +380,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             closeFolder()
             disallowVScroll()
             disallowHScroll()
-            showSensors(255/3)
+            showSensors(255/2)
         }
 
         fun endEditMode() {

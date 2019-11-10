@@ -6,16 +6,17 @@ import android.util.AttributeSet
 import android.widget.FrameLayout
 import android.widget.TextView
 import com.secretingradient.ingradientlauncher.data.AppInfo
+import com.secretingradient.ingradientlauncher.data.FolderInfo
 
 class FolderView : FrameLayout {
-    private val apps: MutableList<AppInfo> = mutableListOf()
+    var info: FolderInfo = FolderInfo(mutableListOf())
     val debugText = TextView(context)
     val folderSize
-        get() = apps.size
+        get() = info.apps.size
 
     init {
         setBackgroundColor(Color.YELLOW)
-        debugText.text = apps.size.toString()
+        debugText.text = info.apps.size.toString()
         debugText.textSize = 32f
         debugText.setTextColor(Color.BLACK)
         addView(debugText)
@@ -34,20 +35,20 @@ class FolderView : FrameLayout {
     }
 
     fun addApps(newApps: Collection<AppInfo>) {
-        apps.addAll(newApps)
+        info.apps.addAll(newApps)
         onUpdate()
     }
 
-    fun getApp(i: Int) = apps[i]
+    fun getApp(i: Int) = info.apps[i]
 
-    fun getApps() = apps
+    fun getApps() = info.apps
 
     fun clear() {
-        apps.clear()
+        info.apps.clear()
         onUpdate()
     }
 
     private fun onUpdate() {
-        debugText.text = apps.size.toString()
+        debugText.text = info.apps.size.toString()
     }
 }
