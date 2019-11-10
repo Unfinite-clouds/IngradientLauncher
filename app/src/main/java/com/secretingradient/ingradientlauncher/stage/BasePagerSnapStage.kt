@@ -29,8 +29,7 @@ abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : Base
 
     // lazy page creating is bad
     inner class PagerSnapAdapter : RecyclerView.Adapter<SnapLayoutHolder>() {
-        private val pageSize = columnCount*rowCount*2
-        lateinit var currentViewHolder: SnapLayoutHolder
+        val pageSize = columnCount*rowCount*4
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SnapLayoutHolder {
             return SnapLayoutHolder(SnapLayout(context, columnCount*2, rowCount*2 ).apply {
@@ -38,8 +37,7 @@ abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : Base
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
-//                setOnTouchListener(this@BasePagerSnapStage)
-            })
+            }, -1)
         }
 
         override fun onBindViewHolder(holder: SnapLayoutHolder, page: Int) {
@@ -54,20 +52,15 @@ abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : Base
             pageStates.add(createPage(page)) // don't need to create pages lazy. create all in init() instead
             val pageState = pageStates[page]
 */
+            holder.page = page
             holder.snapLayout.removeAllViews()
 
-
-
-
-            // WTF why all AppViews is null??
             dataset.forEach {
                 if (isPosInPage(it.key, page)) {
                     holder.snapLayout.addView(it.value.createView(context) // avoid creating here
-                        .apply { setSnapLayoutParams(it.key)}) // bad way
+                        .apply { setSnapLayoutParams(it.key % pageSize)}) // bad way
                 }
             }
-
-            currentViewHolder = holder
         }
 
         override fun getItemCount(): Int = pageCount
@@ -77,5 +70,5 @@ abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : Base
         }
     }
 
-    class SnapLayoutHolder(val snapLayout: SnapLayout) : RecyclerView.ViewHolder(snapLayout)
+    class SnapLayoutHolder(val snapLayout: SnapLayout, var page: Int) : RecyclerView.ViewHolder(snapLayout)
 }

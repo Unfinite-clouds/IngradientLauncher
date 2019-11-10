@@ -15,7 +15,6 @@ import android.view.Gravity
 import android.view.View
 import android.widget.TextView
 import com.secretingradient.ingradientlauncher.R
-import com.secretingradient.ingradientlauncher.SnapLayout
 import com.secretingradient.ingradientlauncher.data.AppInfo
 import com.secretingradient.ingradientlauncher.toPx
 import kotlin.math.min
@@ -141,7 +140,7 @@ class AppView : TextView {
         drawable.draw(canvas)
     }
 
-    override fun toString(): String {
+/*    override fun toString(): String {
         return "${this.hashCode().toString(16)} - ${info!!.label}, icon_bounds: ${icon?.bounds}, parent: $parent"
-    }
+    }*/
 }

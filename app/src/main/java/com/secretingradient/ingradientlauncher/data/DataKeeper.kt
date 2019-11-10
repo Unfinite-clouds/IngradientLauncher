@@ -57,9 +57,9 @@ class DataKeeper(val context: Context) {
                 allAppsCacheData.rawDataset[it] = AppCache(context, resolveInfo!!)
             }
             println("newApps: ${newApps.size}, oldApps: ${oldApps.size}, now: ${allAppsCacheData.rawDataset.size} apps")
-            allAppsCacheData.dumpFileData()
+            allAppsCacheData.dumpData()
             if (oldApps.isNotEmpty()) {
-                mainStageDataset.dumpFileData()
+                mainStageDataset.dumpData()
             }
         }
     }

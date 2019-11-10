@@ -19,6 +19,6 @@ class AppInfo(
     }
 
     override fun createView(context: Context): AppView {
-        return AppView(context)
+        return AppView(context, this)
     }
 }

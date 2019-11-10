@@ -96,7 +96,22 @@ fun Any?.className(): String? {
     return this?.javaClass?.simpleName
 }
 
+fun <K, V> MutableMap<K, V>.move(from: K, to: K) {
+    if (from == to)
+        return
+    if (this[from] == null) throw LauncherException("item at index $from is absent")
+    if (this[to] != null) throw LauncherException("item at index $to is busy. attempt to rewrite")
+
+    this[to] = this[from]!!
+    this.remove(from)
+}
+
 fun <K, V> MutableMap<K, V>.swap(from: K, to: K) {
+    if (from == to)
+        return
+    if (this[to] == null) throw LauncherException("item at index $to is absent")
+    if (this[from] == null) throw LauncherException("item at index $from is absent")
+
     val tmp = this[to]
     this[to] = this[from]!!
     this[from] = tmp!!

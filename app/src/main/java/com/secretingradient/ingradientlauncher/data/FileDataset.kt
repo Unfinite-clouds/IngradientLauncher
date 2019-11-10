@@ -6,12 +6,11 @@ import java.io.FileNotFoundException
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.io.Serializable
-import com.secretingradient.ingradientlauncher.data.Data
 
 open class FileDataset <I, D: Serializable> (val context: Context, val fileName: String){
     open val rawDataset: MutableMap<I, D> = getFileData() ?: mutableMapOf()
 
-    fun dumpFileData() {
+    fun dumpData() {
         ObjectOutputStream(context.openFileOutput(fileName, Context.MODE_PRIVATE)).use { it.writeObject(rawDataset) }
     }
 
@@ -29,12 +28,16 @@ open class FileDataset <I, D: Serializable> (val context: Context, val fileName:
         return loaded
     }
 
-    open fun loadFileData() {
+    open fun loadData() {
         val data = getFileData()
         if (data != null) {
             rawDataset.clear()
             rawDataset.putAll(data)
         }
+    }
+
+    open fun clearData() {
+        rawDataset.clear()
     }
 
     fun deleteFile() {
