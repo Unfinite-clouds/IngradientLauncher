@@ -23,6 +23,8 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
         this.stageRootLayout.stage = this
     }
 
+    open fun onStageAttachedToWindow() {}
+
     open fun receiveTransferredElement(element: AppView) {} // todo make for any Element, not only for AppView
 
     open fun disallowVScroll(disallow: Boolean = true) {

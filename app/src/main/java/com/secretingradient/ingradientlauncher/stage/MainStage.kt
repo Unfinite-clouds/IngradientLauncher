@@ -1,6 +1,7 @@
 package com.secretingradient.ingradientlauncher.stage
 
 import android.graphics.Point
+import android.graphics.PointF
 import android.view.MotionEvent
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
@@ -13,20 +14,29 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
     override val stageLayoutId = R.layout.stage_0_main
     private lateinit var recyclerView: MainStageRecycler
     private var isTransferring = false
+    private var isDragIntercepted = false
     private val touchPoint = Point()
-    private var isDragOnFly = false
     private val dataset = dataKeeper.mainStageDataset
 
-    private val startDragOnFlyRunnable = object : Runnable {
+    private val interceptDragRunnable = object : Runnable {
         var insertedPos = -1
         var event: MotionEvent? = null
         override fun run() {
             event?.let {
-                recyclerView.itemTouchHelper.startDrag(recyclerView.findViewHolderForLayoutPosition(insertedPos)!!)
-                isDragOnFly = true
+                val holder = recyclerView.findViewHolderForLayoutPosition(insertedPos)
+                if (holder == null) {
+                    recyclerView.scrollToPosition(insertedPos)
+                    stageRootLayout.handler.post(this)
+                    return
+                }
+                recyclerView.itemTouchHelper.startDrag(holder)
                 val tmpAction = it.action
+                val tmpPoint = PointF(it.x, it.y)
+                val v = holder.itemView
                 it.action = MotionEvent.ACTION_DOWN
+                it.setLocation(v.left + v.height/2f, v.top + v.width/2f)
                 recyclerView.onInterceptTouchEvent(it)
+                it.setLocation(tmpPoint.x, tmpPoint.y)
                 it.action = tmpAction
             }
         }
@@ -44,6 +54,13 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
         stageRootLayout.setOnTouchListener(this)
     }
 
+    override fun onStageAttachedToWindow() {
+        if (isTransferring) {
+            disallowVScroll()
+            isDragIntercepted = false
+        }
+    }
+
     override fun receiveTransferredElement(element: AppView) {
         goToStage(0)
         isTransferring = true
@@ -55,31 +72,33 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
 
     override fun onTouch(v: View?, event: MotionEvent): Boolean {
         if (!isTransferring) {
-            bug:
-            event.offsetLocation(recyclerView.left.toFloat(), recyclerView.top.toFloat())
             recyclerView.onTouchEvent(event)
+        } else if (!isDragIntercepted) {
+            isDragIntercepted = tryInterceptDrag(event)
+        } else {
             event.offsetLocation(-recyclerView.left.toFloat(), -recyclerView.top.toFloat())
-        } else if (handleInsertOnTransferring(event))
-            isTransferring = false
+            recyclerView.onTouchEvent(event)
+            event.offsetLocation(recyclerView.left.toFloat(), recyclerView.top.toFloat())
+        }
 
-        if (event.action == MotionEvent.ACTION_UP)
+        if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL)
             resetEventState()
 
         return true
     }
 
-    private fun handleInsertOnTransferring(event: MotionEvent): Boolean {
-        disallowVScroll()
+    private fun tryInterceptDrag(event: MotionEvent): Boolean {
         touchPoint.set(event.x.toInt(), event.y.toInt())
         val hoveredView = findViewUnder(touchPoint)
         // hoveredView will one of appViews in RecyclerView
         if (hoveredView is AppView) {
-            startDragOnFlyRunnable.insertedPos = recyclerView.insertViewUnder(stageRootLayout.overlayView as AppView, event.x - recyclerView.left, event.y - recyclerView.top)
-            startDragOnFlyRunnable.event = event
-            stageRootLayout.handler.post(startDragOnFlyRunnable)
+            interceptDragRunnable.insertedPos = recyclerView.insertViewUnder(stageRootLayout.overlayView as AppView, event.x - recyclerView.left, event.y - recyclerView.top)
+            interceptDragRunnable.event = event
+            stageRootLayout.handler.post(interceptDragRunnable)
             stageRootLayout.overlayView = null
             return true
-        }
+        } else if (hoveredView is MainStageRecycler)
+            TODO("NOT IMPLEMENTED")
 
         return false
     }
@@ -87,7 +106,8 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
     private fun resetEventState() {
         launcherRootLayout.dispatchToCurrentStage = false
         isTransferring = false
-        isDragOnFly = false
+        isDragIntercepted = false
         stageRootLayout.overlayView = null
+        stageRootLayout.handler.removeCallbacks(interceptDragRunnable)
     }
 }

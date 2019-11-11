@@ -38,6 +38,11 @@ class StageRootLayout : ConstraintLayout {
         return shouldIntercept
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        stage.onStageAttachedToWindow()
+    }
+
     override fun dispatchDraw(canvas: Canvas?) {
         super.dispatchDraw(canvas)
         overlayView?.let {

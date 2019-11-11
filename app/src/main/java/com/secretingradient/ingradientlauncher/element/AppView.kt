@@ -140,7 +140,10 @@ class AppView : TextView {
         drawable.draw(canvas)
     }
 
-/*    override fun toString(): String {
-        return "${this.hashCode().toString(16)} - ${info!!.label}, icon_bounds: ${icon?.bounds}, parent: $parent"
-    }*/
+    override fun toString(): String {
+        return "${this.javaClass.simpleName}{${this.hashCode().toString(16)}, " +
+                "label: ${info?.label}, " +
+                "parent: ${parent?.javaClass?.simpleName}, " +
+                "bounds: ${Rect(left,top,right,bottom)}}"
+    }
 }

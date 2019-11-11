@@ -144,6 +144,7 @@ class MainStageRecycler : RecyclerView {
                 return true
             }
         }
+
         return super.onTouchEvent(ev)
     }
 }
