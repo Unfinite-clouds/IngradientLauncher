@@ -124,6 +124,19 @@ fun <T> MutableList<T>.move(from: Int, to: Int) {
     this.removeAt(from)
 }
 
+fun <T> MutableList<T>.moveStack(from: Int, to: Int) {
+    if (from == to)
+        return
+    val tmp = this[from]
+    val direction = if (to > from) 1 else -1
+    val range = if (to > from) from until to else from downTo to - direction
+    for (i in range) {
+        this[i] = this[i + direction]
+    }
+    this[to] = tmp
+}
+
+
 fun <K, V> MutableMap<K, V>.swap(from: K, to: K) {
     if (from == to)
         return

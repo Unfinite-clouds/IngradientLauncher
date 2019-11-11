@@ -3,14 +3,15 @@
 package com.secretingradient.ingradientlauncher
 
 import android.content.Context
+import android.graphics.Canvas
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.secretingradient.ingradientlauncher.data.AppData
@@ -23,29 +24,25 @@ import com.secretingradient.ingradientlauncher.stage.AppHolder
 import kotlinx.android.synthetic.main._research_layout.*
 
 
-class ResearchActivity : AppCompatActivity(), View.OnClickListener {
+class ResearchActivity : AppCompatActivity() {
     lateinit var dk: DataKeeper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout._research_layout)
 
-        dk = DataKeeper(this)
+//        dk = DataKeeper(this)
 
-//        research_rv.adapter = ResearchAdapter(dk.mainStageDataset)
-        research_rv.layoutManager = GridLayoutManager(this, 3)
-        ItemTouchHelper(ItemDragger()).attachToRecyclerView(research_rv)
+        research_btn.setOnClickListener {
+            val img = ImageView(this).apply { setBackgroundResource(R.drawable.ic_info) }
+
+        }
+
     }
 
     fun hideKeyboard() {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(currentFocus?.windowToken, 0)
-    }
-
-    override fun onClick(v: View?) {
-        if (v == research_btn) {
-
-        }
     }
 
 }
@@ -54,6 +51,10 @@ class ResearchActivity : AppCompatActivity(), View.OnClickListener {
 class MyRoot : ConstraintLayout {
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
+
+    override fun dispatchDraw(canvas: Canvas) {
+        super.dispatchDraw(canvas)
+    }
 }
 
 class ResearchAdapter(val dataset: Dataset<AppData, AppInfo>) : RecyclerView.Adapter<AppHolder>() {

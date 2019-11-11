@@ -1,9 +1,6 @@
 package com.secretingradient.ingradientlauncher.stage
 
-import android.view.MotionEvent
-import android.view.View
 import com.secretingradient.ingradientlauncher.*
-import com.secretingradient.ingradientlauncher.data.*
 import kotlin.math.ceil
 
 class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(launcherRootLayout){
@@ -19,9 +16,4 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
     override fun initInflate(stageRootLayout: StageRootLayout) {
         super.initInflate(stageRootLayout)
     }
-
-    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
 }

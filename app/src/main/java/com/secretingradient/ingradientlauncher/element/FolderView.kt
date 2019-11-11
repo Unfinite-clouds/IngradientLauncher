@@ -13,6 +13,8 @@ class FolderView : FrameLayout {
     val debugText = TextView(context)
     val folderSize
         get() = info.apps.size
+    val apps: MutableList<AppInfo>
+        get() = info.apps
 
     init {
         setBackgroundColor(Color.YELLOW)
@@ -38,10 +40,6 @@ class FolderView : FrameLayout {
         info.apps.addAll(newApps)
         onUpdate()
     }
-
-    fun getApp(i: Int) = info.apps[i]
-
-    fun getApps() = info.apps
 
     fun clear() {
         info.apps.clear()

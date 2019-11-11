@@ -45,6 +45,7 @@ class StageRootLayout : ConstraintLayout {
 
     override fun dispatchDraw(canvas: Canvas?) {
         super.dispatchDraw(canvas)
+        stage.onDispatchDraw(canvas)
         overlayView?.let {
             canvas?.withTranslation(overlayTranslation.x - it.width / 2, overlayTranslation.y - it.height / 2) {
                 it.draw(canvas)

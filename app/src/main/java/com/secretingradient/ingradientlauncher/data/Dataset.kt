@@ -35,7 +35,7 @@ class Dataset<D: Data, I: Info>(val dataKeeper: DataKeeper, fileName: String) : 
     fun moveStack(from: Int, to: Int, dump: Boolean = true) {
         val tmp = dataset[from]
         val direction = if (to > from) 1 else -1
-        val range = if (to > from) from until to else from downTo to
+        val range = if (to > from) from until to else from downTo to - direction
         for (i in range) {
             println(i)
             dataset[i] = dataset[i + direction]!!

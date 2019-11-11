@@ -1,6 +1,5 @@
 package com.secretingradient.ingradientlauncher.stage
 
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
@@ -9,7 +8,7 @@ import com.secretingradient.ingradientlauncher.SnapLayout
 import com.secretingradient.ingradientlauncher.data.Dataset
 import com.secretingradient.ingradientlauncher.setSnapLayoutParams
 
-abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRootLayout), View.OnTouchListener {
+abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRootLayout) {
     lateinit var stageVP: ViewPager2
     val stageRV: RecyclerView
         get() = stageVP.getChildAt(0) as RecyclerView

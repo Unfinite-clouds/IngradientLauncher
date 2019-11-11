@@ -1,5 +1,6 @@
 package com.secretingradient.ingradientlauncher.data
 
+import com.secretingradient.ingradientlauncher.moveStack
 import com.secretingradient.ingradientlauncher.swap
 
 class DatasetList<D: Data, I: Info>(val dataKeeper: DataKeeper, fileName: String) : FileDatasetList<D>(dataKeeper.context, fileName), MutableIterable<I> {
@@ -36,14 +37,18 @@ class DatasetList<D: Data, I: Info>(val dataKeeper: DataKeeper, fileName: String
     }
 
     fun moveStack(from: Int, to: Int, dump: Boolean = true) {
-        val tmp = dataset[from]
+/*        val tmp = dataset[from]
         val direction = if (to > from) 1 else -1
-        val range = if (to > from) from until to else from downTo to
+        val range = if (to > from) from until to else from downTo to - direction
         for (i in range) {
             dataset[i] = dataset[i + direction]
             rawDataset[i] = rawDataset[i + direction]
         }
-        set(to, tmp, dump)
+        set(to, tmp, dump)*/
+        dataset.moveStack(from, to)
+        rawDataset.moveStack(from, to)
+        if (dump)
+            dumpData()
     }
 
     fun swap(index1: Int, index2: Int, dump: Boolean = true) {

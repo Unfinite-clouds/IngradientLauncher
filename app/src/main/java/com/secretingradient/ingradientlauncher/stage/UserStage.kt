@@ -1,24 +1,23 @@
 package com.secretingradient.ingradientlauncher.stage
 
+import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Point
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.PopupWindow
+import androidx.core.graphics.withTranslation
 import com.secretingradient.ingradientlauncher.*
 import com.secretingradient.ingradientlauncher.data.Data
 import com.secretingradient.ingradientlauncher.data.Dataset
 import com.secretingradient.ingradientlauncher.data.Info
 import com.secretingradient.ingradientlauncher.element.AppView
-import com.secretingradient.ingradientlauncher.element.FolderLayout
 import com.secretingradient.ingradientlauncher.element.FolderView
+import com.secretingradient.ingradientlauncher.element.FolderWindow
 import com.secretingradient.ingradientlauncher.element.WidgetView
 import com.secretingradient.ingradientlauncher.sensor.BaseSensor
 import kotlinx.android.synthetic.main.stage_1_user.view.*
-import kotlin.math.ceil
-import kotlin.math.sqrt
 
 class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(launcherRootLayout) {
     private val FLIP_WIDTH = toPx(25).toInt()
@@ -43,6 +42,11 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
     val currentPage: Int
         get() = stageVP.currentItem
 
+    val folderWindow = FolderWindow(context, dataset, defaultAppSize)
+    var isFolderOpen = false
+        set(value) {field = value; stageRootLayout.invalidate()}
+    private val folderTranslation = Point()
+
     override fun initInflate(stageRootLayout: StageRootLayout) {
         super.initInflate(stageRootLayout)
         touchHandler = TouchHandler()
@@ -65,8 +69,16 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 //        stageVP.offscreenPageLimit = 2
     }
 
-    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
-        TODO("remove this") //To change body of created functions use File | Settings | File Templates.
+    override fun onDispatchDraw(canvas: Canvas?) {
+        if (isFolderOpen)
+            canvas?.withTranslation(folderTranslation.x.toFloat(), folderTranslation.y.toFloat()) {
+                folderWindow.draw(canvas)
+            }
+    }
+
+    fun setFolderAnchorView(v: View) {
+        getLocationOfViewGlobal(v, folderTranslation)
+        stageRootLayout.invalidate()
     }
 
     private inner class TouchHandler : View.OnTouchListener {
@@ -82,7 +94,6 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         var lastLayoutPosition = -1
         var previewFolder: FolderView? = null
         var flipPageDone = false
-        var folderPopup = PopupWindow(context).apply { isClippingEnabled = false }
         var wasMoveAfterStartEditMode = false  // crutch
 
         val upSensorListener = object : BaseSensor.SensorListener {
@@ -131,6 +142,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             }
 
             if (gestureHelper.gesture == Gesture.TAP_UP && selectedView is FolderView && !inEditMode) {
+                println("open?")
                 openFolder(selectedView as FolderView)
             }
 
@@ -285,7 +297,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                 (element.layoutParams as SnapLayout.SnapLayoutParams).position = toLayoutPosition
                 toSnapLayout.addView(element)
                 if (element != ghostView)
-                    dataKeeper.userStageDataset.move(from, to)
+                    dataset.move(from, to)
             }
         }
 
@@ -322,56 +334,37 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             folder.addApps(appView.info!!)
             (appView.parent as ViewGroup?)?.removeView(appView)
             previewFolder = null
-            dataKeeper.userStageDataset.remove(appPos)
-            dataKeeper.userStageDataset.put(folderPos, folder.info, true)
+            dataset.remove(appPos)
+            dataset.put(folderPos, folder.info, true)
         }
 
         fun removeView(v: View) {
             val parent = v.parent as? SnapLayout ?: return
             val pos = getPagedPositionOfView(v)
             parent.removeView(v)
-            dataKeeper.userStageDataset.remove(pos)
+            dataset.remove(pos)
         }
 
         fun cancelPreviewFolder() {
             previewFolder?.let {
                 currentSnapLayout.removeView(it)
-                val appView = AppView(context, it.getApp(0))
+                val appView = AppView(context, it.apps[0])
                 currentSnapLayout.addNewView(appView, (it.layoutParams as SnapLayout.SnapLayoutParams).position, 2, 2)
-                lastHoveredView = appView
                 it.clear()
                 previewFolder = null
+                lastHoveredView = appView
             }
         }
 
         fun openFolder(folder: FolderView) {
-            closeFolder()
-            setFolderContent(folder, folderPopup)
-            folderPopup.showAsDropDown(folder, 0, -folder.height)
-        }
-
-        fun setFolderContent(folder: FolderView, folderPopup: PopupWindow) {
-            // currently set Grid sizes 2 x 2 and 3 x 3
-            val size = folder.folderSize
-            var columnsCount = ceil(sqrt(size.toFloat())).toInt()
-            if (columnsCount == 1) columnsCount = 2
-            else if (columnsCount == 2 && size == 4) columnsCount = 3
-
-            val appSize = defaultAppSize
-
-            val grid = FolderLayout(context)
-            grid.apps = folder.getApps()
-            grid.appSize = appSize
-            grid.columnsCount = columnsCount
-
-            folderPopup.width = appSize * columnsCount
-            folderPopup.height = appSize * columnsCount
-
-            folderPopup.contentView = grid
+            folderWindow.setContent(folder)
+            isFolderOpen = true
+            setFolderAnchorView(folder)
+            println("folder loc: $folderTranslation")
         }
 
         fun closeFolder() {
-            folderPopup.dismiss()
+            isFolderOpen = false
         }
 
         fun startEditMode() {

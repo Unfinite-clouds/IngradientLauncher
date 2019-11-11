@@ -1,6 +1,7 @@
 package com.secretingradient.ingradientlauncher.stage
 
 import android.content.Context
+import android.graphics.Canvas
 import android.graphics.Point
 import android.graphics.Rect
 import android.view.LayoutInflater
@@ -24,6 +25,8 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
     }
 
     open fun onStageAttachedToWindow() {}
+
+    open fun onDispatchDraw(canvas: Canvas?) {}
 
     open fun receiveTransferredElement(element: AppView) {} // todo make for any Element, not only for AppView
 
