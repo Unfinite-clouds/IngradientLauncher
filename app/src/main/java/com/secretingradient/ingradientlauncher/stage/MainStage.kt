@@ -89,7 +89,7 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
 
     private fun tryInterceptDrag(event: MotionEvent): Boolean {
         touchPoint.set(event.x.toInt(), event.y.toInt())
-        val hoveredView = findViewUnder(touchPoint)
+        val hoveredView = findInnerViewUnder(touchPoint)
         // hoveredView will one of appViews in RecyclerView
         if (hoveredView is AppView) {
             interceptDragRunnable.insertedPos = recyclerView.insertViewUnder(stageRootLayout.overlayView as AppView, event.x - recyclerView.left, event.y - recyclerView.top)

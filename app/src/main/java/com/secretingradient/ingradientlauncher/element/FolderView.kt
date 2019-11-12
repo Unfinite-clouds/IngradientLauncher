@@ -38,15 +38,20 @@ class FolderView : FrameLayout {
 
     fun addApps(newApps: Collection<AppInfo>) {
         info.apps.addAll(newApps)
-        onUpdate()
+        update()
+    }
+
+    fun removeApp(i: Int) {
+        info.apps.removeAt(i)
+        update()
     }
 
     fun clear() {
         info.apps.clear()
-        onUpdate()
+        update()
     }
 
-    private fun onUpdate() {
+    fun update() {
         debugText.text = info.apps.size.toString()
     }
 }

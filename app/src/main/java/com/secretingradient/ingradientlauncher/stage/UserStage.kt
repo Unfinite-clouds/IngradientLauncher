@@ -1,13 +1,11 @@
 package com.secretingradient.ingradientlauncher.stage
 
-import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Point
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import androidx.core.graphics.withTranslation
 import com.secretingradient.ingradientlauncher.*
 import com.secretingradient.ingradientlauncher.data.Data
 import com.secretingradient.ingradientlauncher.data.Dataset
@@ -42,10 +40,9 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
     val currentPage: Int
         get() = stageVP.currentItem
 
-    val folderWindow = FolderWindow(context, dataset, defaultAppSize)
+    lateinit var folderWindow: FolderWindow
     var isFolderOpen = false
-        set(value) {field = value; stageRootLayout.invalidate()}
-    private val folderTranslation = Point()
+//    private val folderTranslation = Point()
 
     override fun initInflate(stageRootLayout: StageRootLayout) {
         super.initInflate(stageRootLayout)
@@ -63,22 +60,17 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             sensors.add(remove_sensor.apply { sensorListener = touchHandler.removeSensorListener})
             sensors.add(uninstall_sensor)
         }
-
         touchHandler.hideSensors()
 
+        folderWindow = stageRootLayout.findViewById(R.id.folder_window)
+        folderWindow.initData(dataset, defaultAppSize)
+
+        stageRootLayout.clipChildren = false
 //        stageVP.offscreenPageLimit = 2
     }
 
-    override fun onDispatchDraw(canvas: Canvas?) {
-        if (isFolderOpen)
-            canvas?.withTranslation(folderTranslation.x.toFloat(), folderTranslation.y.toFloat()) {
-                folderWindow.draw(canvas)
-            }
-    }
-
     fun setFolderAnchorView(v: View) {
-        getLocationOfViewGlobal(v, folderTranslation)
-        stageRootLayout.invalidate()
+//        getLocationOfViewGlobal(v, folderTranslation)
     }
 
     private inner class TouchHandler : View.OnTouchListener {
@@ -114,10 +106,12 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
         init {
             gestureHelper.doOnLongClick = {
-                startEditMode()
-                if (selectedView != null) {
-                    startDrag(selectedView!!, touchPoint)
-                    wasMoveAfterStartEditMode = false
+                if (!isFolderOpen) {
+                    startEditMode()
+                    if (selectedView != null) {
+                        startDrag(selectedView!!, touchPoint)
+                        wasMoveAfterStartEditMode = false
+                    }
                 }
             }
         }
@@ -127,11 +121,13 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
             if (event.action == MotionEvent.ACTION_DOWN) {
                 // handle ACTION_DOWN for both inEditMode and !inEditMode
-                disallowHScroll(false)
-                if (isTouchOutsideFolder())
-                    closeFolder()
                 touchPoint.set(event.x.toInt(), event.y.toInt())
-                selectedView = trySelect(findViewUnder(touchPoint))
+                disallowHScroll(false)
+                if (isTouchOutsideFolder(touchPoint))
+                    closeFolder()
+                else
+                    return
+                selectedView = trySelect(findInnerViewUnder(touchPoint))
                 lastHoveredView = selectedView
 
                 if (inEditMode) {
@@ -142,7 +138,6 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             }
 
             if (gestureHelper.gesture == Gesture.TAP_UP && selectedView is FolderView && !inEditMode) {
-                println("open?")
                 openFolder(selectedView as FolderView)
             }
 
@@ -273,7 +268,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
         fun findHoveredViewAt(touchPoint: Point, lastHoveredView: View?): View? {
             // hovered view can't be neither selectedView nor ghostView
-            val v = findViewUnder(touchPoint, lastHoveredView)
+            val v = findInnerViewUnder(touchPoint, lastHoveredView)
             return if (v != selectedView && v != ghostView) v else currentSnapLayout
         }
 
@@ -357,14 +352,15 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         }
 
         fun openFolder(folder: FolderView) {
-            folderWindow.setContent(folder)
             isFolderOpen = true
+            folderWindow.setContent(folder, getPagedPositionOfView(folder))
+            folderWindow.visibility = View.VISIBLE
             setFolderAnchorView(folder)
-            println("folder loc: $folderTranslation")
         }
 
         fun closeFolder() {
             isFolderOpen = false
+            folderWindow.visibility = View.GONE
         }
 
         fun startEditMode() {
@@ -382,7 +378,11 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             hideSensors()
         }
 
-        fun isTouchOutsideFolder(): Boolean{
+        fun isTouchOutsideFolder(touchPoint: Point): Boolean {
+            findChildrenUnder(touchPoint).forEach {
+                if (it is FolderWindow)
+                    return false
+            }
             return true
         }
 

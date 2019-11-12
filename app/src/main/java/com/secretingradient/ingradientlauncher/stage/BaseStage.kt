@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.children
+import androidx.core.view.forEach
 import com.secretingradient.ingradientlauncher.LauncherException
 import com.secretingradient.ingradientlauncher.LauncherRootLayout
 import com.secretingradient.ingradientlauncher.element.AppView
@@ -42,7 +43,17 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
     private val hitRect = Rect()
     private val reusablePoint = Point()
 
-    protected fun findViewUnder(p: Point, lastHoveredView: View? = null): View? {
+    fun findChildrenUnder(p: Point): MutableList<View> {
+        val l = mutableListOf<View>()
+        stageRootLayout.forEach {
+            it.getHitRect(hitRect)
+            if (hitRect.contains(p.x, p.y))
+                l.add(it)
+        }
+        return l
+    }
+
+    fun findInnerViewUnder(p: Point, lastHoveredView: View? = null): View? {
         var foundView: View? = null
 
         if (lastHoveredView != null)
