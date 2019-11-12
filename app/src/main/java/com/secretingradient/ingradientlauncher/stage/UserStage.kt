@@ -6,6 +6,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import androidx.core.view.forEach
 import com.secretingradient.ingradientlauncher.*
 import com.secretingradient.ingradientlauncher.data.Data
 import com.secretingradient.ingradientlauncher.data.Dataset
@@ -87,6 +88,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         var previewFolder: FolderView? = null
         var flipPageDone = false
         var wasMoveAfterStartEditMode = false  // crutch
+        var isTouchInFolder = false
 
         val upSensorListener = object : BaseSensor.SensorListener {
             override fun onSensor(v: View) {
@@ -120,24 +122,16 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             gestureHelper.onTouchEvent(event)
 
             if (event.action == MotionEvent.ACTION_DOWN) {
-                // handle ACTION_DOWN for both inEditMode and !inEditMode
                 touchPoint.set(event.x.toInt(), event.y.toInt())
-                disallowHScroll(false)
                 if (isTouchOutsideFolder(touchPoint))
                     closeFolder()
                 else
-                    return
+                    disallowHScroll()
                 selectedView = trySelect(findInnerViewUnder(touchPoint))
                 lastHoveredView = selectedView
-
-                if (inEditMode) {
-                    disallowVScroll()
-                    if (selectedView != null)
-                        startDrag(selectedView!!, touchPoint)
-                }
             }
 
-            if (gestureHelper.gesture == Gesture.TAP_UP && selectedView is FolderView && !inEditMode) {
+            if (gestureHelper.gesture == Gesture.TAP_UP && selectedView is FolderView) {
                 openFolder(selectedView as FolderView)
             }
 
@@ -149,17 +143,32 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         }
 
         override fun onTouch(v: View, event: MotionEvent): Boolean {
+            // only called by stageRootLayout in EditMode, intercepting TouchEvent
             if (v !is StageRootLayout && !inEditMode)
                 return false
 
             touchPoint.set(event.x.toInt(), event.y.toInt())
 
+            if (!isTouchOutsideFolder(touchPoint)) {
+                selectedView = null
+                isTouchInFolder = true
+                dispatchWithTransform(folderWindow, event)
+            } else if (isTouchInFolder) {
+                isTouchInFolder = false
+                receiveFromFolder(folderWindow, event)
+            }
+
             when (event.action) {
+
+                MotionEvent.ACTION_DOWN -> {
+                    disallowVScroll()
+                }
 
                 MotionEvent.ACTION_MOVE -> {
                     wasMoveAfterStartEditMode = true
                     if (selectedView != null) {
-
+                        if (stageRootLayout.overlayView == null) // (when not in drag)
+                            startDrag(selectedView!!, touchPoint)
                         val hoveredView = findHoveredViewAt(touchPoint, lastHoveredView)
                         if (hoveredView is SnapLayout) {
                             layoutPosition = getPositionOnSnapUnder(hoveredView, touchPoint)
@@ -187,8 +196,10 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                         }
                         lastHoveredView = hoveredView
                         lastLayoutPosition = layoutPosition
-                    } else if (gestureHelper.gesture == Gesture.TAP_UP) // not after longPress
+                    }
+                    if (gestureHelper.gesture == Gesture.TAP_UP && !isFolderOpen) {// not after longPress
                         endEditMode()
+                    }
                     endDrag()
                 }
 
@@ -197,48 +208,55 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             return true
         }
 
-        private fun flipPageIfNeeded(touchPoint: Point) {
-            var direction = 0
-            if (touchPoint.x > stageRootLayout.width - FLIP_WIDTH)
-                direction = 1
-            else if (touchPoint.x < FLIP_WIDTH)
-                direction = -1
-
-            if (direction != 0 && !flipPageDone)
-                flipPage(direction)
-            else if (direction == 0)
-                flipPageDone = false
+        fun findHoveredViewAt(touchPoint: Point, lastHoveredView: View?): View? {
+            // hovered view can't be neither selectedView nor ghostView
+//            if (!isAllChildrenLaidOut(currentSnapLayout))
+//                return null
+            val v = findInnerViewUnder(touchPoint, lastHoveredView)
+            return if (v != selectedView && v != ghostView) v else currentSnapLayout
         }
 
-        private fun flipPage(direction: Int) {
-            stageVP.currentItem += direction
-            cancelPreviewFolder()
-            closeFolder()
-            flipPageDone = true
-        }
-
-        private fun isNewHoveredView(hoveredView: View?): Boolean {
+        fun isNewHoveredView(hoveredView: View?): Boolean {
             return layoutPosition != lastLayoutPosition || hoveredView != lastHoveredView || lastHoveredView == null
         }
 
-        private fun startDrag(selectedView: View, touchPoint: Point) {
-            println("startDrag")
+        fun startDrag(selectedView: View, touchPoint: Point) {
+            println("-- startDrag --")
             stageRootLayout.overlayView = selectedView
             stageRootLayout.setOverlayTranslation(touchPoint.x.toFloat(), touchPoint.y.toFloat())
             selectedView.visibility = View.INVISIBLE
             disallowHScroll()
+            disallowVScroll()
             lastLayoutPosition = -1
             lastHoveredView = null
             flipPageDone = false
         }
 
-        private fun endDrag() {
+        fun endDrag() {
             println("endDrag")
             selectedView?.visibility = View.VISIBLE
             stageRootLayout.overlayView = null
             selectedView = null
+            disallowHScroll(false)
             cancelPreviewFolder()
             flipPageDone = false
+        }
+
+        fun startEditMode() {
+            inEditMode = true
+            shouldIntercept = true
+            folderWindow.inEditMode = true
+            closeFolder()
+            disallowVScroll()
+            disallowHScroll()
+            showSensors(255/2)
+        }
+
+        fun endEditMode() {
+            inEditMode = false
+            folderWindow.inEditMode = false
+            shouldIntercept = false
+            hideSensors()
         }
 
         fun onExitHover(view: View?) {
@@ -260,16 +278,10 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
         fun onPerformAction(selectedView: View, hoveredView: View, movePosition: Int) {
             when {
-                selectedView is AppView && hoveredView is FolderView -> addToFolder(hoveredView, selectedView)
+                selectedView is AppView && hoveredView is FolderView -> { addToFolder(hoveredView, selectedView); removeView(selectedView) }
                 isElement(selectedView) && hoveredView is BaseSensor -> hoveredView.onPerformAction(selectedView)
-                isElement(selectedView) && hoveredView is SnapLayout -> moveView(selectedView, hoveredView, movePosition)
+                isElement(selectedView) && hoveredView is SnapLayout -> moveOrAddView(selectedView, hoveredView, movePosition)
             }
-        }
-
-        fun findHoveredViewAt(touchPoint: Point, lastHoveredView: View?): View? {
-            // hovered view can't be neither selectedView nor ghostView
-            val v = findInnerViewUnder(touchPoint, lastHoveredView)
-            return if (v != selectedView && v != ghostView) v else currentSnapLayout
         }
 
         fun moveGhostView(snapLayout: SnapLayout, layoutPosition: Int) {
@@ -281,38 +293,32 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             snapLayout.moveView(ghostView, layoutPosition)
         }
 
-        fun moveView(element: View, toSnapLayout: SnapLayout, toLayoutPosition: Int) {
+        fun moveOrAddView(element: View, toSnapLayout: SnapLayout, toLayoutPosition: Int) {
+            if (element == ghostView) throw LauncherException("for ghostView use moveGhostView")
+            val parent = element.parent
             val toPage = (stageRV.getChildViewHolder(toSnapLayout) as SnapLayoutHolder).page
-            val fromSnapLayout = element.parent as? SnapLayout
-            val from = getPagedPositionOfView(element)
             val to = toPagedPosition(toLayoutPosition, toPage)
 
-            if (fromSnapLayout != null) {
-                fromSnapLayout.removeView(element)
+            if (parent is SnapLayout) {
+                // todo b01-p (patched) {call of wrong function. It should be directed to addToFolder()}
+                if (dataset[to] != null)
+                    return
+
+                val from = getPagedPositionOfView(element)
                 (element.layoutParams as SnapLayout.SnapLayoutParams).position = toLayoutPosition
+                parent.removeView(element)
                 toSnapLayout.addView(element)
-                if (element != ghostView)
-                    dataset.move(from, to)
+                dataset.move(from, to)
+            } else if (element is AppView){
+                if (parent is ViewGroup) {
+                    parent.removeView(element)
+                }
+                // todo b01-p (patched) {call of wrong function. It should be directed to addToFolder()}
+                if (dataset[to] != null)
+                    return
+                toSnapLayout.addNewView(element, toLayoutPosition, 2, 2)
+                dataset.put(to, element.info!!)
             }
-        }
-
-        fun getElementPage(element: View): Int {
-            val fromSnapLayout = element.parent as? SnapLayout ?: throw LauncherException("element $element not a child of SnapLayout. parent= ${element.parent}")
-            return (stageRV.getChildViewHolder(fromSnapLayout) as SnapLayoutHolder).page
-        }
-
-        fun getPagedPositionOfView(v: View): Int {
-            val layoutPosition = (v.layoutParams as SnapLayout.SnapLayoutParams).position
-            return layoutPosition + getElementPage(v) * pagerAdapter.pageSize
-        }
-
-        fun getPositionOnSnapUnder(snapLayout: SnapLayout, touchPoint: Point): Int {
-            toLocationInView(touchPoint, snapLayout, reusablePoint)
-            return snapLayout.snapToGrid(reusablePoint, 2)
-        }
-
-        fun toPagedPosition(layoutPosition: Int, page: Int = currentPage): Int {
-            return layoutPosition + page * pagerAdapter.pageSize
         }
 
         fun createPreviewFolder(appView: AppView) {
@@ -324,20 +330,19 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         }
 
         fun addToFolder(folder: FolderView, appView: AppView) {
-            val appPos = getPagedPositionOfView(appView)
             val folderPos = getPagedPositionOfView(folder)
             folder.addApps(appView.info!!)
-            (appView.parent as ViewGroup?)?.removeView(appView)
             previewFolder = null
-            dataset.remove(appPos)
             dataset.put(folderPos, folder.info, true)
         }
 
         fun removeView(v: View) {
-            val parent = v.parent as? SnapLayout ?: return
-            val pos = getPagedPositionOfView(v)
+            val parent = v.parent as? ViewGroup ?: return
+            if (parent is SnapLayout) {
+                val pos = getPagedPositionOfView(v)
+                dataset.remove(pos)
+            }
             parent.removeView(v)
-            dataset.remove(pos)
         }
 
         fun cancelPreviewFolder() {
@@ -363,22 +368,9 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             folderWindow.visibility = View.GONE
         }
 
-        fun startEditMode() {
-            inEditMode = true
-            shouldIntercept = true
-            closeFolder()
-            disallowVScroll()
-            disallowHScroll()
-            showSensors(255/2)
-        }
-
-        fun endEditMode() {
-            inEditMode = false
-            shouldIntercept = false
-            hideSensors()
-        }
-
         fun isTouchOutsideFolder(touchPoint: Point): Boolean {
+            if (!isFolderOpen)
+                return true
             findChildrenUnder(touchPoint).forEach {
                 if (it is FolderWindow)
                     return false
@@ -420,11 +412,79 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
         fun transferEvent(appView: AppView) {
             launcherRootLayout.transferEvent(0, appView)
-            currentSnapLayout.removeView(selectedView)
+            (selectedView!!.parent as? ViewGroup)?.removeView(selectedView)
             endDrag()
             endEditMode()
         }
 
+        fun flipPageIfNeeded(touchPoint: Point) {
+            var direction = 0
+            if (touchPoint.x > stageRootLayout.width - FLIP_WIDTH)
+                direction = 1
+            else if (touchPoint.x < FLIP_WIDTH)
+                direction = -1
+
+            if (direction != 0 && !flipPageDone)
+                flipPage(direction)
+            else if (direction == 0)
+                flipPageDone = false
+        }
+
+        fun flipPage(direction: Int) {
+            stageVP.currentItem += direction
+            cancelPreviewFolder()
+            closeFolder()
+            flipPageDone = true
+        }
+
+        fun getElementPage(element: View): Int {
+            val fromSnapLayout = element.parent as? SnapLayout ?: throw LauncherException("element $element not a child of SnapLayout. parent= ${element.parent}")
+            return (stageRV.getChildViewHolder(fromSnapLayout) as SnapLayoutHolder).page
+        }
+
+        fun getPagedPositionOfView(v: View): Int {
+            val layoutPosition = (v.layoutParams as SnapLayout.SnapLayoutParams).position
+            return layoutPosition + getElementPage(v) * pagerAdapter.pageSize
+        }
+
+        fun getPositionOnSnapUnder(snapLayout: SnapLayout, touchPoint: Point): Int {
+            toLocationInView(touchPoint, snapLayout, reusablePoint)
+            return snapLayout.snapToGrid(reusablePoint, 2)
+        }
+
+        fun toPagedPosition(layoutPosition: Int, page: Int = currentPage): Int {
+            return layoutPosition + page * pagerAdapter.pageSize
+        }
+
+        fun dispatchWithTransform(v: View, event: MotionEvent) {
+            val x = event.x.toInt()
+            val y = event.y.toInt()
+            reusablePoint.set(x, y)
+            toLocationInView(reusablePoint, v, reusablePoint)
+            event.setLocation(reusablePoint.x.toFloat(), reusablePoint.y.toFloat())
+            folderWindow.onTouchEvent(event)
+            event.setLocation(x.toFloat(), y.toFloat())
+        }
+
+        fun receiveFromFolder(folderWindow: FolderWindow, event: MotionEvent) {
+            if (folderWindow.selectedApp != null) {
+                selectedView = trySelect(folderWindow.selectedApp!!.info!!.createView(context))
+                stageRootLayout.addView(selectedView, defaultAppSize, defaultAppSize)
+                folderWindow.removeSelectedApp()
+                closeFolder()
+            }
+        }
+
+        fun isAllChildrenLaidOut(v: ViewGroup = stageRootLayout): Boolean {
+            println(v.className())
+            v.forEach {
+                if (it.measuredWidth == 0)
+                    return false
+                if (it is ViewGroup && !isElement(it) && !isAllChildrenLaidOut(it))
+                    return false
+            }
+            return true
+        }
     }
 
 }

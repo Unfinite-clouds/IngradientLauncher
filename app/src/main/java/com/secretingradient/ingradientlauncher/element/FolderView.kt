@@ -5,8 +5,8 @@ import android.graphics.Color
 import android.util.AttributeSet
 import android.widget.FrameLayout
 import android.widget.TextView
-import com.secretingradient.ingradientlauncher.data.AppInfo
-import com.secretingradient.ingradientlauncher.data.FolderInfo
+import com.secretingradient.ingradientlauncher.SnapLayout
+import com.secretingradient.ingradientlauncher.data.*
 
 class FolderView : FrameLayout {
     var info: FolderInfo = FolderInfo(mutableListOf())
@@ -53,5 +53,14 @@ class FolderView : FrameLayout {
 
     fun update() {
         debugText.text = info.apps.size.toString()
+    }
+
+    fun revert(dataset: Dataset<Data, Info>) {
+        val pos = (this.layoutParams as SnapLayout.SnapLayoutParams).position
+        val p = parent as? SnapLayout ?: return
+        p.removeView(this)
+        val app = apps[0].createView(context)
+        p.addNewView(app, pos, 2, 2)
+        dataset.put(pos, app.info!!, true)
     }
 }

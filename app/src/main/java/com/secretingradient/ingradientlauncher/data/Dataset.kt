@@ -5,6 +5,7 @@ import com.secretingradient.ingradientlauncher.move
 import com.secretingradient.ingradientlauncher.swap
 
 class Dataset<D: Data, I: Info>(val dataKeeper: DataKeeper, fileName: String) : FileDataset<Int, D>(dataKeeper.context, fileName), MutableIterable<MutableMap.MutableEntry<Int, I>> {
+    val debugGlobalSave = false
 
     override fun iterator(): MutableIterator<MutableMap.MutableEntry<Int, I>> {
         return dataset.iterator()
@@ -28,7 +29,7 @@ class Dataset<D: Data, I: Info>(val dataKeeper: DataKeeper, fileName: String) : 
             throw LauncherException("item at index $index is busy. use replace=true to rewrite")
         dataset[index] = info
         rawDataset[index] = info.createData(index) as D
-        if (dump)
+        if (dump && debugGlobalSave)
             dumpData()
     }
 
@@ -47,21 +48,21 @@ class Dataset<D: Data, I: Info>(val dataKeeper: DataKeeper, fileName: String) : 
     fun move(from: Int, to: Int, dump: Boolean = true) {
         dataset.move(from, to)
         rawDataset.move(from, to)
-        if (dump)
+        if (dump && debugGlobalSave)
             dumpData()
     }
 
     fun swap(index1: Int, index2: Int, dump: Boolean = true) {
         dataset.swap(index1, index2)
         rawDataset.swap(index1, index2)
-        if (dump)
+        if (dump && debugGlobalSave)
             dumpData()
     }
 
     fun remove(index: Int, dump: Boolean = true) {
         dataset.remove(index)
         rawDataset.remove(index)
-        if (dump)
+        if (dump && debugGlobalSave)
             dumpData()
     }
 
@@ -75,7 +76,7 @@ class Dataset<D: Data, I: Info>(val dataKeeper: DataKeeper, fileName: String) : 
         dataset.clear()
     }
 
-    operator fun get(index: Int): I = dataset[index]!!
+    operator fun get(index: Int): I? = dataset[index]
 
     val size: Int
         get() = dataset.size

@@ -21,16 +21,20 @@ class FolderWindow : RecyclerView {
     lateinit var dataset: Dataset<Data, Info>
     lateinit var folderInfo: FolderInfo
     lateinit var folderView: FolderView
+    var inEditMode = false
     var appSize = -1
     var folderPosInDataset = -1
     private var selectedAppHolder: AppHolder? = null
+    val selectedApp: AppView?
+        get() = selectedAppHolder?.app
+    val itemDragger: ItemTouchHelper
 
     init {
         adapter = FolderAdapter()
         setHasFixedSize(true)
         clipChildren = false
         clipToPadding = false
-        ItemTouchHelper(ItemDragger()).attachToRecyclerView(this)
+        itemDragger = ItemTouchHelper(ItemDragger()).apply { attachToRecyclerView(this@FolderWindow) }
         setBackgroundColor(Color.BLACK)
     }
 
@@ -73,23 +77,44 @@ class FolderWindow : RecyclerView {
         }
     }
 
+    fun removeSelectedApp() {
+        if (selectedAppHolder != null) {
+            val pos = selectedAppHolder!!.adapterPosition
+            folderView.removeApp(pos)
+            dataset.put(folderPosInDataset, folderInfo, true)
+//            adapter?.notifyItemRemoved(pos)
+            if (folderInfo.apps.size < 2)
+                folderView.revert(dataset)
+        }
+    }
+
     override fun onTouchEvent(ev: MotionEvent): Boolean {
-        if (ev.action == MotionEvent.ACTION_UP && selectedAppHolder != null) {
+        if (inEditMode) {
+            when (ev.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    val v = findChildViewUnder(ev.x, ev.y)
+                    if (v != null) {
+                        itemDragger.startDrag(getChildViewHolder(v))
+                        onInterceptTouchEvent(ev)
+                    }
+                }
+            }
+        }
+        if (ev.action == MotionEvent.ACTION_UP || ev.action == MotionEvent.ACTION_CANCEL) {
             val x = ev.x.toInt()
             val y = ev.y.toInt()
-            println("$x, $y")
             if (x < 0 || x > width || y < 0 || y > height) {
-                val pos = selectedAppHolder!!.adapterPosition
-                folderView.removeApp(pos)
-                dataset.put(folderPosInDataset, folderInfo, true)
-                adapter!!.notifyItemRemoved(pos)
+                removeSelectedApp()
                 return true
             }
+            selectedAppHolder = null
         }
         return super.onTouchEvent(ev)
     }
 
     inner class ItemDragger : ItemTouchHelper.SimpleCallback(ItemTouchHelper.RIGHT or ItemTouchHelper.LEFT or ItemTouchHelper.DOWN or ItemTouchHelper.UP, 0) {
+        override fun isLongPressDragEnabled(): Boolean = false
+
         override fun onMove(recyclerView: RecyclerView, viewHolder: ViewHolder, target: ViewHolder): Boolean {
             val from = viewHolder.adapterPosition
             val to = target.adapterPosition
