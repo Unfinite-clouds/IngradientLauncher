@@ -13,7 +13,6 @@ import com.secretingradient.ingradientlauncher.data.Dataset
 import com.secretingradient.ingradientlauncher.data.Info
 import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.element.FolderView
-import com.secretingradient.ingradientlauncher.element.FolderWindow
 import com.secretingradient.ingradientlauncher.element.WidgetView
 import com.secretingradient.ingradientlauncher.sensor.BaseSensor
 import kotlinx.android.synthetic.main.stage_1_user.view.*
@@ -89,6 +88,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         var flipPageDone = false
         var wasMoveAfterStartEditMode = false  // crutch
         var isTouchInFolder = false
+        var needToStartDragInFolder = false
 
         val upSensorListener = object : BaseSensor.SensorListener {
             override fun onSensor(v: View) {
@@ -107,13 +107,14 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         }
 
         init {
-            gestureHelper.doOnLongClick = {
-                if (!isFolderOpen) {
-                    startEditMode()
-                    if (selectedView != null) {
-                        startDrag(selectedView!!, touchPoint)
-                        wasMoveAfterStartEditMode = false
-                    }
+            gestureHelper.doOnLongClick = { downEvent ->
+                startEditMode()
+                wasMoveAfterStartEditMode = false
+                if (isFolderOpen && downEvent != null) {
+                    needToStartDragInFolder = true
+                }
+                if (!isFolderOpen && selectedView != null) {
+                    startDrag(selectedView!!, touchPoint)
                 }
             }
         }
@@ -122,6 +123,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             gestureHelper.onTouchEvent(event)
 
             if (event.action == MotionEvent.ACTION_DOWN) {
+                needToStartDragInFolder = false
                 touchPoint.set(event.x.toInt(), event.y.toInt())
                 if (isTouchOutsideFolder(touchPoint))
                     closeFolder()
@@ -152,7 +154,12 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             if (!isTouchOutsideFolder(touchPoint)) {
                 selectedView = null
                 isTouchInFolder = true
-                dispatchWithTransform(folderWindow, event)
+                if (needToStartDragInFolder) {
+                    needToStartDragInFolder = false
+                    startDragInFolder(event)
+                }
+                else
+                    dispatchWithTransform(folderWindow, event)
             } else if (isTouchInFolder) {
                 isTouchInFolder = false
                 receiveFromFolder(folderWindow, event)
@@ -246,7 +253,6 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             inEditMode = true
             shouldIntercept = true
             folderWindow.inEditMode = true
-            closeFolder()
             disallowVScroll()
             disallowHScroll()
             showSensors(255/2)
@@ -457,13 +463,17 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         }
 
         fun dispatchWithTransform(v: View, event: MotionEvent) {
-            val x = event.x.toInt()
-            val y = event.y.toInt()
-            reusablePoint.set(x, y)
+            val transformedEvent = getTransformedEvent(event, folderWindow)
+            v.onTouchEvent(transformedEvent)
+            transformedEvent.recycle()
+        }
+
+        fun getTransformedEvent(event: MotionEvent, v: View): MotionEvent {
+            reusablePoint.set(event.x.toInt(), event.y.toInt())
             toLocationInView(reusablePoint, v, reusablePoint)
-            event.setLocation(reusablePoint.x.toFloat(), reusablePoint.y.toFloat())
-            folderWindow.onTouchEvent(event)
-            event.setLocation(x.toFloat(), y.toFloat())
+            val e = MotionEvent.obtain(event)
+            e.setLocation(reusablePoint.x.toFloat(), reusablePoint.y.toFloat())
+            return e
         }
 
         fun receiveFromFolder(folderWindow: FolderWindow, event: MotionEvent) {
@@ -476,7 +486,6 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         }
 
         fun isAllChildrenLaidOut(v: ViewGroup = stageRootLayout): Boolean {
-            println(v.className())
             v.forEach {
                 if (it.measuredWidth == 0)
                     return false
@@ -484,6 +493,13 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                     return false
             }
             return true
+        }
+
+        fun startDragInFolder(event: MotionEvent) {
+            val transformedEvent = getTransformedEvent(event, folderWindow)
+            transformedEvent.action = MotionEvent.ACTION_DOWN
+            folderWindow.startDrag(transformedEvent)
+            transformedEvent.recycle()
         }
     }
 

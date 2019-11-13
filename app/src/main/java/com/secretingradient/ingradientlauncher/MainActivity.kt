@@ -31,10 +31,10 @@ class MainActivity : AppCompatActivity() {
         }
 
 //        dk.userStageDataset.deleteFile()
-        for (i in 0 until 24) {
-            val v = i / 2 * 2 + i/14*14
-            dk.userStageDataset.put(v, dk.createAppInfo(i), true)
-        }
+//        for (i in 0 until 24) {
+//            val v = i / 2 * 2 + i/14*14
+//            dk.userStageDataset.put(v, dk.createAppInfo(i), true)
+//        }
     }
 
     override fun onBackPressed() {

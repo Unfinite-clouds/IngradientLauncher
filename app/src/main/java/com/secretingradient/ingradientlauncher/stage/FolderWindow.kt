@@ -1,4 +1,4 @@
-package com.secretingradient.ingradientlauncher.element
+package com.secretingradient.ingradientlauncher.stage
 
 import android.content.Context
 import android.graphics.Color
@@ -12,8 +12,9 @@ import com.secretingradient.ingradientlauncher.data.Data
 import com.secretingradient.ingradientlauncher.data.Dataset
 import com.secretingradient.ingradientlauncher.data.FolderInfo
 import com.secretingradient.ingradientlauncher.data.Info
+import com.secretingradient.ingradientlauncher.element.AppView
+import com.secretingradient.ingradientlauncher.element.FolderView
 import com.secretingradient.ingradientlauncher.moveStack
-import com.secretingradient.ingradientlauncher.stage.AppHolder
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
@@ -88,17 +89,18 @@ class FolderWindow : RecyclerView {
         }
     }
 
+    fun startDrag(downEvent: MotionEvent) {
+        println("startDrag in folder: ${downEvent.y}")
+        val v = findChildViewUnder(downEvent.x, downEvent.y)
+        if (v != null) {
+            itemDragger.startDrag(getChildViewHolder(v))
+            onInterceptTouchEvent(downEvent)
+        }
+    }
+
     override fun onTouchEvent(ev: MotionEvent): Boolean {
-        if (inEditMode) {
-            when (ev.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    val v = findChildViewUnder(ev.x, ev.y)
-                    if (v != null) {
-                        itemDragger.startDrag(getChildViewHolder(v))
-                        onInterceptTouchEvent(ev)
-                    }
-                }
-            }
+        if (inEditMode && ev.action == MotionEvent.ACTION_DOWN) {
+            startDrag(ev)
         }
         if (ev.action == MotionEvent.ACTION_UP || ev.action == MotionEvent.ACTION_CANCEL) {
             val x = ev.x.toInt()

@@ -21,7 +21,7 @@ class GestureHelper(context: Context) {
 
     var gesture: Gesture? = null
 
-    var doOnLongClick: () -> Unit = {}
+    var doOnLongClick: (downEvent: MotionEvent?) -> Unit = {}
 
     private var slopOvercame = false
 
@@ -84,12 +84,12 @@ class GestureHelper(context: Context) {
             return true
         }
 
-        override fun onLongPress(e: MotionEvent?) {
+        override fun onLongPress(downEvent: MotionEvent?) {
             // this prevents case when gesture == TAP_UP after long press
             if (!slopOvercame) {
                 gesture = null
                 wasLongPress = true
-                doOnLongClick()
+                doOnLongClick(downEvent)
             }
         }
     }
