@@ -29,7 +29,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
     override var pageCount = getPrefs(context).getInt(Preferences.USER_STAGE_PAGE_COUNT, -1)
 
     override val pagerAdapter = PagerSnapAdapter()
-    override val dataset: Dataset<Data, Info> = dataKeeper.userStageDataset
+    val dataset: Dataset<Data, Info> = dataKeeper.userStageDataset
     val currentSnapLayout: SnapLayout
         get() = stageRV.getChildAt(0) as SnapLayout
     var shouldIntercept
@@ -42,10 +42,11 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
     lateinit var folderWindow: FolderWindow
     var isFolderOpen = false
-//    private val folderTranslation = Point()
+    var isTransferring = false
 
     override fun initInflate(stageRootLayout: StageRootLayout) {
         super.initInflate(stageRootLayout)
+        pageSize = columnCount*rowCount*4
         touchHandler = TouchHandler()
         stageRootLayout.setOnTouchListener(touchHandler)
         stageRootLayout.preDispatchListener = object : OnPreDispatchListener {
@@ -70,7 +71,31 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
     }
 
     fun setFolderAnchorView(v: View) {
+        // todo
 //        getLocationOfViewGlobal(v, folderTranslation)
+    }
+
+    override fun bindPage(holder: SnapLayoutHolder, page: Int) {
+        dataset.forEach {
+            if (isPosInPage(it.key, page)) {
+                holder.snapLayout.addView(it.value.createView(context) // avoid creating here
+                    .apply { setSnapLayoutParams(it.key % pageSize, 2, 2)}) // bad way
+            }
+        }
+    }
+
+    override fun receiveTransferredElement(element: AppView) {
+        launcherRootLayout.dispatchToCurrentStage = true
+        isTransferring = true
+        touchHandler.selectedView = element.info!!.createView(context)
+        // todo sensor[0].disable()
+    }
+
+    override fun onStageAttachedToWindow() {
+        if (isTransferring && touchHandler.selectedView != null) {
+            touchHandler.startEditMode()
+            touchHandler.startDrag(touchHandler.selectedView!!, Point(200,200)) // todo touchPoint?
+        }
     }
 
     private inner class TouchHandler : View.OnTouchListener {
@@ -109,7 +134,6 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         init {
             gestureHelper.doOnLongClick = { downEvent ->
                 startEditMode()
-                wasMoveAfterStartEditMode = false
                 if (isFolderOpen && downEvent != null) {
                     needToStartDragInFolder = true
                 }
@@ -217,8 +241,6 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
         fun findHoveredViewAt(touchPoint: Point, lastHoveredView: View?): View? {
             // hovered view can't be neither selectedView nor ghostView
-//            if (!isAllChildrenLaidOut(currentSnapLayout))
-//                return null
             val v = findInnerViewUnder(touchPoint, lastHoveredView)
             return if (v != selectedView && v != ghostView) v else currentSnapLayout
         }
@@ -253,6 +275,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             inEditMode = true
             shouldIntercept = true
             folderWindow.inEditMode = true
+            wasMoveAfterStartEditMode = false
             disallowVScroll()
             disallowHScroll()
             showSensors(255/2)
@@ -305,7 +328,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             val toPage = (stageRV.getChildViewHolder(toSnapLayout) as SnapLayoutHolder).page
             val to = toPagedPosition(toLayoutPosition, toPage)
 
-            if (parent is SnapLayout) {
+            if (parent is SnapLayout && (parent.parent as ViewGroup) == stageRV) {
                 // todo b01-p (patched) {call of wrong function. It should be directed to addToFolder()}
                 if (dataset[to] != null)
                     return
@@ -344,7 +367,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
         fun removeView(v: View) {
             val parent = v.parent as? ViewGroup ?: return
-            if (parent is SnapLayout) {
+            if (parent is SnapLayout && (parent.parent as ViewGroup) == stageRV) {
                 val pos = getPagedPositionOfView(v)
                 dataset.remove(pos)
             }
@@ -417,10 +440,12 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         }
 
         fun transferEvent(appView: AppView) {
-            launcherRootLayout.transferEvent(0, appView)
-            (selectedView!!.parent as? ViewGroup)?.removeView(selectedView)
-            endDrag()
-            endEditMode()
+            if (selectedView != null) {
+                launcherRootLayout.transferEvent(0, appView)
+                removeView(selectedView!!)
+                endDrag()
+                endEditMode()
+            }
         }
 
         fun flipPageIfNeeded(touchPoint: Point) {
@@ -450,7 +475,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
         fun getPagedPositionOfView(v: View): Int {
             val layoutPosition = (v.layoutParams as SnapLayout.SnapLayoutParams).position
-            return layoutPosition + getElementPage(v) * pagerAdapter.pageSize
+            return layoutPosition + getElementPage(v) * pageSize
         }
 
         fun getPositionOnSnapUnder(snapLayout: SnapLayout, touchPoint: Point): Int {
@@ -459,11 +484,11 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         }
 
         fun toPagedPosition(layoutPosition: Int, page: Int = currentPage): Int {
-            return layoutPosition + page * pagerAdapter.pageSize
+            return layoutPosition + page * pageSize
         }
 
         fun dispatchWithTransform(v: View, event: MotionEvent) {
-            val transformedEvent = getTransformedEvent(event, folderWindow)
+            val transformedEvent = getTransformedEvent(event, v)
             v.onTouchEvent(transformedEvent)
             transformedEvent.recycle()
         }

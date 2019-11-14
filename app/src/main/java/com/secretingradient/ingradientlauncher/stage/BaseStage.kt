@@ -35,11 +35,6 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
         stageRootLayout.parent.requestDisallowInterceptTouchEvent(disallow)
     }
 
-
-    fun goToStage(number: Int) {
-        launcherRootLayout.launcherViewPager.currentItem = number
-    }
-
     private val hitRect = Rect()
     private val reusablePoint = Point()
 
@@ -51,6 +46,42 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
                 l.add(it)
         }
         return l
+    }
+
+    fun findChildUnder(p: Point, lastHoveredView: View? = null): View? {
+        if (lastHoveredView != null) {
+            lastHoveredView.getHitRect(hitRect)
+            if (hitRect.contains(p.x, p.y))
+                return lastHoveredView
+        }
+
+        stageRootLayout.forEach {
+            it.getHitRect(hitRect)
+            if (hitRect.contains(p.x, p.y))
+                return it
+        }
+        return null
+    }
+
+    fun findViewUnderInList(list: List<View>, p: Point, lastHoveredView: View? = null): View? {
+        if (lastHoveredView != null && lastHoveredView in list && lastHoveredView.parent is ViewGroup) {
+            getLocationOfViewGlobal(lastHoveredView.parent as ViewGroup, reusablePoint)
+            lastHoveredView.getHitRect(hitRect)
+            if (hitRect.contains(p.x - reusablePoint.x, p.y - reusablePoint.y))
+                return lastHoveredView
+        }
+
+        list.forEach {
+            val parent = it.parent
+            if (parent is ViewGroup) {
+                getLocationOfViewGlobal(it.parent as ViewGroup, reusablePoint)
+                it.getHitRect(hitRect)
+                if (hitRect.contains(p.x - reusablePoint.x, p.y - reusablePoint.y))
+                    return it
+            }
+        }
+
+        return null
     }
 
     fun findInnerViewUnder(p: Point, lastHoveredView: View? = null): View? {

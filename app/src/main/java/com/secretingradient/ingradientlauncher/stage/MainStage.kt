@@ -62,7 +62,6 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
     }
 
     override fun receiveTransferredElement(element: AppView) {
-        goToStage(0)
         isTransferring = true
         element.width = recyclerView.widthCell
         element.height = recyclerView.heightCell

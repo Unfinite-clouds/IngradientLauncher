@@ -3,10 +3,9 @@ package com.secretingradient.ingradientlauncher.stage
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
+import com.secretingradient.ingradientlauncher.LauncherException
 import com.secretingradient.ingradientlauncher.LauncherRootLayout
 import com.secretingradient.ingradientlauncher.SnapLayout
-import com.secretingradient.ingradientlauncher.data.Dataset
-import com.secretingradient.ingradientlauncher.setSnapLayoutParams
 
 abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRootLayout) {
     lateinit var stageVP: ViewPager2
@@ -18,7 +17,8 @@ abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : Base
     abstract var columnCount: Int
     abstract var rowCount: Int
     abstract var pageCount: Int
-    abstract val dataset: Dataset<*, *>
+    var pageSize = -1
+        get() = if (field != -1) field else throw LauncherException("pageSize was not init")
 
     override fun initInflate(stageRootLayout: StageRootLayout) {
         super.initInflate(stageRootLayout)
@@ -26,9 +26,14 @@ abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : Base
         stageVP.adapter = pagerAdapter
     }
 
+    abstract fun bindPage(holder: SnapLayoutHolder, page: Int)
+
+    fun isPosInPage(pos: Int, page: Int): Boolean {
+        return pos >= page*pageSize && pos < (page+1)*pageSize
+    }
+
     // lazy page creating is bad
     inner class PagerSnapAdapter : RecyclerView.Adapter<SnapLayoutHolder>() {
-        val pageSize = columnCount*rowCount*4
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SnapLayoutHolder {
             return SnapLayoutHolder(SnapLayout(context, columnCount*2, rowCount*2 ).apply {
@@ -54,19 +59,17 @@ abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : Base
             holder.page = page
             holder.snapLayout.removeAllViews()
 
-            dataset.forEach {
+            bindPage(holder, page)
+
+            /*dataset.forEach {
                 if (isPosInPage(it.key, page)) {
                     holder.snapLayout.addView(it.value.createView(context) // avoid creating here
                         .apply { setSnapLayoutParams(it.key % pageSize, 2, 2)}) // bad way
                 }
-            }
+            }*/
         }
 
         override fun getItemCount(): Int = pageCount
-
-        private fun isPosInPage(pos: Int, page: Int): Boolean {
-            return pos >= page*pageSize && pos < (page+1)*pageSize
-        }
     }
 
     class SnapLayoutHolder(val snapLayout: SnapLayout, var page: Int) : RecyclerView.ViewHolder(snapLayout)

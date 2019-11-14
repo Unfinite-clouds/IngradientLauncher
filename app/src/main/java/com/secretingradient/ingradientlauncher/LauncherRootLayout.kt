@@ -8,9 +8,9 @@ import androidx.core.view.get
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.secretingradient.ingradientlauncher.data.DataKeeper
+import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.stage.BaseStage
 import com.secretingradient.ingradientlauncher.stage.StageAdapter
-import com.secretingradient.ingradientlauncher.element.AppView
 
 class LauncherRootLayout : FrameLayout {
     lateinit var launcherViewPager: ViewPager2
@@ -33,6 +33,9 @@ class LauncherRootLayout : FrameLayout {
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        if (ev.action == MotionEvent.ACTION_DOWN)
+            dispatchToCurrentStage = false
+
         // dispatch to proper itemView - it will current viewHolder.itemView
         if (dispatchToCurrentStage) {
             // attention! when we do that way - we ignore launcherVP scroll listener (for scroll up/down)
@@ -47,7 +50,12 @@ class LauncherRootLayout : FrameLayout {
         return launcherRecyclerView.findViewHolderForLayoutPosition(launcherViewPager.currentItem) as? StageAdapter.StageHolder
     }
 
+    fun goToStage(number: Int) {
+        launcherViewPager.currentItem = number
+    }
+
     fun transferEvent(stage: Int, appView: AppView) {
+        goToStage(stage)
         stages[stage].receiveTransferredElement(appView)
     }
 }

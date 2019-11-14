@@ -36,14 +36,14 @@ class StageAdapter(val launcherRootLayout: LauncherRootLayout) : RecyclerView.Ad
         val stage: BaseStage
         when (position) {
             0 -> {
-                stage = MainStage(launcherRootLayout)
+                stage = AllAppsStage(launcherRootLayout)
             }
             1 -> {
                 stage = UserStage(launcherRootLayout)
             }
             2 -> {
                 // stage = AllAppsStage(launcherRootLayout)
-                stage = UserStage(launcherRootLayout)
+                stage = AllAppsStage(launcherRootLayout)
             }
             3 -> {
                 // stage = WidgetStage(launcherRootLayout)

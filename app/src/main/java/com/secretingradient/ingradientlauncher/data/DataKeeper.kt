@@ -17,7 +17,7 @@ class DataKeeper(val context: Context) {
     private val allAppsCacheData: FileDataset<String, AppCache>
     val mainStageDataset: DatasetList<AppData, AppInfo>
     val userStageDataset: Dataset<Data, Info>
-    val allAppsDataset: Dataset<AppData, AppInfo>
+    val allAppsDataset: List<AppInfo>
 
     val allAppsIds: MutableList<String>
 
@@ -29,7 +29,9 @@ class DataKeeper(val context: Context) {
 
         mainStageDataset = DatasetList(this, "main_stage_data")
         userStageDataset = Dataset(this, "user_stage_data")
-        allAppsDataset = Dataset(this, "all_apps_data")
+        allAppsDataset = List(allAppsCacheData.rawDataset.size) {
+            createAppInfo(allAppsIds[it])
+        }
     }
 
     private fun getLaunchableApps(): List<ResolveInfo> {
