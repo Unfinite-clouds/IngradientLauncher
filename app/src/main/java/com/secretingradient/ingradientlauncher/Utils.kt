@@ -80,14 +80,14 @@ fun vibrate(context: Context, time: Long = 70L) {
 }
 
 fun printlnClass(message: String, vararg any: Any?) {
-    print(message)
+    print("$message ")
     any.forEachIndexed { index, obj ->
         if (index != 0)
             print(", ")
-        if (obj is Number || obj is String)
+        if (obj is Number || obj is String || obj is Boolean)
             print(obj)
         else
-            println(obj?.javaClass?.simpleName)
+            print(obj?.javaClass?.simpleName)
     }
     println()
 }

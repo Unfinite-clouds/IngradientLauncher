@@ -60,7 +60,7 @@ class GestureHelper(context: Context) {
             return true
         }
 
-        override fun onScroll(e1: MotionEvent, e2: MotionEvent, dx: Float, dy: Float): Boolean {
+        override fun onScroll(e1: MotionEvent?, e2: MotionEvent, dx: Float, dy: Float): Boolean {
             if (scrollDirection == null) {
                 slopOvercame = true
                 scrollDirection = if (dx > dy) Gesture.SCROLL_X_MOVE else Gesture.SCROLL_Y_MOVE

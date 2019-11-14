@@ -15,6 +15,7 @@ import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.element.FolderView
 import com.secretingradient.ingradientlauncher.element.WidgetView
 import com.secretingradient.ingradientlauncher.sensor.BaseSensor
+import com.secretingradient.ingradientlauncher.sensor.UpSensor
 import kotlinx.android.synthetic.main.stage_1_user.view.*
 
 class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(launcherRootLayout) {
@@ -42,7 +43,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
     lateinit var folderWindow: FolderWindow
     var isFolderOpen = false
-    var isTransferring = false
+    lateinit var upSensor: UpSensor
 
     override fun initInflate(stageRootLayout: StageRootLayout) {
         super.initInflate(stageRootLayout)
@@ -61,6 +62,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             sensors.add(remove_sensor.apply { sensorListener = touchHandler.removeSensorListener})
             sensors.add(uninstall_sensor)
         }
+        upSensor = sensors[0] as UpSensor
         touchHandler.hideSensors()
 
         folderWindow = stageRootLayout.findViewById(R.id.folder_window)
@@ -68,11 +70,6 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
         stageRootLayout.clipChildren = false
 //        stageVP.offscreenPageLimit = 2
-    }
-
-    fun setFolderAnchorView(v: View) {
-        // todo
-//        getLocationOfViewGlobal(v, folderTranslation)
     }
 
     override fun bindPage(holder: SnapLayoutHolder, page: Int) {
@@ -86,15 +83,13 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
     override fun receiveTransferredElement(element: AppView) {
         launcherRootLayout.dispatchToCurrentStage = true
-        isTransferring = true
-        touchHandler.selectedView = element.info!!.createView(context)
-        // todo sensor[0].disable()
+        touchHandler.receiveTransferringElement(element)
     }
 
     override fun onStageAttachedToWindow() {
-        if (isTransferring && touchHandler.selectedView != null) {
+        if (touchHandler.isTransferring && touchHandler.selectedView != null) {
             touchHandler.startEditMode()
-            touchHandler.startDrag(touchHandler.selectedView!!, Point(200,200)) // todo touchPoint?
+            touchHandler.startDrag(touchHandler.selectedView!!, Point(0,0)) // todo touchPoint?
         }
     }
 
@@ -114,6 +109,8 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         var wasMoveAfterStartEditMode = false  // crutch
         var isTouchInFolder = false
         var needToStartDragInFolder = false
+        var isTransferring = false
+        var tmpView: View? = null
 
         val upSensorListener = object : BaseSensor.SensorListener {
             override fun onSensor(v: View) {
@@ -147,6 +144,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             gestureHelper.onTouchEvent(event)
 
             if (event.action == MotionEvent.ACTION_DOWN) {
+                upSensor.disabled = false
                 needToStartDragInFolder = false
                 touchPoint.set(event.x.toInt(), event.y.toInt())
                 if (isTouchOutsideFolder(touchPoint))
@@ -170,7 +168,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
         override fun onTouch(v: View, event: MotionEvent): Boolean {
             // only called by stageRootLayout in EditMode, intercepting TouchEvent
-            if (v !is StageRootLayout && !inEditMode)
+            if (v !is StageRootLayout || !inEditMode || launcherRootLayout.isAnimating)
                 return false
 
             touchPoint.set(event.x.toInt(), event.y.toInt())
@@ -201,6 +199,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                         if (stageRootLayout.overlayView == null) // (when not in drag)
                             startDrag(selectedView!!, touchPoint)
                         val hoveredView = findHoveredViewAt(touchPoint, lastHoveredView)
+                        println("${touchPoint.y}, ${hoveredView.className()}, ${lastHoveredView.className()}, ${upSensor.disabled}")
                         if (hoveredView is SnapLayout) {
                             layoutPosition = getPositionOnSnapUnder(hoveredView, touchPoint)
                         }
@@ -269,6 +268,8 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             disallowHScroll(false)
             cancelPreviewFolder()
             flipPageDone = false
+            resetTmpView()
+            isTransferring = false
         }
 
         fun startEditMode() {
@@ -288,6 +289,23 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             hideSensors()
         }
 
+        fun transferEvent(appView: AppView) {
+            if (selectedView != null) {
+                println("transferEvent")
+                launcherRootLayout.transferEvent(0, appView)
+                removeView(selectedView!!)
+                endDrag()
+                endEditMode()
+            }
+        }
+
+        fun receiveTransferringElement(appView: AppView) {
+            touchHandler.selectedView = appView.info!!.createView(context)
+            touchHandler.addTmpViewToStage(selectedView!!)
+            upSensor.disabled = true
+            isTransferring = true
+        }
+
         fun onExitHover(view: View?) {
             when (view) {
                 is BaseSensor -> view.onExitSensor()
@@ -297,6 +315,8 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         }
 
         fun onHover(selectedView: View, hoveredView: View?, movePosition: Int) {
+            if (isTransferring && (isElement(hoveredView) || hoveredView is SnapLayout))
+                upSensor.disabled = false.also { println(false) }
             when {
                 selectedView is AppView && hoveredView is AppView -> createPreviewFolder(hoveredView)
                 isElement(selectedView) && hoveredView is BaseSensor -> hoveredView.onSensor(selectedView)
@@ -385,6 +405,11 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             }
         }
 
+        fun setFolderAnchorView(v: View) {
+            // todo
+//        getLocationOfViewGlobal(v, folderTranslation)
+        }
+
         fun openFolder(folder: FolderView) {
             isFolderOpen = true
             folderWindow.setContent(folder, getPagedPositionOfView(folder))
@@ -436,15 +461,6 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         fun hideSensors() {
             sensors.forEach {
                 it.visibility = View.INVISIBLE
-            }
-        }
-
-        fun transferEvent(appView: AppView) {
-            if (selectedView != null) {
-                launcherRootLayout.transferEvent(0, appView)
-                removeView(selectedView!!)
-                endDrag()
-                endEditMode()
             }
         }
 
@@ -504,7 +520,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         fun receiveFromFolder(folderWindow: FolderWindow, event: MotionEvent) {
             if (folderWindow.selectedApp != null) {
                 selectedView = trySelect(folderWindow.selectedApp!!.info!!.createView(context))
-                stageRootLayout.addView(selectedView, defaultAppSize, defaultAppSize)
+                addTmpViewToStage(selectedView!!)
                 folderWindow.removeSelectedApp()
                 closeFolder()
             }
@@ -518,6 +534,18 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                     return false
             }
             return true
+        }
+
+        fun addTmpViewToStage(v: View) {
+            stageRootLayout.addView(v, defaultAppSize, defaultAppSize)
+            tmpView = v
+        }
+
+        fun resetTmpView() {
+            if (tmpView != null) {
+                stageRootLayout.removeView(tmpView)
+                tmpView = null
+            }
         }
 
         fun startDragInFolder(event: MotionEvent) {

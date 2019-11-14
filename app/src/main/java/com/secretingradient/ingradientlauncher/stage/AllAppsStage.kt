@@ -72,7 +72,6 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
         val reusablePoint = Point()
         val gestureHelper = GestureHelper(context)
         var disallowHScroll = false
-        var layoutPosition = -1
         var lastLayoutPosition = -1
 
         val upSensorListener = object : BaseSensor.SensorListener {
@@ -101,7 +100,7 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
                 lastHoveredView = selectedView
             }
 
-            if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) {
+            if (!shouldIntercept && (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL)) {
                 endDrag()
             }
         }
@@ -125,7 +124,6 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
                             onHover(selectedView!!, hoveredView)
                         }
                         lastHoveredView = hoveredView
-                        lastLayoutPosition = layoutPosition
                     }
                 }
 
@@ -138,6 +136,7 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
                         }
                         lastHoveredView = hoveredView
                     }
+                    endDrag()
                 }
             }
 
@@ -145,7 +144,6 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
         }
 
         fun findHoveredViewAt(touchPoint: Point): View? {
-            // hovered view can't be neither selectedView nor ghostView
             return findViewUnderInList(sensors, touchPoint, lastHoveredView)
         }
 

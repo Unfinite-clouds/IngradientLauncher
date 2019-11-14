@@ -21,6 +21,7 @@ class LauncherRootLayout : FrameLayout {
         private set
     val stages = mutableListOf<BaseStage>()
     var dispatchToCurrentStage = false
+    var isAnimating = false
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
@@ -30,6 +31,11 @@ class LauncherRootLayout : FrameLayout {
         launcherViewPager.adapter = StageAdapter(this)
         launcherRecyclerView = launcherViewPager[0] as RecyclerView
         this.dataKeeper = dataKeeper
+        launcherViewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageScrollStateChanged(state: Int) {
+                isAnimating = state != 0
+            }
+        })
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {

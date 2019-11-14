@@ -10,20 +10,27 @@ abstract class BaseSensor : ImageView {
 
     var lastAlpha = -1
     var sensorListener: SensorListener? = null
+    var disabled = false
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
 
     open fun onSensor(v: View) {
-        highlight()
-        sensorListener?.onSensor(v)
+        if (!disabled) {
+            highlight()
+            sensorListener?.onSensor(v)
+        }
     }
     open fun onExitSensor() {
-        unhighlight()
-        sensorListener?.onExitSensor()
+        if (!disabled) {
+            unhighlight()
+            sensorListener?.onExitSensor()
+        }
     }
     open fun onPerformAction(v: View) {
-        sensorListener?.onPerformAction(v)
+        if (!disabled) {
+            sensorListener?.onPerformAction(v)
+        }
     }
 
     fun highlight() {

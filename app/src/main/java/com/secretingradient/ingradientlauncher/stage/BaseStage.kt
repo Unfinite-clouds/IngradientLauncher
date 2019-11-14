@@ -38,45 +38,47 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
     private val hitRect = Rect()
     private val reusablePoint = Point()
 
+    private fun hitTest(p: Point, view: View, computeParentLocationGlobal: Boolean = true): Boolean {
+        if (view == stageRootLayout || view.parent == stageRootLayout)
+            reusablePoint.set(0,0)
+        else if (computeParentLocationGlobal)
+            getLocationOfViewGlobal(view.parent as ViewGroup, reusablePoint)
+        view.getHitRect(hitRect)
+        return hitRect.contains(p.x - reusablePoint.x, p.y - reusablePoint.y)
+    }
+
     fun findChildrenUnder(p: Point): MutableList<View> {
         val l = mutableListOf<View>()
         stageRootLayout.forEach {
-            it.getHitRect(hitRect)
-            if (hitRect.contains(p.x, p.y))
+            if (hitTest(p, it, false))
                 l.add(it)
         }
         return l
     }
 
     fun findChildUnder(p: Point, lastHoveredView: View? = null): View? {
-        if (lastHoveredView != null) {
-            lastHoveredView.getHitRect(hitRect)
-            if (hitRect.contains(p.x, p.y))
+        if (lastHoveredView?.parent == stageRootLayout) {
+            if (hitTest(p, lastHoveredView, false))
                 return lastHoveredView
         }
 
         stageRootLayout.forEach {
-            it.getHitRect(hitRect)
-            if (hitRect.contains(p.x, p.y))
+            if (hitTest(p, it, false))
                 return it
         }
         return null
     }
 
     fun findViewUnderInList(list: List<View>, p: Point, lastHoveredView: View? = null): View? {
-        if (lastHoveredView != null && lastHoveredView in list && lastHoveredView.parent is ViewGroup) {
-            getLocationOfViewGlobal(lastHoveredView.parent as ViewGroup, reusablePoint)
-            lastHoveredView.getHitRect(hitRect)
-            if (hitRect.contains(p.x - reusablePoint.x, p.y - reusablePoint.y))
+        if (lastHoveredView?.parent is ViewGroup && lastHoveredView in list) {
+            if (hitTest(p, lastHoveredView))
                 return lastHoveredView
         }
 
         list.forEach {
             val parent = it.parent
             if (parent is ViewGroup) {
-                getLocationOfViewGlobal(it.parent as ViewGroup, reusablePoint)
-                it.getHitRect(hitRect)
-                if (hitRect.contains(p.x - reusablePoint.x, p.y - reusablePoint.y))
+                if (hitTest(p, it))
                     return it
             }
         }
@@ -106,9 +108,7 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
 
         var foundView: View
 
-        getLocationOfViewGlobal(view, reusablePoint)
-        view.getHitRect(hitRect)
-        if (hitRect.contains(p.x - reusablePoint.x, p.y - reusablePoint.y)) {
+        if (hitTest(p, view)) {
             foundView = view
         } else
             return null
@@ -120,8 +120,7 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
             foundChild = null
             getLocationOfViewGlobal(foundView, reusablePoint)
             for (child in (foundView as ViewGroup).children) {
-                child.getHitRect(hitRect)
-                if (hitRect.contains(p.x - reusablePoint.x, p.y - reusablePoint.y)) {
+                if (hitTest(p, child, false)) {
                     foundView = child
                     foundChild = child
                     break
