@@ -13,6 +13,7 @@ object Preferences {
     const val USER_STAGE_PAGE_COUNT = "6"
     const val ALLAPPS_STAGE_COLUMN_COUNT = "2"
     const val ALLAPPS_STAGE_ROW_COUNT = "3"
+    const val ALLAPPS_SORT_METHOD = "9"
 
     // here default values is declared
     fun loadDefaultPreferences(context: Context) {
@@ -26,6 +27,7 @@ object Preferences {
             putInt(USER_STAGE_PAGE_COUNT, 3)
             putInt(MAIN_STAGE_WIDTH_CELL, 120)
             putInt(MAIN_STAGE_HEIGHT_CELL, 120)
+            putString(ALLAPPS_SORT_METHOD, context.resources.getString(R.string.sort_method_alphabet))
         }
     }
 }

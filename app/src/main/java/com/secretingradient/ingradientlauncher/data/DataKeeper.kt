@@ -17,7 +17,7 @@ class DataKeeper(val context: Context) {
     private val allAppsCacheData: FileDataset<String, AppCache>
     val mainStageDataset: DatasetList<AppData, AppInfo>
     val userStageDataset: Dataset<Data, Info>
-    val allAppsDataset: List<AppInfo>
+    val allAppsList: List<AppInfo>
 
     val allAppsIds: MutableList<String>
 
@@ -29,9 +29,9 @@ class DataKeeper(val context: Context) {
 
         mainStageDataset = DatasetList(this, "main_stage_data")
         userStageDataset = Dataset(this, "user_stage_data")
-        allAppsDataset = List(allAppsCacheData.rawDataset.size) {
+        allAppsList = List(allAppsCacheData.rawDataset.size) {
             createAppInfo(allAppsIds[it])
-        }
+        }.sortedBy { it.label }
     }
 
     private fun getLaunchableApps(): List<ResolveInfo> {
@@ -61,7 +61,7 @@ class DataKeeper(val context: Context) {
             println("newApps: ${newApps.size}, oldApps: ${oldApps.size}, now: ${allAppsCacheData.rawDataset.size} apps")
             allAppsCacheData.dumpData()
             if (oldApps.isNotEmpty()) {
-                mainStageDataset.dumpData()
+//                mainStageDataset.dumpData()
             }
         }
     }

@@ -1,8 +1,14 @@
 package com.secretingradient.ingradientlauncher.stage
 
 import android.graphics.Point
+import android.view.MenuInflater
 import android.view.MotionEvent
 import android.view.View
+import android.widget.ImageView
+import androidx.appcompat.view.menu.MenuBuilder
+import androidx.appcompat.view.menu.MenuPopupHelper
+import androidx.core.content.edit
+import androidx.core.view.iterator
 import com.secretingradient.ingradientlauncher.*
 import com.secretingradient.ingradientlauncher.data.AppInfo
 import com.secretingradient.ingradientlauncher.element.AppView
@@ -19,7 +25,8 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
     override var pageCount = ceil(dataKeeper.allAppsIds.size.toFloat() / (rowCount * columnCount)).toInt()
 
     override val pagerAdapter = PagerSnapAdapter()
-    val dataset: List<AppInfo> = dataKeeper.allAppsDataset
+    val allAppsList: List<AppInfo> = dataKeeper.allAppsList
+    var allAppsOrdered = allAppsList
     val currentSnapLayout: SnapLayout
         get() = stageRV.getChildAt(0) as SnapLayout
     var shouldIntercept
@@ -32,17 +39,23 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
     val currentPage: Int
         get() = stageVP.currentItem
 
-    lateinit var search: View
-    lateinit var sort: View
+    lateinit var search: SearchDataView<AppInfo>
+    lateinit var sort: ImageView
+
+    private val builder = MenuBuilder(context)
+    private val inflater = MenuInflater(context)
+    lateinit var sortPopupMenu: MenuPopupHelper
+    var sortMethod = getPrefs(context).getString(Preferences.ALLAPPS_SORT_METHOD, "error")!!
+    var sortReversed = false
+    val SORT_ALPHA = context.resources.getString(R.string.sort_method_alphabet)
+    val SORT_RECENT = context.resources.getString(R.string.sort_method_recent)
 
     override fun initInflate(stageRootLayout: StageRootLayout) {
         super.initInflate(stageRootLayout)
         pageSize = columnCount*rowCount
         stageRootLayout.setOnTouchListener(touchHandler)
         stageRootLayout.preDispatchListener = object : OnPreDispatchListener {
-            override fun onPreDispatch(event: MotionEvent) {
-                touchHandler.preDispatch(event)
-            }
+            override fun onPreDispatch(event: MotionEvent) = touchHandler.preDispatch(event)
         }
         stageRootLayout.apply {
             sensors.add(up_sensor.apply { sensorListener = touchHandler.upSensorListener})
@@ -50,18 +63,59 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
             sensors.add(uninstall_sensor)
         }
         touchHandler.hideSensors()
-        search = stageRootLayout.findViewById<View>(R.id.search)
-        sort = stageRootLayout.findViewById<View>(R.id.sort_view)
+
+        // init search
+        val onSearchListener = object : SearchDataView.OnTextChangedListener {
+            override fun onTextChanged(newText: String?) {
+                allAppsOrdered = search.filteredData
+                stageVP.adapter?.notifyDataSetChanged()
+            }
+        }
+        search = stageRootLayout.findViewById(R.id.search)
+        search.init(allAppsList, {it.label}, onSearchListener)
+
+        // init sort
+        sort = stageRootLayout.findViewById(R.id.sort_view)
+        sortPopupMenu = MenuPopupHelper(context, builder, sort).apply {
+            setForceShowIcon(true)
+        }
+        sort.setOnClickListener { sortPopupMenu.show() }
+        inflater.inflate(R.menu.sort_method_menu, builder)
+        for (item in builder.iterator()) {
+            item.setOnMenuItemClickListener { onSortMethodChanged(it.title.toString()); true }
+        }
     }
 
     override fun bindPage(holder: SnapLayoutHolder, page: Int) {
-        dataset.forEachIndexed {i, appInfo ->
+        allAppsOrdered.forEachIndexed { i, appInfo ->
             if (isPosInPage(i, page)) {
                 val i2 = i % pageSize
                 val pos = (i2 % columnCount)*2 + i2/columnCount*columnCount*4
                 holder.snapLayout.addView(appInfo.createView(context) // avoid creating here
                     .apply { setSnapLayoutParams(pos, 2, 2)}) // bad way
             }
+        }
+    }
+
+    private fun onSortMethodChanged(newSortMethod: String) {
+        sortReversed = if (sortMethod == newSortMethod) !sortReversed else false
+
+        sortMethod = newSortMethod
+
+        when (sortMethod) {
+            SORT_ALPHA -> allAppsOrdered = allAppsOrdered.sortedBy { it.label }
+            SORT_RECENT -> println("sort method SORT_RECENT is not implemented yet") // todo SORT_RECENT
+            else -> throw LauncherException("Unknown sort method $sortMethod")
+        }
+
+        if (sortReversed)
+            allAppsOrdered = allAppsOrdered.reversed()
+
+        stageVP.adapter?.notifyDataSetChanged()
+
+        // save sort method
+        getPrefs(context).edit {
+            putString(Preferences.ALLAPPS_SORT_METHOD, sortMethod)
         }
     }
 
@@ -73,6 +127,7 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
         val gestureHelper = GestureHelper(context)
         var disallowHScroll = false
         var lastLayoutPosition = -1
+        var dragStarted = false
 
         val upSensorListener = object : BaseSensor.SensorListener {
             override fun onSensor(v: View) {
@@ -100,7 +155,7 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
                 lastHoveredView = selectedView
             }
 
-            if (!shouldIntercept && (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL)) {
+            if (!shouldIntercept && dragStarted && (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL)) {
                 endDrag()
             }
         }
@@ -153,6 +208,7 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
 
         fun startDrag(selectedView: View, touchPoint: Point) {
             println("-- startDrag --")
+            dragStarted = true
             stageRootLayout.overlayView = selectedView
             stageRootLayout.setOverlayTranslation(touchPoint.x.toFloat(), touchPoint.y.toFloat())
             disallowHScroll()
@@ -166,6 +222,7 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
 
         fun endDrag() {
             println("endDrag")
+            dragStarted = false
             stageRootLayout.overlayView = null
             selectedView = null
             disallowHScroll(false)
