@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.secretingradient.ingradientlauncher.MyRoot xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/research_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ResearchActivity">
-
+    tools:context=".ResearchActivity"
+    android:orientation="horizontal">
+<!--
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/research_rv"
         android:layout_width="match_parent"
@@ -23,7 +23,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/research_rv" />
+        app:layout_constraintTop_toBottomOf="@id/research_rv" />-->
 
-</com.secretingradient.ingradientlauncher.MyRoot>
+</FrameLayout>
 
