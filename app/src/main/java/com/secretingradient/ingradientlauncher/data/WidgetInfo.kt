@@ -9,6 +9,6 @@ class WidgetInfo(val packageName: String, val snapW: Int, val snapH: Int /*dont 
     }
 
     override fun createView(context: Context): WidgetView {
-        return WidgetView(context, snapW, snapH)
+        return WidgetView(context)
     }
 }

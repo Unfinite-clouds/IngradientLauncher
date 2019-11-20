@@ -43,6 +43,11 @@ class StageRootLayout : ConstraintLayout {
         stage.onStageAttachedToWindow()
     }
 
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        stage.onStageSizeChanged(w, h, oldw, oldh)
+    }
+
     override fun dispatchDraw(canvas: Canvas?) {
         super.dispatchDraw(canvas)
         stage.onDispatchDraw(canvas)

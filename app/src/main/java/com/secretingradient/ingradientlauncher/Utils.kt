@@ -10,7 +10,9 @@ import android.graphics.Color
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.DisplayMetrics
 import android.view.View
+import android.view.WindowManager
 import androidx.preference.PreferenceManager
 import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.element.FolderView
@@ -32,8 +34,8 @@ fun toPx(dp: Float): Float {
     return dp * Resources.getSystem().displayMetrics.density
 }
 
-fun toPx (dp: Int): Float {
-    return dp * Resources.getSystem().displayMetrics.density
+fun toPx (dp: Int): Int {
+    return (dp * Resources.getSystem().displayMetrics.density).toInt()
 }
 
 class LauncherException : Throwable {
@@ -146,4 +148,11 @@ fun <K, V> MutableMap<K, V>.swap(from: K, to: K) {
     val tmp = this[to]
     this[to] = this[from]!!
     this[from] = tmp!!
+}
+
+fun getDensity(context: Context): Int {
+    val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    val metrics = DisplayMetrics()
+    wm.defaultDisplay.getMetrics(metrics)
+    return metrics.densityDpi
 }

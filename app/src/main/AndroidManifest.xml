@@ -13,7 +13,7 @@
         android:launchMode="singleTask"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/Launcher">
         <receiver android:name=".WidgetTest">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -25,8 +25,7 @@
         </receiver>
 
         <activity
-            android:name=".ResearchActivity"
-            android:theme="@style/Theme.AppCompat">
+            android:name=".ResearchActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -35,7 +34,7 @@
         </activity>
         <activity
             android:name=".MainActivity"
-            android:label="@string/title_activity_main">
+            android:label="@string/label_activity_main">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

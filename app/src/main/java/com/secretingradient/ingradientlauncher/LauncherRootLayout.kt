@@ -19,6 +19,9 @@ class LauncherRootLayout : FrameLayout {
         private set
     lateinit var dataKeeper: DataKeeper
         private set
+    lateinit var wallpaper: WallpaperFlow
+        private set
+
     val stages = mutableListOf<BaseStage>()
     var dispatchToCurrentStage = false
     var isAnimating = false
@@ -36,6 +39,11 @@ class LauncherRootLayout : FrameLayout {
                 isAnimating = state != 0
             }
         })
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        wallpaper = WallpaperFlow(context, windowToken)
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {

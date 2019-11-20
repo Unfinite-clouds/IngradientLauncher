@@ -27,6 +27,8 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
 
     open fun onStageAttachedToWindow() {}
 
+    open fun onStageSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {}
+
     open fun onDispatchDraw(canvas: Canvas?) {}
 
     open fun receiveTransferredElement(element: AppView) {} // todo make for any Element, not only for AppView

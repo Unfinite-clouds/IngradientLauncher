@@ -45,8 +45,7 @@ class StageAdapter(val launcherRootLayout: LauncherRootLayout) : RecyclerView.Ad
                 stage = AllAppsStage(launcherRootLayout)
             }
             3 -> {
-                // stage = WidgetStage(launcherRootLayout)
-                stage = AllAppsStage(launcherRootLayout)
+                stage = AllWidgetsStage(launcherRootLayout)
             }
             else -> throw LauncherException("position must be in range 0..${itemCount - 1}")
         }
