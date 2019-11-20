@@ -19,8 +19,8 @@ import com.secretingradient.ingradientlauncher.sensor.UpSensor
 import kotlinx.android.synthetic.main.stage_1_user.view.*
 
 class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(launcherRootLayout) {
-    private val FLIP_WIDTH = toPx(25).toInt()
-    private val defaultAppSize = toPx(70).toInt()
+    private val FLIP_WIDTH = toPx(25)
+    private val defaultAppSize = toPx(70)
 
     override val stageLayoutId = R.layout.stage_1_user
     override val viewPagerId = R.id.user_stage_pager

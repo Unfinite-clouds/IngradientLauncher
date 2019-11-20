@@ -68,7 +68,7 @@ class AllWidgetsStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launch
                 icon?.setBounds(0, 0, ICON_SIZE, ICON_SIZE)
 
                 val preview = dataKeeper.widgetPreviewDrawables[id]
-                val size = "${ceil(widget.minWidth/80f)} x ${ceil(widget.minHeight/80f)}"  // todo 80
+                val size = "${ceil(widget.minWidth/80f).toInt()} x ${ceil(widget.minHeight/80f).toInt()}"  // todo 80f
                 dataset.add(WidgetPreviewInfo(preview, icon, it.label, size))
             }
         }
