@@ -3,7 +3,6 @@ package com.secretingradient.ingradientlauncher.stage
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
-import com.secretingradient.ingradientlauncher.LauncherException
 import com.secretingradient.ingradientlauncher.LauncherRootLayout
 import com.secretingradient.ingradientlauncher.SnapLayout
 
@@ -17,8 +16,8 @@ abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : Base
     abstract var columnCount: Int
     abstract var rowCount: Int
     abstract var pageCount: Int
-    var pageSize = -1
-        get() = if (field != -1) field else throw LauncherException("pageSize was not init")
+    val pageSize
+        get() = rowCount*columnCount*4
 
     override fun initInflate(stageRootLayout: StageRootLayout) {
         super.initInflate(stageRootLayout)

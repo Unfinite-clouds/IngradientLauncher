@@ -4,7 +4,6 @@ import android.graphics.Point
 import android.graphics.PointF
 import android.view.MotionEvent
 import android.view.View
-import androidx.recyclerview.widget.RecyclerView
 import com.secretingradient.ingradientlauncher.LauncherRootLayout
 import com.secretingradient.ingradientlauncher.R
 import com.secretingradient.ingradientlauncher.element.AppView
@@ -46,11 +45,7 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
         super.initInflate(stageRootLayout)
         recyclerView = stageRootLayout.findViewById(R.id.stage_0_recycler)
         recyclerView.init(dataset)
-        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-//                TODO scroll wallpaper (dx, dy)
-            }
-        })
+        recyclerView.addOnScrollListener(scroller)
         stageRootLayout.setOnTouchListener(this)
     }
 
@@ -61,11 +56,17 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
         }
     }
 
-    override fun receiveTransferredElement(element: AppView) {
+    override fun onStageSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        scroller.maxScroll = recyclerView.computeHorizontalScrollRange() - recyclerView.width
+    }
+
+    override fun receiveTransferEvent(obj: Any?) {
+        if (obj !is AppView)
+            return
         isTransferring = true
-        element.width = recyclerView.widthCell
-        element.height = recyclerView.heightCell
-        stageRootLayout.overlayView = element
+        obj.width = recyclerView.widthCell
+        obj.height = recyclerView.heightCell
+        stageRootLayout.overlayView = obj
         launcherRootLayout.dispatchToCurrentStage = true
     }
 

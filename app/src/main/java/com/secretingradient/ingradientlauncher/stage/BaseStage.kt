@@ -9,16 +9,15 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.children
 import androidx.core.view.forEach
-import com.secretingradient.ingradientlauncher.LauncherException
-import com.secretingradient.ingradientlauncher.LauncherRootLayout
-import com.secretingradient.ingradientlauncher.element.AppView
-import com.secretingradient.ingradientlauncher.isElement
+import com.secretingradient.ingradientlauncher.*
 
 abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
     val context: Context = launcherRootLayout.context
     val dataKeeper = launcherRootLayout.dataKeeper
     protected abstract val stageLayoutId: Int
     lateinit var stageRootLayout: StageRootLayout
+    val launcher = context as MainActivity
+    val scroller = WallpaperFlow.RecyclerScroller(launcherRootLayout)
 
     open fun initInflate(stageRootLayout: StageRootLayout) {
         this.stageRootLayout = LayoutInflater.from(context).inflate(stageLayoutId, stageRootLayout, true) as StageRootLayout
@@ -31,10 +30,18 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
 
     open fun onDispatchDraw(canvas: Canvas?) {}
 
-    open fun receiveTransferredElement(element: AppView) {} // todo make for any Element, not only for AppView
+    open fun receiveTransferEvent(obj: Any?) {} // todo make for any Element, not only for AppView
 
     open fun disallowVScroll(disallow: Boolean = true) {
         stageRootLayout.parent.requestDisallowInterceptTouchEvent(disallow)
+    }
+
+    fun moveToDragLayer(v: View) {
+        launcher.dragLayer.addToDrag(v)
+    }
+
+    fun removeFromDragLayer(v: View?) {
+        launcher.dragLayer.removeDrag(v)
     }
 
     private val hitRect = Rect()

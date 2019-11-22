@@ -5,7 +5,6 @@ import android.content.Context
 import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.MotionEvent
-import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.core.view.children
@@ -24,22 +23,39 @@ class WidgetResizeFrame(context: Context, attrs: AttributeSet) : FrameLayout(con
     var b = 0f
     var minWidth = 100
     var minHeight = 100
-    var hostView: AppWidgetHostView? = null
-        set(value) {
-            field = value
-            if (value != null)
-                layoutParams = ViewGroup.LayoutParams(value.layoutParams.width, value.layoutParams.height)
-        }
+    private var snapLayout: SnapLayout? = null
+    private val snapX
+        get() = snapLayout!!.snapStepX
+    private val snapY
+        get() = snapLayout!!.snapStepY
+    private var resizableWidget: AppWidgetHostView? = null
+    val snapLoc = IntArray(2)
+
+    fun attachToWidget(widget: AppWidgetHostView) {
+        snapLayout = widget.parent as? SnapLayout ?: throw LauncherException("widget must be added to snapLayout")
+        val lp = (widget.layoutParams as SnapLayout.SnapLayoutParams)
+        val widgetLoc = snapLayout!!.snapPositionToPoint(lp.position)
+        resizableWidget = widget
+        layoutParams = FrameLayout.LayoutParams(widget.layoutParams.width, widget.layoutParams.height)
+        snapLayout!!.getLocationOnScreen(snapLoc)
+        translationX = widgetLoc.x + snapLoc[0].toFloat()
+        translationY = widgetLoc.y + snapLoc[1].toFloat()
+//        requestLayout()
+    }
+
+    fun stopResize() {
+        snapLayout = null
+        resizableWidget = null
+    }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        val widget = hostView ?: return false
+        val widget = resizableWidget ?: return false
 
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 side = 0
-                r = x + right.toFloat()
-                b = y + bottom.toFloat()
-                println(bottom)
+                r = translationX + right.toFloat()
+                b = translationY + bottom.toFloat()
                 for (it in children) {
                     if (it is ImageView) {
                         it.getHitRect(reusableRect)
@@ -53,15 +69,15 @@ class WidgetResizeFrame(context: Context, attrs: AttributeSet) : FrameLayout(con
             MotionEvent.ACTION_MOVE -> {
                 when (side) {
                     INDEX_LEFT -> {
-                        if ((r - x - event.x).toInt() >= minWidth) {
-                            x += event.x
-                            layoutParams.width = (r - x).toInt()
+                        if ((r - translationX - event.x).toInt() >= minWidth) {
+                            translationX += event.x
+                            layoutParams.width = (r - translationX).toInt()
                         }
                     }
                     INDEX_TOP -> {
-                        if ((b - y - event.y).toInt() >= minHeight) {
-                            y += event.y
-                            layoutParams.height = (b - y).toInt()
+                        if ((b - translationY - event.y).toInt() >= minHeight) {
+                            translationY += event.y
+                            layoutParams.height = (b - translationY).toInt()
                         }
                     }
                     INDEX_RIGHT -> layoutParams.width = max(minWidth, event.x.toInt())
@@ -71,10 +87,12 @@ class WidgetResizeFrame(context: Context, attrs: AttributeSet) : FrameLayout(con
                 requestLayout()
             }
             MotionEvent.ACTION_UP -> {
-                layoutParams.width = widget.layoutParams.width
-                layoutParams.height = widget.layoutParams.height
-                x = widget.x
-                y = widget.y
+                val lp = widget.layoutParams as SnapLayout.SnapLayoutParams
+                val cellLoc = snapLayout!!.snapPositionToPoint(lp.position)
+                layoutParams.width = lp.snapWidth * snapX
+                layoutParams.height = lp.snapHeight * snapY
+                translationX = cellLoc.x + snapLoc[0].toFloat()
+                translationY = cellLoc.y + snapLoc[1].toFloat()
                 requestLayout()
             }
 
@@ -83,21 +101,44 @@ class WidgetResizeFrame(context: Context, attrs: AttributeSet) : FrameLayout(con
     }
 
     fun resizeWidgetIfNeeded(widget: AppWidgetHostView) {
-        val snapX = 100
-        val snapY = 100
-        val portWidth = layoutParams.width
-        val portHeight = layoutParams.height
-
-        if (abs(portWidth - widget.layoutParams.width) > snapX) {
-            widget.x = x
-            widget.layoutParams.width = portWidth
-            widget.updateAppWidgetSize(null, portWidth, portHeight, portWidth, portHeight)
+        val lp = widget.layoutParams as SnapLayout.SnapLayoutParams
+        val cellLoc = snapLayout!!.snapPositionToPoint(lp.position)
+        val deltaL = (translationX - snapLoc[0] - cellLoc.x).toInt()
+        val deltaR = layoutParams.width - lp.snapWidth * snapX
+        val deltaT = (translationY - snapLoc[1] - cellLoc.y).toInt()
+        val deltaB = layoutParams.height - lp.snapHeight * snapY
+        var changed = true
+        when {
+            abs(deltaL) > snapX -> {
+                lp.position += deltaL / snapX
+                lp.snapWidth -= deltaL / snapX
+            }
+            abs(deltaR) > snapX -> {
+                lp.snapWidth += deltaR / snapX
+            }
+            abs(deltaT) > snapY -> {
+                println("$deltaT, $snapY")
+                lp.position += deltaT / snapY * snapLayout!!.snapCountX
+                lp.snapHeight -= deltaT / snapY
+            }
+            abs(deltaB) > snapY -> {
+                lp.snapHeight += deltaB / snapY
+            }
+            else -> changed = false
         }
 
+        if (changed) {
+            // currently only for portrait screen
+            lp.computeSnapBounds(snapLayout!!)
+            widget.updateAppWidgetSize(null, lp.snapWidth * snapX, lp.snapHeight * snapY, lp.snapWidth * snapX, lp.snapHeight * snapY)
+            widget.requestLayout()
+        }
+/*
         if (abs(portHeight - widget.layoutParams.height) > snapY) {
-            widget.y = y
+            widget.top = translationY.toInt() - snapLoc[1]
             widget.layoutParams.height = portHeight
             widget.updateAppWidgetSize(null, portWidth, portHeight, portWidth, portHeight)
-        }
+            widget.requestLayout()
+        }*/
     }
 }

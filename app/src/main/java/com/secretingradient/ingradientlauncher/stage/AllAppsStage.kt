@@ -52,11 +52,11 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
 
     override fun initInflate(stageRootLayout: StageRootLayout) {
         super.initInflate(stageRootLayout)
-        pageSize = columnCount*rowCount
         stageRootLayout.setOnTouchListener(touchHandler)
         stageRootLayout.preDispatchListener = object : OnPreDispatchListener {
             override fun onPreDispatch(event: MotionEvent) = touchHandler.preDispatch(event)
         }
+        stageRV.addOnScrollListener(scroller)
         stageRootLayout.apply {
             sensors.add(up_sensor.apply { sensorListener = touchHandler.upSensorListener})
             sensors.add(info_sensor)
@@ -95,6 +95,11 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
                     .apply { setSnapLayoutParams(pos, 2, 2)}) // bad way
             }
         }
+    }
+
+    override fun onStageSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        scroller.maxScroll = stageRV.computeHorizontalScrollRange() + stageVP.width
+        println(stageVP.width)
     }
 
     private fun onSortMethodChanged(newSortMethod: String) {

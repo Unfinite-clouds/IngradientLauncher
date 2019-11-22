@@ -35,7 +35,7 @@ class SnapLayout : FrameLayout {
     override fun onViewAdded(child: View) {
         SnapLayoutParams.verifyLayoutParams(child.layoutParams)
         val lp = child.layoutParams as SnapLayoutParams
-        lp.computeSnapBounds(snapCountX)
+        lp.computeSnapBounds(this)
     }
 
     fun addNewView(child: View, layoutParams: SnapLayoutParams) {
@@ -84,7 +84,6 @@ class SnapLayout : FrameLayout {
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-//        println("...onLayout")
         children.forEach { child: View ->
             val lp = child.layoutParams as SnapLayoutParams
             val l = lp.snapBounds.left * snapStepX
@@ -93,29 +92,25 @@ class SnapLayout : FrameLayout {
         }
     }
 
-    fun canPlaceView(v: View): Boolean {
+    fun canPlaceView(v: View, ignore: View?): Boolean {
         SnapLayoutParams.verifyLayoutParams(v.layoutParams)
-        return canPlaceHere(v.layoutParams as SnapLayoutParams)
+        return canPlaceHere(v.layoutParams as SnapLayoutParams, ignore)
     }
 
     fun canPlaceHere(p: Point, snapWidth: Int, snapHeight: Int): Boolean {
         val pos = snapToGrid(p, 2)
-        return canPlaceHere(SnapLayoutParams(pos, snapWidth, snapHeight, snapCountX))
+        return canPlaceHere(SnapLayoutParams(pos, snapWidth, snapHeight, this))
     }
 
     fun canPlaceHere(pos: Int, snapWidth: Int, snapHeight: Int): Boolean {
-        return canPlaceHere(SnapLayoutParams(pos, snapWidth, snapHeight, snapCountX))
+        return canPlaceHere(SnapLayoutParams(pos, snapWidth, snapHeight, this))
     }
 
-    fun canPlaceHere(layoutInfo: SnapLayoutInfo): Boolean {
-        return canPlaceHere(SnapLayoutParams(layoutInfo, snapCountX))
-    }
-
-    fun canMoveViewToPos(v: View, pos: Int, excepted: View? = null): Boolean {
+    fun canMoveViewToPos(v: View, pos: Int, ignore: View? = null): Boolean {
         if (pos < 0) throw LauncherException("position= $pos must be positive")
         val lp = v.layoutParams as SnapLayoutParams
-        val new_lp = SnapLayoutParams(pos, lp.snapWidth, lp.snapHeight, snapCountX)
-        return canPlaceHere(new_lp, excepted)
+        val new_lp = SnapLayoutParams(pos, lp.snapWidth, lp.snapHeight, this)
+        return canPlaceHere(new_lp, ignore)
     }
 
     private var last_lp_child: SnapLayoutParams? = null
@@ -139,6 +134,12 @@ class SnapLayout : FrameLayout {
         return Point(p.x / snapStepX * snapStepX, p.y / snapStepY * snapStepY)
     }
 
+    fun snapPositionToPoint(position: Int): Point {
+        val x = position % snapCountX * snapStepX
+        val y = position / snapCountX * snapStepY
+        return Point(x, y)
+    }
+
     fun snapToGrid(p: Point, step: Int = 2): Int {
         // int division! Expression's order does matter
         var pos = p.x / snapStepX / step * step  +  p.y / snapStepY / step * step * snapCountX
@@ -153,13 +154,13 @@ class SnapLayout : FrameLayout {
         val pos = snapToGrid(p)
         val saved_pos = lp.position  // save
         lp.position = pos
-        lp.computeSnapBounds(snapCountX)
+        lp.computeSnapBounds(this)
         if (canPlaceHere(lp)) {
             addView(v)
             return true
         }
         lp.position = saved_pos  // restore
-        lp.computeSnapBounds(snapCountX) // bad code
+        lp.computeSnapBounds(this) // bad code
         return false
     }
 
@@ -168,7 +169,7 @@ class SnapLayout : FrameLayout {
         val lp = v.layoutParams as SnapLayoutParams
         if (lp.position != pos) {
             lp.position = pos
-            lp.computeSnapBounds(snapCountX)
+            lp.computeSnapBounds(this)
             requestLayout()
         }
     }
@@ -187,24 +188,26 @@ class SnapLayout : FrameLayout {
 
 
     class SnapLayoutParams(var position: Int, var snapWidth: Int, var snapHeight: Int) : LayoutParams(0, 0) {
-        lateinit var snapBounds: Rect // need recompute if any property or snapCountX was change
+        lateinit var snapBounds: Rect // need recompute if any property or snapCountX was changed
 
         constructor(info: SnapLayoutInfo) : this(info.position, info.snapWidth, info.snapHeight)
         constructor(layoutParams: SnapLayoutParams) : this(layoutParams.position, layoutParams.snapWidth, layoutParams.snapHeight)
-        constructor(pos: Int, snapWidth: Int, snapHeight: Int, snapCountX: Int) : this(pos, snapWidth, snapHeight) {
-            computeSnapBounds(snapCountX)
+        constructor(pos: Int, snapWidth: Int, snapHeight: Int, snapLayout: SnapLayout) : this(pos, snapWidth, snapHeight) {
+            computeSnapBounds(snapLayout)
         }
-        constructor(info: SnapLayoutInfo, snapCountX: Int) : this(info.position, info.snapWidth, info.snapHeight) {
-            computeSnapBounds(snapCountX)
+        constructor(info: SnapLayoutInfo, snapLayout: SnapLayout) : this(info.position, info.snapWidth, info.snapHeight) {
+            computeSnapBounds(snapLayout)
         }
 
-        fun computeSnapBounds(snapCountX: Int) {
+        fun computeSnapBounds(snapLayout: SnapLayout) {
             snapBounds = Rect().apply {
-                left = getPosX(snapCountX)
-                top =  getPosY(snapCountX)
+                left = getPosX(snapLayout.snapCountX)
+                top =  getPosY(snapLayout.snapCountX)
                 right = left + snapWidth
                 bottom = top + snapHeight
             }
+            width = snapWidth * snapLayout.snapStepX
+            height = snapHeight * snapLayout.snapStepY
         }
 
         private fun getPosX(snapCountX: Int): Int {
@@ -243,6 +246,39 @@ class SnapLayout : FrameLayout {
         }
     }
 
+
+    class ElementHolder {
+        var view: View?
+            set(value) {
+                field = value
+                if (value != null && value.layoutParams !is SnapLayoutParams)
+                    throw LauncherException("view.layoutParams must be SnapLayoutParams")
+            }
+        var snapPosition: Int
+            get() = (view!!.layoutParams as SnapLayoutParams).position
+            set(value) {(view!!.layoutParams as SnapLayoutParams).position = value}
+        var snapWidth: Int
+            get() = (view!!.layoutParams as SnapLayoutParams).snapWidth
+            set(value) {(view!!.layoutParams as SnapLayoutParams).snapWidth = value}
+        var snapHeight: Int
+            get() = (view!!.layoutParams as SnapLayoutParams).snapHeight
+            set(value) {(view!!.layoutParams as SnapLayoutParams).snapHeight = value}
+
+        constructor(v: View? = null) {
+            view = v
+        }
+
+        constructor(v: View, position: Int, snapWidth: Int, snapHeight: Int) {
+            if (v.layoutParams !is SnapLayoutParams) {
+                v.layoutParams = SnapLayoutParams(position, snapWidth, snapHeight)
+            }
+            view = v
+        }
+
+        fun setLayoutParams(lp: SnapLayoutParams) {
+            (view!!.layoutParams as SnapLayoutParams).set(lp)
+        }
+    }
 
     data class SnapLayoutInfo(
         var position: Int = -1,

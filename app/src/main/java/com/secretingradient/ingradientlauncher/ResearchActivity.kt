@@ -30,7 +30,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.secretingradient.ingradientlauncher.data.DataKeeper
 import com.secretingradient.ingradientlauncher.element.FolderView
-import com.secretingradient.ingradientlauncher.stage.AllWidgetsStage
 import kotlinx.android.synthetic.main._research_layout.*
 import kotlinx.android.synthetic.main.stage_3_all_widgets.*
 
@@ -71,7 +70,7 @@ class ResearchActivity : AppCompatActivity() {
             println(" ")
         }*/
 
-        stage_3_rv.adapter = AllWidgetsStage.AllWidgetsAdapter(dk)
+//        stage_3_rv.adapter = AllWidgetsStage.AllWidgetsAdapter(dk)
         stage_3_rv.layoutManager = GridLayoutManager(this, 3, LinearLayoutManager.HORIZONTAL, false)
     }
 
@@ -150,7 +149,7 @@ class ResearchActivity : AppCompatActivity() {
         }
         research_root.addView(hostView)
         val frame = LayoutInflater.from(context).inflate(R.layout._frame_test, research_root, false) as WidgetResizeFrame
-        frame.hostView = hostView
+        frame.attachToWidget(hostView)
         research_root.addView(frame)
     }
 

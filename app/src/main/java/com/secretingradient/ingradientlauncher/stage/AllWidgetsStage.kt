@@ -1,7 +1,7 @@
 package com.secretingradient.ingradientlauncher.stage
 
 import android.appwidget.AppWidgetManager
-import android.graphics.drawable.Drawable
+import android.appwidget.AppWidgetProviderInfo
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,10 +10,11 @@ import android.widget.TextView
 import androidx.core.view.setPadding
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.secretingradient.ingradientlauncher.*
+import com.secretingradient.ingradientlauncher.LauncherRootLayout
+import com.secretingradient.ingradientlauncher.R
 import com.secretingradient.ingradientlauncher.data.DataKeeper
 import com.secretingradient.ingradientlauncher.data.WidgetPreviewInfo
-import kotlin.math.ceil
+import com.secretingradient.ingradientlauncher.toPx
 
 val ICON_PADDING = toPx(10)
 val PREVIEW_PADDING_IF_ICON = toPx(25)
@@ -24,7 +25,6 @@ val CARD_MARGIN = toPx(8)
 class AllWidgetsStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRootLayout) {
     override val stageLayoutId = R.layout.stage_3_all_widgets
     lateinit var recyclerView: RecyclerView
-    val scroller = WallpaperFlow.RecyclerScroller(launcherRootLayout)
 
     override fun initInflate(stageRootLayout: StageRootLayout) {
         super.initInflate(stageRootLayout)
@@ -38,7 +38,7 @@ class AllWidgetsStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launch
         scroller.maxScroll = recyclerView.computeHorizontalScrollRange() - recyclerView.width
     }
 
-    class AllWidgetsAdapter(val dataKeeper: DataKeeper) : RecyclerView.Adapter<WidgetPreviewHolder>() {
+    inner class AllWidgetsAdapter(val dataKeeper: DataKeeper) : RecyclerView.Adapter<WidgetPreviewHolder>() {
         val context = dataKeeper.context
         val dataset = mutableListOf<WidgetPreviewInfo>()
         val installedWidgets = AppWidgetManager.getInstance(context).installedProviders
@@ -51,25 +51,7 @@ class AllWidgetsStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launch
         fun prepareDataset() {
             installedWidgets.forEachIndexed {i, it ->
                 val widget = installedWidgets[i]
-                val id = dataKeeper.getWidgetId(widget)
-
-                // Icon
-                var icon: Drawable? = null
-                // 1) try to find icon from appIcons in the same packageName
-                for (entry in dataKeeper.iconDrawables) {
-                    if (entry.key.startsWith(widget.provider.packageName)) {
-                        icon = entry.value
-                        break
-                    }
-                }
-                if (icon == null)
-                    // 2) try to get icon from widget
-                    icon = dataKeeper.loadWidgetIcon(getDensity(context), widget)
-                icon?.setBounds(0, 0, ICON_SIZE, ICON_SIZE)
-
-                val preview = dataKeeper.widgetPreviewDrawables[id]
-                val size = "${ceil(widget.minWidth/80f).toInt()} x ${ceil(widget.minHeight/80f).toInt()}"  // todo 80f
-                dataset.add(WidgetPreviewInfo(preview, icon, it.label, size))
+                dataset.add(WidgetPreviewInfo(widget, dataKeeper))
             }
         }
 
@@ -80,7 +62,7 @@ class AllWidgetsStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launch
                 lp.setMargins(0, 0, CARD_MARGIN, CARD_MARGIN)
                 lp.width = 300  // todo 300?
             }
-            return WidgetPreviewHolder(widgetView)
+            return WidgetPreviewHolder(widgetView, this@AllWidgetsStage)
         }
 
         override fun getItemCount() = dataset.size
@@ -90,10 +72,11 @@ class AllWidgetsStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launch
         }
     }
 
-    class WidgetPreviewHolder(view: ViewGroup) : RecyclerView.ViewHolder(view), View.OnLongClickListener {
+    class WidgetPreviewHolder(view: ViewGroup, val stage: AllWidgetsStage) : RecyclerView.ViewHolder(view), View.OnLongClickListener {
         val titleTextView = view.findViewById<TextView>(R.id.label)
         val previewImageView = view.findViewById<ImageView>(R.id.preview_image)
         val sizeTextView = view.findViewById<TextView>(R.id.size)
+        lateinit var widget: AppWidgetProviderInfo
 
         fun bindWidgetInfo(widgetPreviewInfo: WidgetPreviewInfo) {
             titleTextView.text = widgetPreviewInfo.label
@@ -108,12 +91,19 @@ class AllWidgetsStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launch
                 previewImageView.setPadding(PREVIEW_PADDING)
             sizeTextView.text = widgetPreviewInfo.size
             itemView.setOnLongClickListener(this)
+            this.widget = widgetPreviewInfo.widget
         }
 
         override fun onLongClick(v: View?): Boolean {
-            println("onLongClick")
-            return false
+            stage.transferWidget(widget)
+            return true
         }
+
     }
+
+    fun transferWidget(widget: AppWidgetProviderInfo) {
+        launcherRootLayout.transferEvent(1, widget)
+    }
+
 
 }

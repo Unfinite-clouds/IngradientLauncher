@@ -8,7 +8,6 @@ import androidx.core.view.get
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.secretingradient.ingradientlauncher.data.DataKeeper
-import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.stage.BaseStage
 import com.secretingradient.ingradientlauncher.stage.StageAdapter
 
@@ -64,12 +63,12 @@ class LauncherRootLayout : FrameLayout {
         return launcherRecyclerView.findViewHolderForLayoutPosition(launcherViewPager.currentItem) as? StageAdapter.StageHolder
     }
 
-    fun goToStage(number: Int) {
+    private fun scrollToStage(number: Int) {
         launcherViewPager.currentItem = number
     }
 
-    fun transferEvent(stage: Int, appView: AppView) {
-        goToStage(stage)
-        stages[stage].receiveTransferredElement(appView)
+    fun transferEvent(stage: Int, obj: Any? = null) {
+        scrollToStage(stage)
+        stages[stage].receiveTransferEvent(obj)
     }
 }
