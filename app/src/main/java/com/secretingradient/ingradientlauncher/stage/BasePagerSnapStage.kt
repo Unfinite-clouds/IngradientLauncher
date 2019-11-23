@@ -1,6 +1,7 @@
 package com.secretingradient.ingradientlauncher.stage
 
 import android.view.ViewGroup
+import androidx.core.view.doOnLayout
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.secretingradient.ingradientlauncher.LauncherRootLayout
@@ -23,6 +24,10 @@ abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : Base
         super.initInflate(stageRootLayout)
         stageVP = stageRootLayout.findViewById(viewPagerId)
         stageVP.adapter = pagerAdapter
+        stageRV.addOnScrollListener(scroller)
+        stageRootLayout.doOnLayout {
+            scroller.maxScroll = stageRV.computeHorizontalScrollRange() - stageVP.width
+        }
     }
 
     abstract fun bindPage(holder: SnapLayoutHolder, page: Int)

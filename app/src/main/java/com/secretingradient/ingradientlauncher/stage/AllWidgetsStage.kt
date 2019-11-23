@@ -1,12 +1,12 @@
 package com.secretingradient.ingradientlauncher.stage
 
 import android.appwidget.AppWidgetManager
-import android.appwidget.AppWidgetProviderInfo
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.view.doOnLayout
 import androidx.core.view.setPadding
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -32,10 +32,9 @@ class AllWidgetsStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launch
         recyclerView.adapter = AllWidgetsAdapter(dataKeeper)
         recyclerView.layoutManager = GridLayoutManager(context, 3, GridLayoutManager.HORIZONTAL, false)
         recyclerView.addOnScrollListener(scroller)
-    }
-
-    override fun onStageSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        scroller.maxScroll = recyclerView.computeHorizontalScrollRange() - recyclerView.width
+        stageRootLayout.doOnLayout {
+            scroller.maxScroll = recyclerView.computeHorizontalScrollRange() - recyclerView.width
+        }
     }
 
     inner class AllWidgetsAdapter(val dataKeeper: DataKeeper) : RecyclerView.Adapter<WidgetPreviewHolder>() {
@@ -76,7 +75,7 @@ class AllWidgetsStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launch
         val titleTextView = view.findViewById<TextView>(R.id.label)
         val previewImageView = view.findViewById<ImageView>(R.id.preview_image)
         val sizeTextView = view.findViewById<TextView>(R.id.size)
-        lateinit var widget: AppWidgetProviderInfo
+        lateinit var previewInfo: WidgetPreviewInfo
 
         fun bindWidgetInfo(widgetPreviewInfo: WidgetPreviewInfo) {
             titleTextView.text = widgetPreviewInfo.label
@@ -91,18 +90,18 @@ class AllWidgetsStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launch
                 previewImageView.setPadding(PREVIEW_PADDING)
             sizeTextView.text = widgetPreviewInfo.size
             itemView.setOnLongClickListener(this)
-            this.widget = widgetPreviewInfo.widget
+            this.previewInfo = widgetPreviewInfo
         }
 
         override fun onLongClick(v: View?): Boolean {
-            stage.transferWidget(widget)
+            stage.transferWidget(previewInfo)
             return true
         }
 
     }
 
-    fun transferWidget(widget: AppWidgetProviderInfo) {
-        launcherRootLayout.transferEvent(1, widget)
+    fun transferWidget(previewInfo: WidgetPreviewInfo) {
+        launcherRootLayout.transferEvent(1, previewInfo)
     }
 
 

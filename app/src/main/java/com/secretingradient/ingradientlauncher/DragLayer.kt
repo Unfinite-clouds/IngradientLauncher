@@ -20,7 +20,7 @@ class DragLayer : FrameLayout {
         draggedView?.let {
             it.translationX = event.rawX - locationOnScreen[0] - it.left - it.width/2
             it.translationY = event.rawY - locationOnScreen[1] - it.top - it.height/2
-//            println("${it.translationY}")
+//            println("draggevView = ${it.className()}, w = ${it.width}")
         }
         return false
     }
@@ -30,8 +30,8 @@ class DragLayer : FrameLayout {
         (v.parent as? ViewGroup)?.removeView(v)
         addView(v)
         draggedView = v
-        v.translationX = reusablePoint[0].toFloat() - locationOnScreen[0] + v.width/2
-        v.translationY = reusablePoint[1].toFloat() - locationOnScreen[1] + v.height/2
+        v.translationX = reusablePoint[0].toFloat() - locationOnScreen[0]
+        v.translationY = reusablePoint[1].toFloat() - locationOnScreen[1]
     }
 
     fun removeDrag(v: View?) {

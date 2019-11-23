@@ -56,7 +56,6 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
         stageRootLayout.preDispatchListener = object : OnPreDispatchListener {
             override fun onPreDispatch(event: MotionEvent) = touchHandler.preDispatch(event)
         }
-        stageRV.addOnScrollListener(scroller)
         stageRootLayout.apply {
             sensors.add(up_sensor.apply { sensorListener = touchHandler.upSensorListener})
             sensors.add(info_sensor)
@@ -87,19 +86,16 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
     }
 
     override fun bindPage(holder: SnapLayoutHolder, page: Int) {
+        println("$page, ${holder.page}, ${allAppsOrdered.size}")
         allAppsOrdered.forEachIndexed { i, appInfo ->
-            if (isPosInPage(i, page)) {
-                val i2 = i % pageSize
-                val pos = (i2 % columnCount)*2 + i2/columnCount*columnCount*4
+            val i2 = i % pageSize
+            val pos = (i2 % columnCount)*2 + i2/columnCount*columnCount*4
+            if (isPosInPage(pos, page)) {
+                println("$pos, $pageSize")
                 holder.snapLayout.addView(appInfo.createView(context) // avoid creating here
-                    .apply { setSnapLayoutParams(pos, 2, 2)}) // bad way
+                    .apply { setSnapLayoutParams(pos % pageSize, 2, 2)}) // bad way
             }
         }
-    }
-
-    override fun onStageSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        scroller.maxScroll = stageRV.computeHorizontalScrollRange() + stageVP.width
-        println(stageVP.width)
     }
 
     private fun onSortMethodChanged(newSortMethod: String) {

@@ -144,11 +144,11 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
         var v = view as View?
         // get location on stage
         while (v != stageRootLayout && v != null) {
-            pointOut.set(pointOut.x + v.left, pointOut.y + v.top)
+            pointOut.set(pointOut.x + v.x.toInt(), pointOut.y + v.y.toInt())
             v = v.parent as View?
         }
         if (v == null)
-            throw LauncherException("view $view must be a child of stageRootLayout")
+            throw LauncherException("view $view must be a subchild of stageRootLayout")
     }
 
     fun toLocationInView(globalPoint: Point, view: View, pointOut: Point) {

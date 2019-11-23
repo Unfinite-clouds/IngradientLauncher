@@ -4,6 +4,7 @@ import android.graphics.Point
 import android.graphics.PointF
 import android.view.MotionEvent
 import android.view.View
+import androidx.core.view.doOnLayout
 import com.secretingradient.ingradientlauncher.LauncherRootLayout
 import com.secretingradient.ingradientlauncher.R
 import com.secretingradient.ingradientlauncher.element.AppView
@@ -54,10 +55,13 @@ class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRoot
             disallowVScroll()
             isDragIntercepted = false
         }
+        stageRootLayout.doOnLayout {
+            scroller.maxScroll = recyclerView.computeHorizontalScrollRange() - recyclerView.width
+        }
     }
 
     override fun onStageSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        scroller.maxScroll = recyclerView.computeHorizontalScrollRange() - recyclerView.width
+
     }
 
     override fun receiveTransferEvent(obj: Any?) {

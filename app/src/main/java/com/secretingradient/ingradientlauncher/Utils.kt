@@ -99,7 +99,7 @@ fun Any?.className(): String? {
 }
 
 fun isElement(v: View?): Boolean {
-    return v as? AppView ?: v as? FolderView ?: v as? AppWidgetHostView != null
+    return v as? AppView ?: v as? FolderView ?: v as? AppWidgetHostView ?: v as? WidgetPreview != null
 }
 
 fun View.setSnapLayoutParams(position: Int, snapW: Int = 2, snapH: Int = 2) {

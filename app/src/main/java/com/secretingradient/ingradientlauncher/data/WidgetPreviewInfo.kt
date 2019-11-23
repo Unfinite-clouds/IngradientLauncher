@@ -7,14 +7,14 @@ import com.secretingradient.ingradientlauncher.stage.ICON_SIZE
 import kotlin.math.ceil
 
 class WidgetPreviewInfo {
-    var widget: AppWidgetProviderInfo
+    var widgetInfo: AppWidgetProviderInfo
 	var previewImage: Drawable?
 	var icon: Drawable? = null
 	var label: String
     var size: String
 
     constructor(widget: AppWidgetProviderInfo, dataKeeper: DataKeeper) {
-        this.widget = widget
+        this.widgetInfo = widget
         val id = dataKeeper.getWidgetId(widget)
 
         // Icon
