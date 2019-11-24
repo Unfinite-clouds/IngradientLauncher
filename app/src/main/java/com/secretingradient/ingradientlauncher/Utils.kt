@@ -1,6 +1,5 @@
 package com.secretingradient.ingradientlauncher
 
-import android.appwidget.AppWidgetHostView
 import android.content.Context
 import android.content.Context.VIBRATOR_SERVICE
 import android.content.SharedPreferences
@@ -17,6 +16,7 @@ import android.view.WindowManager
 import androidx.preference.PreferenceManager
 import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.element.FolderView
+import com.secretingradient.ingradientlauncher.element.WidgetView
 import java.io.ByteArrayOutputStream
 import java.io.InputStreamReader
 import java.util.*
@@ -99,7 +99,7 @@ fun Any?.className(): String? {
 }
 
 fun isElement(v: View?): Boolean {
-    return v as? AppView ?: v as? FolderView ?: v as? AppWidgetHostView ?: v as? WidgetPreview != null
+    return v as? AppView ?: v as? FolderView ?: v as? WidgetView ?: v as? WidgetPreview != null
 }
 
 fun View.setSnapLayoutParams(position: Int, snapW: Int = 2, snapH: Int = 2) {

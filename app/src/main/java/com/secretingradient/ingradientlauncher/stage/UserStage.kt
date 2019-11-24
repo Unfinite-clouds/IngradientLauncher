@@ -4,18 +4,15 @@ import android.appwidget.AppWidgetHostView
 import android.appwidget.AppWidgetProviderInfo
 import android.graphics.Color
 import android.graphics.Point
-import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import com.secretingradient.ingradientlauncher.*
-import com.secretingradient.ingradientlauncher.data.Data
-import com.secretingradient.ingradientlauncher.data.Dataset
-import com.secretingradient.ingradientlauncher.data.Info
-import com.secretingradient.ingradientlauncher.data.WidgetPreviewInfo
+import com.secretingradient.ingradientlauncher.data.*
 import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.element.FolderView
+import com.secretingradient.ingradientlauncher.element.WidgetView
 import com.secretingradient.ingradientlauncher.sensor.BaseSensor
 import com.secretingradient.ingradientlauncher.sensor.UpSensor
 import kotlinx.android.synthetic.main.stage_1_user.view.*
@@ -48,7 +45,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
     lateinit var folderWindow: FolderWindow
     var isFolderOpen = false
     lateinit var upSensor: UpSensor
-    val resizeFrame = LayoutInflater.from(context).inflate(R.layout._frame_test, launcher.dragLayer, false) as WidgetResizeFrame
+    val resizeFrame = View.inflate(context, R.layout.resize_frame, null) as WidgetResizeFrame
     var transferringWidgetPreview: WidgetPreview? = null
 
     override fun initInflate(stageRootLayout: StageRootLayout) {
@@ -83,38 +80,41 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         dataset.forEach {
             if (isPosInPage(it.key, page)) {
                 holder.snapLayout.addView(it.value.createView(context) // avoid creating here
-                    .apply { setSnapLayoutParams(it.key % pageSize, 2, 2)}) // bad way
+                    .apply { setSnapLayoutParams(it.key % pageSize, it.value.snapWidth, it.value.snapHeight)}) // bad way
             }
         }
     }
 
     override fun receiveTransferEvent(obj: Any?) {
+        println("receive $obj")
         if (obj is AppView) {
             launcherRootLayout.dispatchToCurrentStage = true
             touchHandler.receiveTransferringApp(obj)
         }
         else if (obj is WidgetPreviewInfo) {
             launcherRootLayout.dispatchToCurrentStage = true
-//            (context as MainActivity).requestCreateWidget(obj)
             touchHandler.receiveTransferringWidget(obj)
         }
     }
 
-    fun onAddWidget(widget: AppWidgetHostView, widgetInfo: AppWidgetProviderInfo) {
+    fun onAddWidget(widgetInfo: AppWidgetProviderInfo, widgetId: Int) {
         println("adding widget...")
         widgetInfo.apply {
             println("min = $minWidth, $minHeight, $minResizeWidth, $minResizeHeight")
         }
         if (transferringWidgetPreview == null) throw LauncherException("transferringWidgetPreview must not be null")
         (transferringWidgetPreview!!.parent as? ViewGroup)?.removeView(transferringWidgetPreview)
-        widget.layoutParams = transferringWidgetPreview!!.layoutParams
+        val lp = transferringWidgetPreview!!.layoutParams as SnapLayout.SnapLayoutParams
+        val widget = WidgetView(context, WidgetInfo(widgetInfo, widgetId, lp.snapWidth, lp.snapHeight))
+        widget.layoutParams = lp
         touchHandler.select(widget)
         currentSnapLayout.addView(widget)
+        dataset.put(lp.position, widget.widgetInfo)
         transferringWidgetPreview = null
         startResizeWidget(widget)
     }
 
-    fun startResizeWidget(widget: AppWidgetHostView) {
+    fun startResizeWidget(widget: WidgetView) {
         println("start Resize Widget")
         resizeFrame.visibility = View.VISIBLE
         resizeFrame.attachToWidget(widget)
@@ -137,7 +137,6 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         val touchPoint = Point()
         val reusablePoint = Point()
         val ghostHolder = SnapLayout.ElementHolder(ImageView(context).apply { setBackgroundColor(Color.LTGRAY) }, -1, 0, 0)
-        val gestureHelper = GestureHelper(context)
         var disallowHScroll = false
         var layoutPosition = -1
         var lastLayoutPosition = -1
@@ -240,9 +239,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                             startDragSelected()
                         val hoveredView = findHoveredViewAt(touchPoint, lastHoveredView)
 //                        println("${touchPoint.y}, ${hoveredView.className()}, ${lastHoveredView.className()}, ${upSensor.disabled}")
-                        if (hoveredView is SnapLayout) {
-                            layoutPosition = getPositionOnSnapUnder(hoveredView, touchPoint)
-                        }
+                        setLayoutPositionIfNeeded(hoveredView, touchPoint)
                         if (isNewHoveredView(hoveredView)) {
                             onExitHover(lastHoveredView)
                             onHover(selectedView!!, hoveredView, layoutPosition)
@@ -257,9 +254,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                 MotionEvent.ACTION_UP -> {
                     if (selectedView != null) {
                         val hoveredView = findHoveredViewAt(touchPoint, lastHoveredView)
-                        if (hoveredView is SnapLayout) {
-                            layoutPosition = getPositionOnSnapUnder(hoveredView, touchPoint)
-                        }
+                        setLayoutPositionIfNeeded(hoveredView, touchPoint)
                         if (hoveredView != null) {
                             onPerformAction(selectedView!!, hoveredView, layoutPosition)
                             onExitHover(hoveredView)
@@ -276,6 +271,14 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             }
 
             return true
+        }
+
+        fun setLayoutPositionIfNeeded(hoveredView: View?, touchPoint: Point) {
+            if (hoveredView is SnapLayout) {
+                val p = Point(selectedView!!.x.toInt(), selectedView!!.y.toInt())
+//                getLocationOfViewGlobal(selectedView!!, p)
+                layoutPosition = getPositionOnSnapUnder(hoveredView, p)
+            }
         }
 
         fun findHoveredViewAt(touchPoint: Point, lastHoveredView: View?): View? {
@@ -326,7 +329,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             inEditMode = false
             folderWindow.inEditMode = false
             shouldIntercept = false
-            resizeFrame.stopResize()  // todo not here. need to do it on singleTap
+            resizeFrame.detachFromWidget()  // todo not here. need to do it on singleTap
             resizeFrame.visibility = View.GONE
             hideSensors()
         }
@@ -426,6 +429,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         }
 
         fun moveOrAddView(element: View, toSnapLayout: SnapLayout, toLayoutPosition: Int) {
+            println("moveOrAddView ${selectedView.className()}, from = $fromPosition")
             if (element == ghostHolder.view) throw LauncherException("for ghostView use moveGhostView")
             val parent = element.parent as? ViewGroup
             val toPage = (stageRV.getChildViewHolder(toSnapLayout) as SnapLayoutHolder).page
@@ -437,7 +441,6 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 //                return
 
             // move/add view
-            val from = fromPosition  // was getPagedPositionOfView(element)
             lp.position = toLayoutPosition
             parent?.removeView(element)
             toSnapLayout.addView(element)
@@ -445,7 +448,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             // change data
             if (fromPosition != -1) {
                 println("move")
-                dataset.move(from, to)
+                dataset.move(fromPosition, to)
             } else {
                 println("add")
                 when (element) {
@@ -455,6 +458,9 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         }
 
         fun removeView(v: View) {
+            println("removeView ${selectedView.className()}")
+            if (v is WidgetView)
+                dataKeeper.widgetHost.deleteAppWidgetId(v.widget.appWidgetId.also { println("id=$it") })
             val parent = v.parent as? ViewGroup
             val pos = toPagedPosition(selectedHolder.snapPosition)
             dataset.remove(pos)
@@ -462,10 +468,10 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         }
 
         fun startAddWidget(widgetPreview: WidgetPreview, toLayoutPosition: Int) {
+            println("startAddWidget")
             check(widgetPreview == selectedView)
             selectedHolder.snapPosition = toLayoutPosition
-            println("request bind")
-            (context as MainActivity).requestCreateWidget(widgetPreview.widgetInfo)
+            (context as LauncherActivity).requestCreateWidget(widgetPreview.widgetInfo)
         }
 
         fun cancelDrag() {
@@ -540,6 +546,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         }
 
         fun select(v: View?, setSnapLayoutParams: SnapLayout.SnapLayoutParams? = null): View? {
+            println("try to select ${v.className()}; ${v?.layoutParams}")
             if (v == null || !isElement(v)) {
                 fromPosition = -1
                 selectedHolder.view = null
@@ -549,12 +556,12 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                 v.layoutParams = setSnapLayoutParams
             selectedHolder.view = v
             fromPosition = if (v.parent == currentSnapLayout) selectedHolder.snapPosition + currentPage*pageSize else -1
-            println("selected = ${v.className()}, fromPosition = $fromPosition")
             when (v) {
                 is AppView -> onAppSelected(v)
                 is FolderView -> onFolderSelected(v)
                 is AppWidgetHostView -> onWidgetSelected(v)
             }
+            println("selected = ${v.className()}, fromPosition = $fromPosition")
             return v
         }
 
@@ -613,7 +620,11 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
         fun getPositionOnSnapUnder(snapLayout: SnapLayout, touchPoint: Point): Int {
             toLocationInView(touchPoint, snapLayout, reusablePoint)
-            return snapLayout.snapToGrid(reusablePoint, 2) // todo 2
+            val step = if (selectedView is WidgetView || selectedView is WidgetPreview) 1 else 2
+            val offsetX = step/2f*snapLayout.snapStepX.toFloat()
+            val offsetY = step/2f*snapLayout.snapStepY.toFloat()
+            reusablePoint.set(reusablePoint.x + offsetX.toInt(), reusablePoint.y + offsetY.toInt())
+            return snapLayout.snapToGrid(reusablePoint, step)
         }
 
         fun toPagedPosition(layoutPosition: Int, page: Int = currentPage): Int {

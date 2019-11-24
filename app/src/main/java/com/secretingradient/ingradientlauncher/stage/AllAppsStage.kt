@@ -86,12 +86,12 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
     }
 
     override fun bindPage(holder: SnapLayoutHolder, page: Int) {
-        println("$page, ${holder.page}, ${allAppsOrdered.size}")
+//        println("$page, ${holder.page}, ${allAppsOrdered.size}")
         allAppsOrdered.forEachIndexed { i, appInfo ->
             val i2 = i % pageSize
             val pos = (i2 % columnCount)*2 + i2/columnCount*columnCount*4
             if (isPosInPage(pos, page)) {
-                println("$pos, $pageSize")
+//                println("$pos, $pageSize")
                 holder.snapLayout.addView(appInfo.createView(context) // avoid creating here
                     .apply { setSnapLayoutParams(pos % pageSize, 2, 2)}) // bad way
             }

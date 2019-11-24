@@ -11,8 +11,9 @@ import androidx.core.view.children
 import com.secretingradient.ingradientlauncher.element.WidgetView
 import kotlin.math.abs
 import kotlin.math.max
+import kotlin.math.truncate
 
-class WidgetResizeFrame(context: Context, attrs: AttributeSet) : FrameLayout(context, attrs) {
+class WidgetResizeFrameOld(context: Context, attrs: AttributeSet) : FrameLayout(context, attrs) {
 
     val reusableRect = Rect()
     private val INDEX_LEFT = 0
@@ -20,6 +21,8 @@ class WidgetResizeFrame(context: Context, attrs: AttributeSet) : FrameLayout(con
     private val INDEX_RIGHT = 2
     private val INDEX_BOTTOM = 3
     var side = 0
+    var r = 0f
+    var b = 0f
     var minWidth = 100
     var minHeight = 100
     private var snapLayout: SnapLayout? = null
@@ -28,45 +31,42 @@ class WidgetResizeFrame(context: Context, attrs: AttributeSet) : FrameLayout(con
     private val snapY
         get() = snapLayout!!.snapStepY
     private var resizableWidget: WidgetView? = null
+    val snapLoc = IntArray(2)
 
     init {
         layoutParams = ViewGroup.LayoutParams(LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
     }
 
     fun attachToWidget(widget: WidgetView) {
-        detachFromWidget()
         snapLayout = widget.parent as? SnapLayout ?: throw LauncherException("widget must be added to snapLayout")
+        detachFromWidget()
         resizableWidget = widget
-        widget.clipChildren = false
-        (widget.parent as? ViewGroup)?.clipChildren = false
-//        widget.clipToPadding = false
-//        (widget.parent as? ViewGroup)?.clipToPadding = false
-        widget.addView(this)
+        val lp = (widget.layoutParams as SnapLayout.SnapLayoutParams)
+        val widgetLoc = snapLayout!!.getPointForPosition(lp.position)
+        snapLayout!!.getLocationOnScreen(snapLoc)
+        translationX = widgetLoc.x + snapLoc[0].toFloat()
+        translationY = widgetLoc.y + snapLoc[1].toFloat()
+        requestLayout()
     }
 
     fun detachFromWidget() {
-        resizableWidget?.clipChildren = true
-        (resizableWidget?.parent as? ViewGroup)?.clipChildren = true
-//        resizableWidget?.clipToPadding = true
-//        (resizableWidget?.parent as? ViewGroup)?.clipToPadding = true
-        (parent as? ViewGroup)?.removeView(this)
         snapLayout = null
         resizableWidget = null
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         val widget = resizableWidget ?: return false
-        val dx = event.x.toInt()
-        val dy = event.y.toInt()
 
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 side = 0
+                r = translationX + right.toFloat()
+                b = translationY + bottom.toFloat()
                 for (it in children) {
                     if (it is ImageView) {
                         it.getHitRect(reusableRect)
                         reusableRect.inset(-20, -20)
-                        if (reusableRect.contains(dx, dy))
+                        if (reusableRect.contains(event.x.toInt(), event.y.toInt()))
                             break
                         side++
                     }
@@ -75,29 +75,31 @@ class WidgetResizeFrame(context: Context, attrs: AttributeSet) : FrameLayout(con
             MotionEvent.ACTION_MOVE -> {
                 when (side) {
                     INDEX_LEFT -> {
-                        if ((width - dx) >= minWidth) {
-                            translationX += dx
-                            layoutParams.width = width - dx
+                        if ((r - translationX - event.x).toInt() >= minWidth) {
+                            translationX += truncate(event.x)
+                            layoutParams.width -= event.x.toInt()
                         }
                     }
                     INDEX_TOP -> {
-                        if ((height - dy) >= minHeight) {
-                            translationY += dy
-                            layoutParams.height = height - dy
+                        if ((b - translationY - event.y).toInt() >= minHeight) {
+                            translationY += truncate(event.y)
+                            layoutParams.height -= event.y.toInt()
                         }
                     }
-                    INDEX_RIGHT -> {
-                        layoutParams.width = max(minWidth, dx)
-                    }
-                    INDEX_BOTTOM -> {
-                        layoutParams.height = max(minHeight, dy)
-                    }
+                    INDEX_RIGHT -> layoutParams.width = max(minWidth, event.x.toInt())
+                    INDEX_BOTTOM -> layoutParams.height = max(minHeight, event.y.toInt())
                 }
                 resizeWidgetIfNeeded(widget, side)
                 requestLayout()
             }
             MotionEvent.ACTION_UP -> {
-                fitToWidget()
+                val lp = widget.layoutParams as SnapLayout.SnapLayoutParams
+                val cellLoc = snapLayout!!.getPointForPosition(lp.position)
+                layoutParams.width = lp.snapWidth * snapX
+                layoutParams.height = lp.snapHeight * snapY
+                translationX = cellLoc.x + snapLoc[0].toFloat()
+                translationY = cellLoc.y + snapLoc[1].toFloat()
+                requestLayout()
             }
 
         }
@@ -106,13 +108,11 @@ class WidgetResizeFrame(context: Context, attrs: AttributeSet) : FrameLayout(con
 
     fun resizeWidgetIfNeeded(widget: WidgetView, side: Int) {
         val lp = widget.layoutParams as SnapLayout.SnapLayoutParams
-        val snapX = snapX
-        val snapY = snapY
-        val deltaL = translationX.toInt()
+        val cellLoc = snapLayout!!.getPointForPosition(lp.position)
+        val deltaL = (translationX - snapLoc[0] - cellLoc.x).toInt()
         val deltaR = layoutParams.width - lp.snapWidth * snapX
-        val deltaT = translationY.toInt()
+        val deltaT = (translationY - snapLoc[1] - cellLoc.y).toInt()
         val deltaB = layoutParams.height - lp.snapHeight * snapY
-
         var changed = true
         when {
             side == INDEX_LEFT && abs(deltaL) > snapX -> {
@@ -123,10 +123,12 @@ class WidgetResizeFrame(context: Context, attrs: AttributeSet) : FrameLayout(con
                 lp.snapWidth += deltaR / snapX
             }
             side == INDEX_TOP && abs(deltaT) > snapY -> {
+                println("$deltaT, $snapY")
                 lp.position += deltaT / snapY * snapLayout!!.snapCountX
                 lp.snapHeight -= deltaT / snapY
             }
             side == INDEX_BOTTOM && abs(deltaB) > snapY -> {
+                println("$deltaB, $snapY")
                 lp.snapHeight += deltaB / snapY
             }
             else -> changed = false
@@ -137,15 +139,6 @@ class WidgetResizeFrame(context: Context, attrs: AttributeSet) : FrameLayout(con
             lp.computeSnapBounds(snapLayout!!)
             widget.widget.updateAppWidgetSize(null, lp.snapWidth * snapX, lp.snapHeight * snapY, lp.snapWidth * snapX, lp.snapHeight * snapY)
             widget.requestLayout()
-            fitToWidget()
         }
-    }
-
-    fun fitToWidget() {
-        translationX = 0f
-        translationY = 0f
-        layoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT
-        layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
-        requestLayout()
     }
 }

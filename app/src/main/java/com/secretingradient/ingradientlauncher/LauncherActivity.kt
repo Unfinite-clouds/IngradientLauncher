@@ -12,27 +12,38 @@ import androidx.viewpager2.widget.ViewPager2
 import com.secretingradient.ingradientlauncher.data.DataKeeper
 import com.secretingradient.ingradientlauncher.stage.UserStage
 
-class MainActivity : AppCompatActivity() {
+class LauncherActivity : AppCompatActivity() {
     val REQUSET_BIND_WIDGET = 0
     val REQUSET_CONFIGURE_WIDGET = 1
 
+    lateinit var context: Context
     lateinit var launcherRootLayout: LauncherRootLayout
     lateinit var dragLayer: DragLayer
-    lateinit var widgetHost: WidgetHost
-    lateinit var context: Context
-    lateinit var widgetManager: AppWidgetManager
     lateinit var dataKeeper: DataKeeper
+    lateinit var widgetHost: WidgetHost
+    lateinit var widgetManager: AppWidgetManager
+    lateinit var gestureHelper: GestureHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.launcher_root)
 
-        dataKeeper = DataKeeper(this)
         context = this.applicationContext
         widgetHost = WidgetHost(this)
+        dataKeeper = DataKeeper(this, widgetHost)
         widgetManager = AppWidgetManager.getInstance(context)
+        gestureHelper = GestureHelper(this)
 
         fillData(dataKeeper)
+        val a = widgetManager.installedProviders[1].provider.packageName
+        val prov = widgetManager.installedProviders.find { it.provider.packageName == a }
+        println(prov?.provider?.className)
+        println(widgetHost.appWidgetIds?.contentToString())
+        println(prov?.provider?.className)
+//        widgetHost.appWidgetIds.forEach {
+//            widgetHost.deleteAppWidgetId(it)
+//        }
+
 
         getPrefs(this).edit { putBoolean(Preferences.FIRST_LOAD, true) }
         if (getPrefs(this).getBoolean(Preferences.FIRST_LOAD, true))
@@ -110,17 +121,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun addWidget(widgetId: Int, widgetInfo: AppWidgetProviderInfo){
-        val hostView = widgetHost.createView(context, widgetId, widgetInfo)
-        (launcherRootLayout.stages[1] as UserStage).onAddWidget(hostView, widgetInfo)
+//        val hostView = widgetHost.createView(context, widgetId, widgetInfo)
+        (launcherRootLayout.stages[1] as UserStage).onAddWidget(widgetInfo, widgetId)
     }
 
-    override fun onResume() {
-        super.onResume()
+    override fun onStart() {
+        super.onStart()
         widgetHost.startListening()
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onStop() {
+        super.onStop()
         widgetHost.stopListening()
     }
 

@@ -39,9 +39,7 @@ class AppView : TextView {
         }
 
     private var iconBounds = Rect()
-    private var iconPaddingBottom = toPx(5).toInt()
-    val snapWidth = 2
-    val snapHeight = 2
+    private var iconPaddingBottom = toPx(5)
 
     var desiredIconSize = Int.MAX_VALUE
     var animator: ObjectAnimator
@@ -108,6 +106,8 @@ class AppView : TextView {
     }
 
     companion object : OnClickListener {
+        val snapWidth = 2
+        val snapHeight = 2
         override fun onClick(v: View) {
             if (v is AppView)
                 v.launchApp()

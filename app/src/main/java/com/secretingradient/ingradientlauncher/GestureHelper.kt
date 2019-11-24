@@ -15,7 +15,7 @@ enum class Gesture {
 
 class GestureHelper(context: Context) {
 
-    private val gestureListener = GestureHelperListener()
+    private val gestureListener = DetectorListener()
 
     private val gestureDetector = GestureDetector(context, gestureListener)
 
@@ -53,7 +53,11 @@ class GestureHelper(context: Context) {
         wasLongPress = false
     }
 
-    private inner class GestureHelperListener : GestureDetector.SimpleOnGestureListener() {
+    interface GestureHelperListener {
+        fun onLongClick(downEvent: MotionEvent?)
+    }
+
+    private inner class DetectorListener : GestureDetector.SimpleOnGestureListener() {
         override fun onDown(event: MotionEvent): Boolean {
             reset()
             isDownEventCaught = true

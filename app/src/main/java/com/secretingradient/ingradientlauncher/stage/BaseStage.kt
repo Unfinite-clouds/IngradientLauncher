@@ -13,11 +13,12 @@ import com.secretingradient.ingradientlauncher.*
 
 abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
     val context: Context = launcherRootLayout.context
+    val launcher = context as LauncherActivity
     val dataKeeper = launcherRootLayout.dataKeeper
     protected abstract val stageLayoutId: Int
     lateinit var stageRootLayout: StageRootLayout
-    val launcher = context as MainActivity
     val scroller = WallpaperFlow.RecyclerScroller(launcherRootLayout)
+    val gestureHelper = launcher.gestureHelper
 
     open fun initInflate(stageRootLayout: StageRootLayout) {
         this.stageRootLayout = LayoutInflater.from(context).inflate(stageLayoutId, stageRootLayout, true) as StageRootLayout
@@ -30,7 +31,7 @@ abstract class BaseStage(val launcherRootLayout: LauncherRootLayout) {
 
     open fun onDispatchDraw(canvas: Canvas?) {}
 
-    open fun receiveTransferEvent(obj: Any?) {} // todo make for any Element, not only for AppView
+    open fun receiveTransferEvent(obj: Any?) {}
 
     open fun disallowVScroll(disallow: Boolean = true) {
         stageRootLayout.parent.requestDisallowInterceptTouchEvent(disallow)

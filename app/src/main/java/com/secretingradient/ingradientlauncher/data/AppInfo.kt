@@ -10,7 +10,6 @@ class AppInfo(
     val label: String,
     val icon: Drawable
 ) : Info {
-
     val id: String
         get() = "${packageName}_$name"
 

@@ -18,6 +18,8 @@ class SnapLayout : FrameLayout {
     var snapStepX = -1
     var snapStepY = -1
 
+    val snapBounds = Rect()
+
     private val paddingReminder = Rect()
 
     constructor(context: Context) : super(context)
@@ -25,11 +27,19 @@ class SnapLayout : FrameLayout {
         val a = context.theme.obtainStyledAttributes(attrs, R.styleable.SnapLayout, 0, 0)
         snapCountX = a.getInteger(R.styleable.SnapLayout_snapCountX, 0)
         snapCountY = a.getInteger(R.styleable.SnapLayout_snapCountY, 0)
+        snapBounds.set(0, 0, snapCountX, snapCountY)
         a.recycle()
     }
     constructor(context: Context, snapCountX: Int, snapCountY: Int) : super(context) {
         this.snapCountX = snapCountX
         this.snapCountY = snapCountY
+        snapBounds.set(0, 0, snapCountX, snapCountY)
+    }
+
+    fun setSnapCounts(snapCountX: Int, snapCountY: Int) {
+        this.snapCountX = snapCountX
+        this.snapCountY = snapCountY
+        snapBounds.set(0, 0, snapCountX, snapCountY)
     }
 
     override fun onViewAdded(child: View) {
@@ -115,6 +125,9 @@ class SnapLayout : FrameLayout {
 
     private var last_lp_child: SnapLayoutParams? = null
     fun canPlaceHere(lp: SnapLayoutParams, excepted: View? = null): Boolean {
+        if (!snapBounds.contains(lp.snapBounds))
+            return false
+
         if (last_lp_child != null && Rect.intersects(lp.snapBounds, last_lp_child!!.snapBounds))
             return false
 
@@ -130,11 +143,11 @@ class SnapLayout : FrameLayout {
         return true
     }
 
-    fun getPointSnapped(p: Point): Point {
+    fun snapPoint(p: Point): Point {
         return Point(p.x / snapStepX * snapStepX, p.y / snapStepY * snapStepY)
     }
 
-    fun snapPositionToPoint(position: Int): Point {
+    fun getPointForPosition(position: Int): Point {
         val x = position % snapCountX * snapStepX
         val y = position / snapCountX * snapStepY
         return Point(x, y)

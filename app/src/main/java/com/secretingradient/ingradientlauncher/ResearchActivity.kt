@@ -2,7 +2,6 @@
 
 package com.secretingradient.ingradientlauncher
 
-import android.appwidget.AppWidgetHost
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProviderInfo
 import android.content.Context
@@ -38,7 +37,7 @@ class ResearchActivity : AppCompatActivity() {
     lateinit var dk: DataKeeper
     lateinit var wMan: AppWidgetManager
     lateinit var pm: PackageManager
-    lateinit var wHost: AppWidgetHost
+    lateinit var wHost: WidgetHost
     lateinit var context: Context
     lateinit var wallpaper: WallpaperFlow
 
@@ -50,15 +49,15 @@ class ResearchActivity : AppCompatActivity() {
         wMan = AppWidgetManager.getInstance(context)
         pm = packageManager
 
-        dk = DataKeeper(this)
 
 //        research_btn.setOnClickListener {
 //            val img = ImageView(this).apply { setBackgroundResource(R.drawable.ic_info) }
 //        }
 
-        wHost = AppWidgetHost(applicationContext, WIDGET_HOST_ID)
+        wHost = WidgetHost(applicationContext)
         wHost.startListening()
         val wid = wHost.allocateAppWidgetId()
+        dk = DataKeeper(this, wHost)
 
 /*        val intentGetAllWidgets = Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
         val list = pm.queryBroadcastReceivers(intentGetAllWidgets, 0)
@@ -148,8 +147,8 @@ class ResearchActivity : AppCompatActivity() {
             hostView.layoutParams = FrameLayout.LayoutParams(w, h)
         }
         research_root.addView(hostView)
-        val frame = LayoutInflater.from(context).inflate(R.layout._frame_test, research_root, false) as WidgetResizeFrame
-        frame.attachToWidget(hostView)
+        val frame = LayoutInflater.from(context).inflate(R.layout.resize_frame, research_root, false) as WidgetResizeFrameOld
+//        frame.attachToWidget(hostView)
         research_root.addView(frame)
     }
 

@@ -10,13 +10,10 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
-import com.secretingradient.ingradientlauncher.LauncherException
-import com.secretingradient.ingradientlauncher.decodeBitmap
-import com.secretingradient.ingradientlauncher.encodeBitmap
-import com.secretingradient.ingradientlauncher.getDensity
+import com.secretingradient.ingradientlauncher.*
 import java.io.Serializable
 
-class DataKeeper(val context: Context) {
+class DataKeeper(val context: Context, val widgetHost: WidgetHost) {
 
     // this is pool for Bitmaps and data needed to create AppInfo
     private val allAppsCacheData: FileDataset<String, AppCache>  // deprecated
@@ -32,6 +29,7 @@ class DataKeeper(val context: Context) {
 
     init {
 //        resetAllCache()
+
         allAppsCacheData = FileDataset(context,"all_apps_cache_data")  // deprecated
         iconCache = FileDataset(context, "icon_cache")
         widgetPreviewCache = FileDataset(context, "widget_preview_cache")
@@ -131,7 +129,7 @@ class DataKeeper(val context: Context) {
 
     fun getAppId(resolveInfo: ResolveInfo) = resolveInfo.activityInfo.packageName + "_" + resolveInfo.activityInfo.name
 
-    fun getWidgetId(providerInfo: AppWidgetProviderInfo) = providerInfo.provider.className
+    fun getWidgetId(providerInfo: AppWidgetProviderInfo) = providerInfo.provider.flattenToString()
 
     fun loadWidgetPreview(context: Context, density: Int, providerInfo: AppWidgetProviderInfo): Drawable? {
         val resources: Resources = context.packageManager.getResourcesForApplication(providerInfo.provider.packageName)
@@ -170,7 +168,7 @@ class DataKeeper(val context: Context) {
     }
 
     private fun getAppCache(id: String): AppCache {
-        return allAppsCacheData.rawDataset[id] ?: throw LauncherException("id $id for App not found in allAppsCacheData")
+        return allAppsCacheData.rawDataset[id] ?: throw LauncherException("not found id $id in allAppsCacheData")
     }
 
     fun createAppInfo(id: String): AppInfo {
@@ -182,7 +180,13 @@ class DataKeeper(val context: Context) {
     }
 
     fun getAppIcon(id: String): Drawable {
-        return getAppCache(id).icon ?: throw LauncherException("icon isn't decoded")
+        return getAppCache(id).icon ?: throw LauncherException("icon has not decoded")
+    }
+
+    fun getWidgetProviderInfo(providerId: String): AppWidgetProviderInfo {
+        val widgetInfo = AppWidgetManager.getInstance(context).installedProviders.find { it.provider.flattenToString() == providerId }
+            ?: throw LauncherException("not found widget for providerId $providerId. Was it uninstalled?")
+        return widgetInfo
     }
 
     fun resetAllCache() {

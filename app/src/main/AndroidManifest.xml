@@ -33,7 +33,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name=".LauncherActivity"
             android:label="@string/label_activity_main">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
