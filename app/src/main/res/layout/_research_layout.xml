@@ -1,29 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.secretingradient.ingradientlauncher.MyRoot xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/research_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ResearchActivity"
-    android:orientation="horizontal">
-<!--
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/research_rv"
+    tools:context=".ResearchActivity">
+
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/research_btn"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-    <Button
-        android:id="@+id/research_btn"
+        <com.secretingradient.ingradientlauncher.TestStage
+            android:id="@+id/stage1"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <com.secretingradient.ingradientlauncher.SnapLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@android:color/holo_blue_dark"
+                app:snapCountX="3"
+                android:clickable="false"
+                android:focusable="false"
+                app:snapCountY="3" />
+
+            <com.secretingradient.ingradientlauncher.sensor.RemoveSensor
+                android:layout_width="match_parent"
+                android:layout_height="50dp" />
+        </com.secretingradient.ingradientlauncher.TestStage>
+
+        <com.secretingradient.ingradientlauncher.TestStage
+            android:id="@+id/stage2"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <com.secretingradient.ingradientlauncher.SnapLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@android:color/holo_orange_dark"
+                app:snapCountX="3"
+                app:snapCountY="3" />
+
+            <com.secretingradient.ingradientlauncher.sensor.RemoveSensor
+                android:layout_width="match_parent"
+                android:layout_height="50dp" />
+        </com.secretingradient.ingradientlauncher.TestStage>
+    </LinearLayout>
+
+    <com.secretingradient.ingradientlauncher.drag.DragLayer
+        android:id="@+id/drag_layer"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/research_rv" />-->
+        android:layout_height="match_parent" />
 
-</FrameLayout>
-
+</com.secretingradient.ingradientlauncher.MyRoot>
