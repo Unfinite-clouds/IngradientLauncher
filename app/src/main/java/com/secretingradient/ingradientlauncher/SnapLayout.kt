@@ -25,8 +25,8 @@ class SnapLayout : FrameLayout {
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
         val a = context.theme.obtainStyledAttributes(attrs, R.styleable.SnapLayout, 0, 0)
-        snapCountX = a.getInteger(R.styleable.SnapLayout_snapCountX, 0)
-        snapCountY = a.getInteger(R.styleable.SnapLayout_snapCountY, 0)
+        snapCountX = a.getInteger(R.styleable.SnapLayout_snapCountX, 1)
+        snapCountY = a.getInteger(R.styleable.SnapLayout_snapCountY, 1)
         snapBounds.set(0, 0, snapCountX, snapCountY)
         a.recycle()
     }
@@ -123,19 +123,19 @@ class SnapLayout : FrameLayout {
         return canPlaceHere(new_lp, ignore)
     }
 
-    private var last_lp_child: SnapLayoutParams? = null
-    fun canPlaceHere(lp: SnapLayoutParams, excepted: View? = null): Boolean {
+    private var lastView: View? = null
+    fun canPlaceHere(lp: SnapLayoutParams, ignore: View? = null): Boolean {
         if (!snapBounds.contains(lp.snapBounds))
             return false
 
-        if (last_lp_child != null && Rect.intersects(lp.snapBounds, last_lp_child!!.snapBounds))
+        if (lastView?.parent == this && Rect.intersects(lp.snapBounds, (lastView!!.layoutParams as SnapLayoutParams).snapBounds))
             return false
 
         children.forEach {
-            if (it != excepted) {
+            if (it != ignore) {
                 val lp_child = it.layoutParams as SnapLayoutParams
                 if (Rect.intersects(lp.snapBounds, lp_child.snapBounds)) { // todo - bad using snapBounds
-                    last_lp_child = lp_child
+                    lastView = it
                     return false
                 }
             }
@@ -155,7 +155,7 @@ class SnapLayout : FrameLayout {
 
     fun snapToGrid(p: Point, step: Int = 2): Int {
         // int division! Expression's order does matter
-        var pos = p.x / snapStepX / step * step  +  p.y / snapStepY / step * step * snapCountX
+        var pos = (p.x / (snapStepX*step) + p.y / (snapStepY*step) * snapCountX) * step
         if (p.x >= width - paddingReminder.right)
             pos -= step
         if (p.y >= height - paddingReminder.bottom)

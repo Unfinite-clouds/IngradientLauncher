@@ -16,7 +16,7 @@ import com.secretingradient.ingradientlauncher.sensor.BaseSensor
 import kotlinx.android.synthetic.main.stage_1_user.view.*
 import kotlin.math.ceil
 
-class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(launcherRootLayout) {
+class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(launcherRootLayout), GestureHelper.GestureHelperListener {
     override val stageLayoutId = R.layout.stage_2_all_apps
     override val viewPagerId = R.id.all_apps_pager
 
@@ -98,6 +98,10 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
         }
     }
 
+    override fun onLongClick(downEvent: MotionEvent) {
+        touchHandler.onLongClick(downEvent)
+    }
+
     private fun onSortMethodChanged(newSortMethod: String) {
         sortReversed = if (sortMethod == newSortMethod) !sortReversed else false
 
@@ -125,7 +129,6 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
         var lastHoveredView: View? = null
         val touchPoint = Point()
         val reusablePoint = Point()
-        val gestureHelper = GestureHelper(context)
         var disallowHScroll = false
         var lastLayoutPosition = -1
         var dragStarted = false
@@ -139,17 +142,16 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
             override fun onPerformAction(v: View) {}
         }
 
-        init {
-            gestureHelper.doOnLongClick = { downEvent ->
-                if (selectedView != null)
-                    startDrag(selectedView!!, touchPoint)
-            }
+        fun onLongClick(downEvent: MotionEvent) {
+            if (selectedView != null)
+                startDrag(selectedView!!, touchPoint)
         }
 
         fun preDispatch(event: MotionEvent) {
             gestureHelper.onTouchEvent(event)
 
             if (event.action == MotionEvent.ACTION_DOWN) {
+                gestureHelper.onHelperGesture = this@AllAppsStage
                 touchPoint.set(event.x.toInt(), event.y.toInt())
 
                 selectedView = trySelect(findInnerViewUnder(touchPoint))

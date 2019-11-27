@@ -8,7 +8,6 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 
 class DragLayer : FrameLayout {
-    val gestureHelper = GestureHelper(context)
     var draggedView: View? = null
     val locationOnScreen = IntArray(2)
     val reusablePoint = IntArray(2)

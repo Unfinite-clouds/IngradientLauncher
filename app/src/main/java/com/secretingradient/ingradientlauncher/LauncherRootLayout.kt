@@ -12,6 +12,9 @@ import com.secretingradient.ingradientlauncher.stage.BaseStage
 import com.secretingradient.ingradientlauncher.stage.StageAdapter
 
 class LauncherRootLayout : FrameLayout {
+    lateinit var launcher: LauncherActivity
+        private set
+    lateinit var gestureHelper: GestureHelper
     lateinit var launcherViewPager: ViewPager2
         private set
     lateinit var launcherRecyclerView: RecyclerView
@@ -29,6 +32,8 @@ class LauncherRootLayout : FrameLayout {
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
     fun initViewPager(viewPager: ViewPager2, dataKeeper: DataKeeper) {
+        launcher = context as LauncherActivity
+        gestureHelper = launcher.gestureHelper
         launcherViewPager = viewPager
         launcherViewPager.adapter = StageAdapter(this)
         launcherRecyclerView = launcherViewPager[0] as RecyclerView
@@ -69,6 +74,7 @@ class LauncherRootLayout : FrameLayout {
 
     fun transferEvent(stage: Int, obj: Any? = null) {
         scrollToStage(stage)
+        gestureHelper.onHelperGesture = stages[stage] as? GestureHelper.GestureHelperListener
         stages[stage].receiveTransferEvent(obj)
     }
 }

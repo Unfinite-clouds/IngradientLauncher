@@ -13,6 +13,7 @@ import android.os.Vibrator
 import android.util.DisplayMetrics
 import android.view.View
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.preference.PreferenceManager
 import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.element.FolderView
@@ -155,4 +156,8 @@ fun getDensity(context: Context): Int {
     val metrics = DisplayMetrics()
     wm.defaultDisplay.getMetrics(metrics)
     return metrics.densityDpi
+}
+
+fun toast(context: Context, msg: String) {
+    Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
 }

@@ -19,7 +19,7 @@ import kotlinx.android.synthetic.main.stage_1_user.view.*
 import kotlin.math.ceil
 import kotlin.math.min
 
-class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(launcherRootLayout) {
+class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(launcherRootLayout), GestureHelper.GestureHelperListener {
     private val FLIP_WIDTH = toPx(25)
     private val defaultAppSize = toPx(70)
 
@@ -83,6 +83,10 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                     .apply { setSnapLayoutParams(it.key % pageSize, it.value.snapWidth, it.value.snapHeight)}) // bad way
             }
         }
+    }
+
+    override fun onLongClick(downEvent: MotionEvent) {
+        touchHandler.onLongClick(downEvent)
     }
 
     override fun receiveTransferEvent(obj: Any?) {
@@ -164,15 +168,13 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             }
         }
 
-        init {
-            gestureHelper.doOnLongClick = { downEvent ->
-                startEditMode()
-                if (isFolderOpen && downEvent != null) {
-                    needToStartDragInFolder = true
-                }
-                if (!isFolderOpen && selectedHolder.view != null) {
-                    startDragSelected()
-                }
+        fun onLongClick(downEvent: MotionEvent) {
+            startEditMode()
+            if (isFolderOpen && downEvent != null) {
+                needToStartDragInFolder = true
+            }
+            if (!isFolderOpen && selectedHolder.view != null) {
+                startDragSelected()
             }
         }
 
@@ -180,6 +182,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             gestureHelper.onTouchEvent(event)
 
             if (event.action == MotionEvent.ACTION_DOWN) {
+                gestureHelper.onHelperGesture = this@UserStage
                 upSensor.disabled = false
                 needToStartDragInFolder = false
                 touchPoint.set(event.x.toInt(), event.y.toInt())
@@ -276,7 +279,6 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         fun setLayoutPositionIfNeeded(hoveredView: View?, touchPoint: Point) {
             if (hoveredView is SnapLayout) {
                 val p = Point(selectedView!!.x.toInt(), selectedView!!.y.toInt())
-//                getLocationOfViewGlobal(selectedView!!, p)
                 layoutPosition = getPositionOnSnapUnder(hoveredView, p)
             }
         }
@@ -447,10 +449,10 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
             // change data
             if (fromPosition != -1) {
-                println("move")
+                println("move to $to")
                 dataset.move(fromPosition, to)
             } else {
-                println("add")
+                println("add to $to")
                 when (element) {
                     is AppView -> dataset.put(to, element.info!!)
                 }
@@ -619,11 +621,18 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         }
 
         fun getPositionOnSnapUnder(snapLayout: SnapLayout, touchPoint: Point): Int {
-            toLocationInView(touchPoint, snapLayout, reusablePoint)
+            val parent = selectedView!!.parent
+            if (parent is DragLayer)
+                toLocationInView(touchPoint, snapLayout, reusablePoint)
+            else if (parent == snapLayout)
+                reusablePoint.set(touchPoint.x, touchPoint.y)
+            else
+                throw LauncherException("unexpected parent ${selectedView!!.parent}")
+
             val step = if (selectedView is WidgetView || selectedView is WidgetPreview) 1 else 2
-            val offsetX = step/2f*snapLayout.snapStepX.toFloat()
-            val offsetY = step/2f*snapLayout.snapStepY.toFloat()
-            reusablePoint.set(reusablePoint.x + offsetX.toInt(), reusablePoint.y + offsetY.toInt())
+            val offsetX = (step / 2f * snapLayout.snapStepX).toInt()
+            val offsetY = (step / 2f * snapLayout.snapStepY).toInt()
+            reusablePoint.set(reusablePoint.x + offsetX, reusablePoint.y + offsetY)
             return snapLayout.snapToGrid(reusablePoint, step)
         }
 

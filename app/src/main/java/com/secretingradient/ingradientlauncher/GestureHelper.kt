@@ -21,7 +21,9 @@ class GestureHelper(context: Context) {
 
     var gesture: Gesture? = null
 
-    var doOnLongClick: (downEvent: MotionEvent?) -> Unit = {}
+//    var doOnLongClick: (downEvent: MotionEvent?) -> Unit = {}
+
+    var onHelperGesture: GestureHelperListener? = null
 
     private var slopOvercame = false
 
@@ -54,7 +56,7 @@ class GestureHelper(context: Context) {
     }
 
     interface GestureHelperListener {
-        fun onLongClick(downEvent: MotionEvent?)
+        fun onLongClick(downEvent: MotionEvent)
     }
 
     private inner class DetectorListener : GestureDetector.SimpleOnGestureListener() {
@@ -90,10 +92,11 @@ class GestureHelper(context: Context) {
 
         override fun onLongPress(downEvent: MotionEvent?) {
             // this prevents case when gesture == TAP_UP after long press
+            if (downEvent == null) throw LauncherException("downEvent is null")
             if (!slopOvercame) {
                 gesture = null
                 wasLongPress = true
-                doOnLongClick(downEvent)
+                onHelperGesture?.onLongClick(downEvent)
             }
         }
     }
