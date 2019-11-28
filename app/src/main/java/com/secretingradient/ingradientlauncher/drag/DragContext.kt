@@ -3,34 +3,26 @@ package com.secretingradient.ingradientlauncher.drag
 import android.graphics.Rect
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.children
 import com.secretingradient.ingradientlauncher.LauncherException
 import com.secretingradient.ingradientlauncher.className
 
 abstract class DragContext {
     abstract var canStartDrag: Boolean
-    abstract val draggableHandlers: MutableList<DraggableHandler<*>>
-    abstract val hoverableHandlers: MutableList<HoverableHandler<*>>  // order does matter!
     abstract val contentView: ViewGroup
     fun toPointLocal(pointGlobal: IntArray) {
         contentView.getLocationOnScreen(_reusablePoint)
         pointGlobal[0] -= _reusablePoint[0]
         pointGlobal[1] -= _reusablePoint[1]
     }
-    fun getDraggableHandlerUnder(pointLocal: IntArray): DraggableHandler<*>? {
+    fun getDraggableUnder(pointLocal: IntArray): Draggable? {
         if (!canStartDrag)
             return null
-        draggableHandlers.forEach {
-            if (hitView(it.v, pointLocal))
-                return it
-        }
-        return null
+        return hitTraversal(pointLocal) as? Draggable
+
     }
-    fun getHoveredViewUnder(pointLocal: IntArray, draggedView: View): HoverableHandler<*>? {
-        hoverableHandlers.forEachIndexed {i, it ->
-            if (it.v != draggedView && hitView(it.v, pointLocal))
-                return it
-        }
-        return null
+    fun getHoverableUnder(pointLocal: IntArray): Hoverable? {
+        return hitTraversal(pointLocal) as? Hoverable
     }
     private fun hitView(v: View, pointLocal: IntArray): Boolean {
         getLocationIn(contentView, v, _reusablePoint)
@@ -47,11 +39,31 @@ abstract class DragContext {
             pointOut[1] += parent.y.toInt()
             parent = parent.parent as? ViewGroup ?: throw LauncherException("view ${v.className()} must be a subchild of viewGroup ${viewGroup.className()}")
         }
-        println(pointOut.joinToString(", "))
+//        println("getLocationIn result: ${pointOut.joinToString(", ")}")
+    }
+    private fun hitTraversal(pointLocal: IntArray) : View? {
+        var view: View = if (hitView(contentView, pointLocal)) contentView else return null
+            .also { println("hitTraversal result: $it") }
+        var hittedView: View?
+        var nextParent: ViewGroup? = contentView
+
+        while (nextParent is ViewGroup) {
+            hittedView = null
+            for (child in nextParent.children) {
+                if (hitView(child, pointLocal)) {
+                    hittedView = child
+                    view = child
+                    break
+                }
+            }
+            nextParent = hittedView as? ViewGroup
+        }
+
+        return view
+//            .also { println("hitTraversal result: $it") }
     }
     companion object {
         private val _reusableRect = Rect()
         private val _reusablePoint = IntArray(2)
-
     }
 }

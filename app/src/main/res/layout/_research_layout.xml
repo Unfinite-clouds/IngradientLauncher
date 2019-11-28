@@ -21,7 +21,7 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <com.secretingradient.ingradientlauncher.SnapLayout
+            <com.secretingradient.ingradientlauncher.SnapLayoutHover
                 android:layout_marginTop="100dp"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"

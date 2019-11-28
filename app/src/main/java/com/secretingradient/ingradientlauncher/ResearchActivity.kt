@@ -20,8 +20,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.secretingradient.ingradientlauncher.data.DataKeeper
 import com.secretingradient.ingradientlauncher.drag.DragContext
 import com.secretingradient.ingradientlauncher.drag.DragController
-import com.secretingradient.ingradientlauncher.drag.DraggableHandler
-import com.secretingradient.ingradientlauncher.drag.HoverableHandler
+import com.secretingradient.ingradientlauncher.drag.Draggable
+import com.secretingradient.ingradientlauncher.drag.Hoverable
 import com.secretingradient.ingradientlauncher.sensor.BaseSensor
 
 
@@ -67,8 +67,6 @@ class MyRoot : FrameLayout {
 class TestStage(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs) {
     val dragContext = object : DragContext() {
         override var canStartDrag: Boolean = true
-        override val draggableHandlers: MutableList<DraggableHandler<*>> = mutableListOf()
-        override val hoverableHandlers: MutableList<HoverableHandler<*>> = mutableListOf()
         override val contentView: ViewGroup
             get() = this@TestStage
     }
@@ -95,17 +93,10 @@ class TestStage(context: Context, attrs: AttributeSet) : LinearLayout(context, a
 
     private fun populate() {
         for (i in 0 until 3) {
-            val v_child = ImageView(context).apply { setImageResource(R.drawable.ic_launcher_background); setBackgroundColor(Color.BLACK) }
+            val v_child = AppDraggable(context).apply { setImageResource(R.drawable.ic_launcher_background); setBackgroundColor(Color.BLACK) }
             v_child.setSnapLayoutParams(i, 1, 1)
             snapLayout.addView(v_child)
-            when (v_child) {
-                is ImageView -> {
-                    dragContext.draggableHandlers.add(AppDraggableHandler(v_child))
-                    dragContext.hoverableHandlers.add(AppHoverableHandler(v_child))
-                }
-            }
         }
-        dragContext.hoverableHandlers.add(SnapHoverableHandler(snapLayout))
         val v = snapLayout[1]
         v.scaleX = 1.5f
         v.rotationX = 50f
@@ -115,7 +106,7 @@ class TestStage(context: Context, attrs: AttributeSet) : LinearLayout(context, a
 }
 
 
-class AppDraggableHandler(override val v: ImageView) : DraggableHandler<ImageView> {
+/*class AppDraggableHandler(override val v: ImageView) : DraggableHandler<ImageView> {
     override fun onDragStarted() {
     }
 
@@ -137,11 +128,47 @@ class AppHoverableHandler(override val v: ImageView) : HoverableHandler<ImageVie
 class SnapHoverableHandler(override val v: SnapLayout) : HoverableHandler<SnapLayout> {
     override fun onHoverMoved(draggedView: View) {
     }
+}*/
+
+class AppDraggable(context: Context) : ImageView(context), Draggable, Hoverable {
+    override fun onDragStarted() {
+        setBackgroundColor(Color.RED)
+    }
+
+    override fun onDragEnded() {
+        setBackgroundColor(Color.BLACK)
+        println("onDragEnded")
+    }
+
+    override fun onDragMoved() {
+    }
+
+    override fun onHoverIn(draggedView: View) {
+        setBackgroundColor(Color.YELLOW)
+    }
+    override fun onHoverOut(draggedView: View) {
+        setBackgroundColor(Color.BLACK)
+        println("onHoverOut")
+    }
+
+    override fun onHoverMoved(draggedView: View) {
+    }
+
 }
 
+class SnapLayoutHover(context: Context, attrs: AttributeSet) : SnapLayout(context, attrs), Hoverable {
+    override fun onHoverIn(draggedView: View) {
+        setBackgroundColor(Color.WHITE)
+    }
 
+    override fun onHoverOut(draggedView: View) {
+        setBackgroundColor(Color.BLACK)
+    }
 
+    override fun onHoverMoved(draggedView: View) {
+    }
 
+}
 
 
 

@@ -1,31 +1,32 @@
 package com.secretingradient.ingradientlauncher.drag
 
 import android.view.MotionEvent
+import android.view.View
 
 class DragController(val dragLayer: DragLayer) {
     var dragContext: DragContext? = null
         set(value) {
             field = value
             if (draggable != null)
-                hovered?.onHoverOut(draggable!!.v)
+                hovered?.onHoverOut(draggable as View)
         }
     var dragEnabled = false
-    var draggable: DraggableHandler<*>? = null
+    var draggable: Draggable? = null
         set(value) {
             if (field != value) {
                 field?.onDragEnded()
                 value?.onDragStarted()
-                dragLayer.draggableView = value?.v
+                dragLayer.draggableView = value as View?
                 field = value
             }
         }
-    private var _hovered_field: HoverableHandler<*>? = null
+    private var _hovered_field: Hoverable? = null
     val hovered
         get() = _hovered_field
-    fun setHovered(newHovered: HoverableHandler<*>?, draggable: DraggableHandler<*>) {
+    fun setHovered(newHovered: Hoverable?, draggable: Draggable) {
         if (hovered != newHovered) {
-            hovered?.onHoverOut(draggable.v)
-            newHovered?.onHoverIn(draggable.v)
+            hovered?.onHoverOut(draggable as View)
+            newHovered?.onHoverIn(draggable as View)
             _hovered_field = newHovered
         }
     }
@@ -37,19 +38,19 @@ class DragController(val dragLayer: DragLayer) {
 
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                draggable = dragContext.getDraggableHandlerUnder(getPointLocal(event, dragContext))
+                draggable = dragContext.getDraggableUnder(getPointLocal(event, dragContext))
             }
             MotionEvent.ACTION_MOVE -> {
                 draggable?.let {
-                    val newHovered = dragContext.getHoveredViewUnder(getPointLocal(event, dragContext), it.v)
+                    val newHovered = dragContext.getHoverableUnder(getPointLocal(event, dragContext))
                     setHovered(newHovered, it)
                     it.onDragMoved()
-                    hovered?.onHoverMoved(it.v)
+                    hovered?.onHoverMoved(it as View)
                 }
             }
             MotionEvent.ACTION_UP -> {
                 draggable?.let {
-                    hovered?.onHoverOut(draggable!!.v)
+                    setHovered(null, it)
                     draggable = null
                 }
             }
