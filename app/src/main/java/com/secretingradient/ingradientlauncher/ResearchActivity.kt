@@ -8,11 +8,13 @@ import android.os.Bundle
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.get
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.secretingradient.ingradientlauncher.data.DataKeeper
@@ -64,27 +66,23 @@ class MyRoot : FrameLayout {
 
 class TestStage(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs) {
     val dragContext = object : DragContext() {
-        private val _reusablePoint = IntArray(2)
         override var canStartDrag: Boolean = true
         override val draggableHandlers: MutableList<DraggableHandler<*>> = mutableListOf()
         override val hoverableHandlers: MutableList<HoverableHandler<*>> = mutableListOf()
-        override fun toPointLocal(pointGlobal: IntArray) {
-            this@TestStage.getLocationOnScreen(_reusablePoint)
-            pointGlobal[0] = pointGlobal[0] - _reusablePoint[0]
-            pointGlobal[1] = pointGlobal[1] - _reusablePoint[1]
-        }
+        override val contentView: ViewGroup
+            get() = this@TestStage
     }
     lateinit var snapLayout: SnapLayout
     val sensors = mutableListOf<BaseSensor>()
 
     init {
         setOnLongClickListener {
-            println("lon")
             val controller = (context as ResearchActivity).controller
             controller.dragContext = this.dragContext
             controller.dragEnabled = true
             true
         }
+//        addView(FolderWindow(context, dataset, 120))
     }
 
     override fun onFinishInflate() {
@@ -108,6 +106,10 @@ class TestStage(context: Context, attrs: AttributeSet) : LinearLayout(context, a
             }
         }
         dragContext.hoverableHandlers.add(SnapHoverableHandler(snapLayout))
+        val v = snapLayout[1]
+        v.scaleX = 1.5f
+        v.rotationX = 50f
+        v.translationY = 150f
     }
 
 }
@@ -124,8 +126,8 @@ class AppDraggableHandler(override val v: ImageView) : DraggableHandler<ImageVie
 class AppHoverableHandler(override val v: ImageView) : HoverableHandler<ImageView> {
     override fun onHoverIn(draggedView: View) {
         v.setBackgroundColor(Color.YELLOW)
-        val activity = (context as ResearchActivity)
-        activity.controller.dragContext = activity.stages[1].dragContext
+//        val activity = (context as ResearchActivity)
+//        activity.controller.dragContext = activity.stages[1].dragContext
     }
     override fun onHoverOut(draggedView: View) {
         v.setBackgroundColor(Color.BLACK)

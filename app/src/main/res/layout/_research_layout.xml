@@ -8,11 +8,13 @@
     tools:context=".ResearchActivity">
 
     <LinearLayout
+        android:layout_marginTop="100dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
 
         <com.secretingradient.ingradientlauncher.TestStage
+            android:layout_marginTop="100dp"
             android:id="@+id/stage1"
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -20,6 +22,7 @@
             android:orientation="vertical">
 
             <com.secretingradient.ingradientlauncher.SnapLayout
+                android:layout_marginTop="100dp"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
@@ -27,7 +30,7 @@
                 app:snapCountX="3"
                 android:clickable="false"
                 android:focusable="false"
-                app:snapCountY="3" />
+                app:snapCountY="4" />
 
             <com.secretingradient.ingradientlauncher.sensor.RemoveSensor
                 android:layout_width="match_parent"
@@ -38,7 +41,7 @@
             android:id="@+id/stage2"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_weight="0"
             android:orientation="vertical">
 
             <com.secretingradient.ingradientlauncher.SnapLayout
