@@ -7,7 +7,7 @@ import com.secretingradient.ingradientlauncher.LauncherActivity
 import com.secretingradient.ingradientlauncher.SnapLayout
 import com.secretingradient.ingradientlauncher.data.WidgetInfo
 
-class WidgetView(context: Context, widgetInfo: WidgetInfo) : FrameLayout(context) {
+open class WidgetView(context: Context, widgetInfo: WidgetInfo) : FrameLayout(context) {
     var snapWidth: Int
         get() = (layoutParams as SnapLayout.SnapLayoutParams).snapWidth
         set(value) { (layoutParams as SnapLayout.SnapLayoutParams).snapWidth = value }
@@ -29,5 +29,4 @@ class WidgetView(context: Context, widgetInfo: WidgetInfo) : FrameLayout(context
         addView((context as LauncherActivity).widgetHost.createView(context, widgetInfo.widgetId, widgetInfo.widgetProviderInfo))
         this.widgetInfo = widgetInfo
     }
-
 }

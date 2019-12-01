@@ -10,53 +10,48 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.viewpager2.widget.ViewPager2
 import com.secretingradient.ingradientlauncher.data.DataKeeper
-import com.secretingradient.ingradientlauncher.stage.UserStage
+import com.secretingradient.ingradientlauncher.drag.DragController
+import com.secretingradient.ingradientlauncher.drag.DragLayer
+import com.secretingradient.ingradientlauncher.stage.UserStageOld
 
 class LauncherActivity : AppCompatActivity() {
     val REQUSET_BIND_WIDGET = 0
     val REQUSET_CONFIGURE_WIDGET = 1
 
-    lateinit var context: Context
-    lateinit var launcherRootLayout: LauncherRootLayout
+    lateinit var appContext: Context
+    lateinit var launcher: Launcher
     lateinit var dragLayer: DragLayer
     lateinit var dataKeeper: DataKeeper
     lateinit var widgetHost: WidgetHost
     lateinit var widgetManager: AppWidgetManager
     lateinit var gestureHelper: GestureHelper
+    lateinit var dragController: DragController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.launcher_root)
 
-        context = this.applicationContext
+        launcher = findViewById(R.id.launcher_root)
+        dragLayer = findViewById(R.id.drag_layer)
+
+        appContext = this.applicationContext
         widgetHost = WidgetHost(this)
         dataKeeper = DataKeeper(this, widgetHost)
-        widgetManager = AppWidgetManager.getInstance(context)
+        widgetManager = AppWidgetManager.getInstance(appContext)
         gestureHelper = GestureHelper(this)
+        dragController = DragController(dragLayer)
+
 
         fillData(dataKeeper)
-        val a = widgetManager.installedProviders[1].provider.packageName
-        val prov = widgetManager.installedProviders.find { it.provider.packageName == a }
-        println(prov?.provider?.className)
-        println(widgetHost.appWidgetIds?.contentToString())
-        println(prov?.provider?.className)
 //        widgetHost.appWidgetIds.forEach {
 //            widgetHost.deleteAppWidgetId(it)
 //        }
-
 
         getPrefs(this).edit { putBoolean(Preferences.FIRST_LOAD, true) }
         if (getPrefs(this).getBoolean(Preferences.FIRST_LOAD, true))
             Preferences.loadDefaultPreferences(this)
 
-        launcherRootLayout = findViewById(R.id.launcher_root)
-        dragLayer = findViewById(R.id.drag_layer)
-        launcherRootLayout.initViewPager(findViewById(R.id.root_viewpager), dataKeeper)
-
-    }
-
-    fun requestCreateWidget(widgetInfo: AppWidgetProviderInfo) {
-        createWidget(widgetInfo)
+        launcher.initViewPager(findViewById(R.id.root_viewpager))
     }
 
     private fun fillData(dk: DataKeeper) {
@@ -72,10 +67,6 @@ class LauncherActivity : AppCompatActivity() {
 //        }
     }
 
-    override fun onBackPressed() {
-        super.onBackPressed()  // do back stack
-    }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         printlnClass("onResult")
         super.onActivityResult(requestCode, resultCode, data)
@@ -86,6 +77,10 @@ class LauncherActivity : AppCompatActivity() {
             REQUSET_BIND_WIDGET -> configureWidgetIfNeeded(widgetId, widgetInfo)
             REQUSET_CONFIGURE_WIDGET -> addWidget(widgetId, widgetInfo)
         }
+    }
+
+    fun requestCreateWidget(widgetInfo: AppWidgetProviderInfo) {
+        createWidget(widgetInfo)
     }
 
     private fun createWidget(widgetInfo: AppWidgetProviderInfo) {
@@ -122,7 +117,11 @@ class LauncherActivity : AppCompatActivity() {
 
     private fun addWidget(widgetId: Int, widgetInfo: AppWidgetProviderInfo){
 //        val hostView = widgetHost.createView(context, widgetId, widgetInfo)
-        (launcherRootLayout.stages[1] as UserStage).onAddWidget(widgetInfo, widgetId)
+        (launcher.stages[1] as UserStageOld).onAddWidget(widgetInfo, widgetId)
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()  // do back stack
     }
 
     override fun onStart() {
@@ -135,7 +134,7 @@ class LauncherActivity : AppCompatActivity() {
         widgetHost.stopListening()
     }
 
-    class PageTransformer : ViewPager2.PageTransformer {
+    private class PageTransformer : ViewPager2.PageTransformer {
         override fun transformPage(view: View, position: Float) {
 //        println("Transfroming: $relativePosition")
         }

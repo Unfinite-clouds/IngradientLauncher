@@ -4,10 +4,10 @@ import android.view.ViewGroup
 import androidx.core.view.doOnLayout
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
-import com.secretingradient.ingradientlauncher.LauncherRootLayout
+import com.secretingradient.ingradientlauncher.Launcher
 import com.secretingradient.ingradientlauncher.SnapLayout
 
-abstract class BasePagerSnapStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRootLayout) {
+abstract class BasePagerSnapStage(launcher: Launcher) : BaseStage(launcher) {
     lateinit var stageVP: ViewPager2
     val stageRV: RecyclerView
         get() = stageVP.getChildAt(0) as RecyclerView

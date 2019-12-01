@@ -14,6 +14,7 @@ enum class Gesture {
 }
 
 class GestureHelper(context: Context) {
+    val launcher = (context as LauncherActivity).launcher
 
     private val gestureListener = DetectorListener()
 
@@ -23,9 +24,12 @@ class GestureHelper(context: Context) {
 
 //    var doOnLongClick: (downEvent: MotionEvent?) -> Unit = {}
 
-    var onHelperGesture: GestureHelperListener? = null
+//    var onHelperGesture: GestureHelperListener? = null
+    val currentGestureListener
+        get() = launcher.currentStage as? GestureHelperListener
 
-    private var slopOvercame = false
+    var slopOvercame = false
+        private set
 
     private var isDownEventCaught = false
     
@@ -96,7 +100,7 @@ class GestureHelper(context: Context) {
             if (!slopOvercame) {
                 gesture = null
                 wasLongPress = true
-                onHelperGesture?.onLongClick(downEvent)
+                currentGestureListener?.onLongClick(downEvent)
             }
         }
     }

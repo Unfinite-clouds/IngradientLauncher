@@ -10,7 +10,7 @@ import android.widget.FrameLayout
 import androidx.core.view.children
 import java.io.Serializable
 
-class SnapLayout : FrameLayout {
+open class SnapLayout : FrameLayout {
 
     // when we change snapCountX or snapCountY, we need to recompute children's LayoutParams
     var snapCountX = 0
@@ -19,6 +19,8 @@ class SnapLayout : FrameLayout {
     var snapStepY = -1
 
     val snapBounds = Rect()
+    val maxPosition
+        get() = snapCountX*snapCountY*2
 
     private val paddingReminder = Rect()
 
@@ -88,6 +90,7 @@ class SnapLayout : FrameLayout {
 
     override fun measureChild(child: View, widthSpec: Int, heightSpec: Int) {
         val lp = child.layoutParams as SnapLayoutParams
+        lp.computeSnapBounds(this) // todo: double computed
 
         child.measure(MeasureSpec.makeMeasureSpec(lp.snapWidth*snapStepX, MeasureSpec.EXACTLY),
                       MeasureSpec.makeMeasureSpec(lp.snapHeight*snapStepY, MeasureSpec.EXACTLY))
@@ -221,6 +224,7 @@ class SnapLayout : FrameLayout {
             }
             width = snapWidth * snapLayout.snapStepX
             height = snapHeight * snapLayout.snapStepY
+//            println("computed w = $width")
         }
 
         private fun getPosX(snapCountX: Int): Int {

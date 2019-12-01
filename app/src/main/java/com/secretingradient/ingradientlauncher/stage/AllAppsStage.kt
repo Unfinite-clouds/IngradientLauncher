@@ -16,9 +16,9 @@ import com.secretingradient.ingradientlauncher.sensor.BaseSensor
 import kotlinx.android.synthetic.main.stage_1_user.view.*
 import kotlin.math.ceil
 
-class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(launcherRootLayout), GestureHelper.GestureHelperListener {
+class AllAppsStage(launcher: Launcher) : BasePagerSnapStage(launcher), GestureHelper.GestureHelperListener {
     override val stageLayoutId = R.layout.stage_2_all_apps
-    override val viewPagerId = R.id.all_apps_pager
+    override val viewPagerId = R.id.stage_0_pager
 
     override var rowCount = getPrefs(context).getInt(Preferences.ALLAPPS_STAGE_ROW_COUNT, -1)
     override var columnCount = getPrefs(context).getInt(Preferences.ALLAPPS_STAGE_COLUMN_COUNT, -1)
@@ -57,7 +57,7 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
             override fun onPreDispatch(event: MotionEvent) = touchHandler.preDispatch(event)
         }
         stageRootLayout.apply {
-            sensors.add(up_sensor.apply { sensorListener = touchHandler.upSensorListener})
+//            sensors.add(up_sensor.apply { sensorListener = touchHandler.upSensorListener})
             sensors.add(info_sensor)
             sensors.add(uninstall_sensor)
         }
@@ -133,14 +133,16 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
         var lastLayoutPosition = -1
         var dragStarted = false
 
-        val upSensorListener = object : BaseSensor.SensorListener {
-            override fun onSensor(v: View) {
-                if (v is AppView)
-                    transferEvent(v)
+/*        val upSensorListener = object : BaseSensor.SensorListener {
+            override fun onHoverIn(draggedView: View) {
+                if (draggedView is AppView)
+                    transferEvent(draggedView)
             }
-            override fun onExitSensor() {}
+            override fun onHoverOut(draggedView: View) {}
+            override fun onHoverMoved(draggedView: View) {}
+
             override fun onPerformAction(v: View) {}
-        }
+        }*/
 
         fun onLongClick(downEvent: MotionEvent) {
             if (selectedView != null)
@@ -151,7 +153,7 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
             gestureHelper.onTouchEvent(event)
 
             if (event.action == MotionEvent.ACTION_DOWN) {
-                gestureHelper.onHelperGesture = this@AllAppsStage
+//                gestureHelper.onHelperGesture = this@AllAppsStage
                 touchPoint.set(event.x.toInt(), event.y.toInt())
 
                 selectedView = trySelect(findInnerViewUnder(touchPoint))
@@ -237,19 +239,19 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
 
         fun onExitHover(view: View?) {
             when (view) {
-                is BaseSensor -> view.onExitSensor()
+                is BaseSensor -> view.onHoverOut(view)
             }
         }
 
         fun onHover(selectedView: View, hoveredView: View?) {
             when {
-                selectedView is AppView && hoveredView is BaseSensor -> hoveredView.onSensor(selectedView)
+                selectedView is AppView && hoveredView is BaseSensor -> hoveredView.onHoverIn(selectedView)
             }
         }
 
         fun onPerformAction(selectedView: View, hoveredView: View) {
             when {
-                selectedView is AppView && hoveredView is BaseSensor -> hoveredView.onPerformAction(selectedView)
+                selectedView is AppView && hoveredView is BaseSensor -> hoveredView.onHoverEnd(selectedView)
             }
         }
 
@@ -293,7 +295,7 @@ class AllAppsStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(
 
         fun transferEvent(appView: AppView) {
             endDrag()
-            launcherRootLayout.transferEvent(1, appView)
+//            launcherRootLayout.transferEvent(1, appView)
         }
 
         fun getElementPage(element: View): Int {

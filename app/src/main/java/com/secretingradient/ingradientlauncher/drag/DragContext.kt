@@ -1,47 +1,63 @@
 package com.secretingradient.ingradientlauncher.drag
 
 import android.graphics.Rect
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.children
+import com.secretingradient.ingradientlauncher.LauncherActivity
 import com.secretingradient.ingradientlauncher.LauncherException
 import com.secretingradient.ingradientlauncher.className
 
 abstract class DragContext {
-    abstract var canStartDrag: Boolean
+    var isDragEnabled: Boolean = false
     abstract val contentView: ViewGroup
+    abstract fun onDrag(event: MotionEvent)
+    abstract fun onEndDrag()
+    val dragController
+        get() = (contentView.context as LauncherActivity).dragController
+    val pendingActions = mutableListOf<()->Unit>()
     fun toPointLocal(pointGlobal: IntArray) {
         contentView.getLocationOnScreen(_reusablePoint)
         pointGlobal[0] -= _reusablePoint[0]
         pointGlobal[1] -= _reusablePoint[1]
     }
     fun getDraggableUnder(pointLocal: IntArray): Draggable? {
-        if (!canStartDrag)
-            return null
-        return hitTraversal(pointLocal) as? Draggable
-
+        if (!isDragEnabled) return null
+        return hitTraversal(pointLocal) {
+            if (it is Draggable)
+                breakConditionDraggable(it)
+            else false
+        } as? Draggable
     }
     fun getHoverableUnder(pointLocal: IntArray): Hoverable? {
-        return hitTraversal(pointLocal) as? Hoverable
+        return hitTraversal(pointLocal) { if (it is Hoverable) breakConditionHoverable(it) else false } as? Hoverable
+    }
+    fun getLocationIn(viewGroup: ViewGroup, v: View, pointOut: IntArray) {
+        if (!v.isAttachedToWindow) throw LauncherException("${v.className()} isn't attached")
+        pointOut[0] = 0
+        pointOut[1] = 0
+        var parent: View = v
+        while (parent != viewGroup) {
+            pointOut[0] = (pointOut[0] * parent.scaleX).toInt()
+            pointOut[0] += (parent.x + (1f-parent.scaleX)*parent.pivotX).toInt()
+            pointOut[1] = (pointOut[1] * parent.scaleY).toInt()
+            pointOut[1] += (parent.y + (1f-parent.scaleY)*parent.pivotY).toInt()
+
+            parent = parent.parent as? ViewGroup ?: throw LauncherException("view ${v.className()} must be a subchild of viewGroup ${viewGroup.className()}")
+        }
     }
     private fun hitView(v: View, pointLocal: IntArray): Boolean {
         getLocationIn(contentView, v, _reusablePoint)
         _reusableRect.set(_reusablePoint[0], _reusablePoint[1], _reusablePoint[0] + v.width, _reusablePoint[1] + v.height)
         return _reusableRect.contains(pointLocal[0], pointLocal[1])
     }
-    private fun getLocationIn(viewGroup: ViewGroup, v: View, pointOut: IntArray) {
-        if (!v.isAttachedToWindow) throw LauncherException("${v.className()} isn't attached")
-        pointOut[0] = 0
-        pointOut[1] = 0
-        var parent: View = v
-        while (parent != viewGroup) {
-            pointOut[0] += parent.x.toInt()
-            pointOut[1] += parent.y.toInt()
-            parent = parent.parent as? ViewGroup ?: throw LauncherException("view ${v.className()} must be a subchild of viewGroup ${viewGroup.className()}")
-        }
-//        println("getLocationIn result: ${pointOut.joinToString(", ")}")
+    open fun breakConditionDraggable(v: Draggable) : Boolean {
+        return false
     }
-    private fun hitTraversal(pointLocal: IntArray) : View? {
+    open fun breakConditionHoverable(v: Hoverable) : Boolean {
+        return false
+    }
+    private fun hitTraversal(pointLocal: IntArray, breakCondition: (v: View) -> Boolean = {false}) : View? {
         var view: View = if (hitView(contentView, pointLocal)) contentView else return null
             .also { println("hitTraversal result: $it") }
         var hittedView: View?
@@ -49,10 +65,13 @@ abstract class DragContext {
 
         while (nextParent is ViewGroup) {
             hittedView = null
-            for (child in nextParent.children) {
+            for (i in nextParent.childCount - 1 downTo 0) {
+                val child = nextParent.getChildAt(i)
+                // It can be optimized (not use hitView)
                 if (hitView(child, pointLocal)) {
                     hittedView = child
                     view = child
+                    if (breakCondition(child)) return view
                     break
                 }
             }

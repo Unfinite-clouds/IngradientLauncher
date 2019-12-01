@@ -5,11 +5,11 @@ import android.graphics.PointF
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.view.doOnLayout
-import com.secretingradient.ingradientlauncher.LauncherRootLayout
+import com.secretingradient.ingradientlauncher.Launcher
 import com.secretingradient.ingradientlauncher.R
 import com.secretingradient.ingradientlauncher.element.AppView
 
-class MainStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRootLayout), View.OnTouchListener {
+class MainStage(launcher: Launcher) : BaseStage(launcher), View.OnTouchListener {
 
     override val stageLayoutId = R.layout.stage_0_main
     private lateinit var recyclerView: MainStageRecycler

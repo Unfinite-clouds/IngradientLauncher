@@ -84,8 +84,8 @@ class FolderWindow : RecyclerView {
             folderView.removeApp(pos)
             dataset.put(folderPosInDataset, folderInfo, true)
 //            adapter?.notifyItemRemoved(pos)
-            if (folderInfo.apps.size < 2)
-                folderView.revert(dataset)
+//            if (folderInfo.apps.size < 2)
+//                folderView.revert(dataset)
         }
     }
 

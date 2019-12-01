@@ -5,31 +5,35 @@ import android.graphics.drawable.BitmapDrawable
 import android.util.AttributeSet
 import android.view.View
 import android.widget.ImageView
+import com.secretingradient.ingradientlauncher.drag.Hoverable
 
-abstract class BaseSensor : ImageView {
+abstract class BaseSensor : ImageView, Hoverable {
 
     var lastAlpha = -1
-    var sensorListener: SensorListener? = null
+    var sensorListener: Hoverable? = null
     var disabled = false
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
 
-    open fun onSensor(v: View) {
+    override fun onHoverIn(draggedView: View) {
         if (!disabled) {
             highlight()
-            sensorListener?.onSensor(v)
+            sensorListener?.onHoverIn(draggedView)
         }
     }
-    open fun onExitSensor() {
+    override fun onHoverOut(draggedView: View) {
         if (!disabled) {
             unhighlight()
-            sensorListener?.onExitSensor()
+            sensorListener?.onHoverOut(draggedView)
         }
     }
-    open fun onPerformAction(v: View) {
+
+    override fun onHoverMoved(draggedView: View, pointLocal: IntArray) {}
+
+    override fun onHoverEnd(draggedView: View) {
         if (!disabled) {
-            sensorListener?.onPerformAction(v)
+            sensorListener?.onHoverEnd(draggedView)
         }
     }
 
@@ -41,11 +45,5 @@ abstract class BaseSensor : ImageView {
     fun unhighlight() {
         drawable.alpha = lastAlpha
         lastAlpha = -1
-    }
-
-    interface SensorListener {
-        fun onSensor(v: View)
-        fun onExitSensor()
-        fun onPerformAction(v: View)
     }
 }

@@ -4,15 +4,18 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
 import android.widget.FrameLayout
+import com.secretingradient.ingradientlauncher.LauncherActivity
 
 class DragLayer: FrameLayout {
     var draggableView: View? = null
         set(value) {
             realState.loadState(field)
-            removeView(field)
-            realState.parent?.addView(field)
+            if (field?.parent == this) {
+                // revert to last state
+                this.removeView(field)
+                realState.parent?.addView(field)
+            }
 
             realState.saveState(value)
             realState.parent?.removeView(value)
@@ -20,7 +23,11 @@ class DragLayer: FrameLayout {
 
             field = value
         }
-    var realState = RealState()
+    val dragController
+        get() = (context as LauncherActivity).dragController
+    val realState
+        get() = dragController.realState
+
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
 
@@ -32,22 +39,5 @@ class DragLayer: FrameLayout {
         return false
     }
 
-    class RealState {
-        var parent: ViewGroup? = null
-        var translationX = 0f
-        var translationY = 0f
 
-        fun saveState(v: View?) {
-            parent = v?.parent as? ViewGroup
-            translationX = v?.translationX ?: 0f
-            translationY = v?.translationY ?: 0f
-        }
-
-        fun loadState(v: View?) {
-            if (v == null)
-                return
-            v.translationX = translationX
-            v.translationY = translationY
-        }
-    }
 }

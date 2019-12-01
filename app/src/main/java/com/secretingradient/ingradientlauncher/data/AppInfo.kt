@@ -3,6 +3,7 @@ package com.secretingradient.ingradientlauncher.data
 import android.content.Context
 import android.graphics.drawable.Drawable
 import com.secretingradient.ingradientlauncher.element.AppView
+import com.secretingradient.ingradientlauncher.element.AppViewDraggable
 
 class AppInfo(
     val packageName: String,
@@ -17,7 +18,10 @@ class AppInfo(
         return AppData(index, id)
     }
 
-    override fun createView(context: Context): AppView {
-        return AppView(context, this)
+    override fun createView(context: Context, draggable: Boolean): AppView {
+        return if (!draggable)
+            AppView(context, this)
+        else
+            AppViewDraggable(context, this)
     }
 }

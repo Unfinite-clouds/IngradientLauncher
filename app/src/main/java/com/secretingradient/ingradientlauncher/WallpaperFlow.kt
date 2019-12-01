@@ -13,13 +13,13 @@ class WallpaperFlow(val context: Context, val windowToken: IBinder) {
         wallpaper.setWallpaperOffsets(windowToken, xOffset, yOffset)
     }
 
-    class RecyclerScroller(val launcherRootLayout: LauncherRootLayout) : RecyclerView.OnScrollListener() {
+    class RecyclerScroller(val launcher: Launcher) : RecyclerView.OnScrollListener() {
         var maxScroll = 0
         private var scrollX = 0
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             scrollX += dx
             val wallOffset = scrollX.toFloat()/maxScroll
-            launcherRootLayout.wallpaper.scroll(wallOffset, 0f)
+            launcher.wallpaper.scroll(wallOffset, 0f)
         }
     }
 }

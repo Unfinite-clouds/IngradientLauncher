@@ -1,8 +1,8 @@
 package com.secretingradient.ingradientlauncher.data
 
 import android.content.Context
-import android.view.View
 import com.secretingradient.ingradientlauncher.element.FolderView
+import com.secretingradient.ingradientlauncher.element.FolderViewDraggable
 
 class FolderInfo(val apps: MutableList<AppInfo>) : Info {
     override fun createData(index: Int): FolderData {
@@ -11,7 +11,10 @@ class FolderInfo(val apps: MutableList<AppInfo>) : Info {
         })
     }
 
-    override fun createView(context: Context): FolderView {
-        return FolderView(context, apps)
+    override fun createView(context: Context, draggable: Boolean): FolderView {
+        return if (!draggable)
+            FolderView(context, apps)
+        else
+            FolderViewDraggable(context, apps)
     }
 }

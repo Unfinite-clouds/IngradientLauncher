@@ -1,6 +1,7 @@
 package com.secretingradient.ingradientlauncher.data
 
 import com.secretingradient.ingradientlauncher.LauncherException
+import com.secretingradient.ingradientlauncher.className
 import com.secretingradient.ingradientlauncher.move
 import com.secretingradient.ingradientlauncher.swap
 
@@ -25,6 +26,7 @@ class Dataset<D: Data, I: Info>(val dataKeeper: DataKeeper, fileName: String) : 
     }
 
     fun put(index: Int, info: I, replace: Boolean = false, dump: Boolean = true) {
+        println("put $index, ${info.className()}, r = $replace")
         if (!replace && (dataset[index] != null || rawDataset[index] != null))
             throw LauncherException("item at index $index is busy. use replace=true to rewrite")
         dataset[index] = info
@@ -46,6 +48,7 @@ class Dataset<D: Data, I: Info>(val dataKeeper: DataKeeper, fileName: String) : 
     }
 
     fun move(from: Int, to: Int, dump: Boolean = true) {
+        println("$from -> $to")
         dataset.move(from, to)
         rawDataset.move(from, to)
         if (dump && debugAllowSave)
@@ -60,6 +63,7 @@ class Dataset<D: Data, I: Info>(val dataKeeper: DataKeeper, fileName: String) : 
     }
 
     fun remove(index: Int, dump: Boolean = true) {
+        println("remove $index")
         dataset.remove(index)
         rawDataset.remove(index)
         if (dump && debugAllowSave)

@@ -13,15 +13,15 @@ class UninstallSensor : BaseSensor {
         setImageResource(R.drawable.ic_delete_white_24dp)
     }
 
-    override fun onSensor(v: View) {
-        if (v is AppView)
-            super.onSensor(v)
+    override fun onHoverIn(draggedView: View) {
+        if (draggedView is AppView)
+            super.onHoverIn(draggedView)
     }
 
-    override fun onPerformAction(v: View) {
+    override fun onHoverEnd(v: View) {
         if (v is AppView) {
             v.intentToUninstall()
-            super.onPerformAction(v)
+            super.onHoverEnd(v)
         }
     }
 

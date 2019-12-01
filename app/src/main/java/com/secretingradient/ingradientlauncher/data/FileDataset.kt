@@ -11,6 +11,7 @@ open class FileDataset <I, D: Serializable> (val context: Context, val fileName:
     open val rawDataset: MutableMap<I, D> = getFileData() ?: mutableMapOf()
 
     fun dumpData() {
+        println("dump data")
         ObjectOutputStream(context.openFileOutput(fileName, Context.MODE_PRIVATE)).use { it.writeObject(rawDataset) }
     }
 

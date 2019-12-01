@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import com.secretingradient.ingradientlauncher.*
 import com.secretingradient.ingradientlauncher.data.*
+import com.secretingradient.ingradientlauncher.drag.DragLayer
 import com.secretingradient.ingradientlauncher.element.AppView
 import com.secretingradient.ingradientlauncher.element.FolderView
 import com.secretingradient.ingradientlauncher.element.WidgetView
@@ -19,12 +20,12 @@ import kotlinx.android.synthetic.main.stage_1_user.view.*
 import kotlin.math.ceil
 import kotlin.math.min
 
-class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(launcherRootLayout), GestureHelper.GestureHelperListener {
+class UserStageOld(launcher: Launcher) : BasePagerSnapStage(launcher), GestureHelper.GestureHelperListener {
     private val FLIP_WIDTH = toPx(25)
     private val defaultAppSize = toPx(70)
 
     override val stageLayoutId = R.layout.stage_1_user
-    override val viewPagerId = R.id.user_stage_pager
+    override val viewPagerId = R.id.stage_1_pager
 
     override var columnCount = getPrefs(context).getInt(Preferences.USER_STAGE_COLUMN_COUNT, -1)
     override var rowCount = getPrefs(context).getInt(Preferences.USER_STAGE_ROW_COUNT, -1)
@@ -59,9 +60,9 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         }
 
         stageRootLayout.apply {
-            sensors.add(up_sensor.apply { sensorListener = touchHandler.upSensorListener})
+//            sensors.add(up_sensor.apply { sensorListener = touchHandler.upSensorListener})
             sensors.add(info_sensor)
-            sensors.add(remove_sensor.apply { sensorListener = touchHandler.removeSensorListener})
+//            sensors.add(remove_sensor.apply { sensorListener = touchHandler.removeSensorListener})
             sensors.add(uninstall_sensor)
         }
         upSensor = sensors[0] as UpSensor
@@ -71,7 +72,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         folderWindow.initData(dataset, defaultAppSize)
 
         stageRootLayout.clipChildren = false
-        launcher.dragLayer.addView(resizeFrame)
+        launcherActivity.dragLayer.addView(resizeFrame)
         resizeFrame.visibility = View.GONE
 //        stageVP.offscreenPageLimit = 2
     }
@@ -152,21 +153,25 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         var isTransferring = false
         var isDrag = false
 
-        val upSensorListener = object : BaseSensor.SensorListener {
-            override fun onSensor(v: View) {
-                if (v is AppView)
-                    transferEvent(v)
+/*        val upSensorListener = object : BaseSensor.SensorListener {
+            override fun onHoverIn(draggedView: View) {
+                if (draggedView is AppView)
+                    transferEvent(draggedView)
             }
-            override fun onExitSensor() {}
+            override fun onHoverOut(draggedView: View) {}
+            override fun onHoverMoved(draggedView: View) {}
+
             override fun onPerformAction(v: View) {}
         }
         val removeSensorListener = object : BaseSensor.SensorListener {
-            override fun onSensor(v: View) {}
-            override fun onExitSensor() {}
+            override fun onHoverIn(draggedView: View) {}
+            override fun onHoverOut(draggedView: View) {}
+            override fun onHoverMoved(draggedView: View) {}
+
             override fun onPerformAction(v: View) {
                 removeView(v)
             }
-        }
+        }*/
 
         fun onLongClick(downEvent: MotionEvent) {
             startEditMode()
@@ -182,7 +187,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             gestureHelper.onTouchEvent(event)
 
             if (event.action == MotionEvent.ACTION_DOWN) {
-                gestureHelper.onHelperGesture = this@UserStage
+//                gestureHelper.onHelperGesture = this@UserStageOld
                 upSensor.disabled = false
                 needToStartDragInFolder = false
                 touchPoint.set(event.x.toInt(), event.y.toInt())
@@ -213,7 +218,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                 return true
 
             touchPoint.set(event.x.toInt(), event.y.toInt())
-            launcher.dragLayer.onTouchEvent(event)
+            launcherActivity.dragLayer.onTouchEvent(event)
 
             if (!isTouchOutsideFolder(touchPoint)) {
                 select(null)
@@ -339,7 +344,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
         fun transferEvent(appView: AppView) {
             if (selectedView != null) {
                 println("transferEvent")
-                launcherRootLayout.transferEvent(0, appView)
+//                launcherRootLayout.transferEvent(0, appView)
                 removeView(selectedView!!)
                 endDrag()
                 endEditMode()
@@ -382,7 +387,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
 
         fun onExitHover(view: View?) {
             when (view) {
-                is BaseSensor -> view.onExitSensor()
+                is BaseSensor -> view.onHoverOut(view)
                 is FolderView -> cancelPreviewFolder()
                 is SnapLayout -> view.removeView(ghostHolder.view)
             }
@@ -393,7 +398,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
                 upSensor.disabled = false
             when {
                 selectedView is AppView && hoveredView is AppView -> createPreviewFolder(hoveredView)
-                isElement(selectedView) && hoveredView is BaseSensor -> hoveredView.onSensor(selectedView)
+                isElement(selectedView) && hoveredView is BaseSensor -> hoveredView.onHoverIn(selectedView)
                 isElement(selectedView) && hoveredView is SnapLayout -> moveGhostView(hoveredView, movePosition)
                 else -> println("no space")
 //                hoveredView == null -> { cancelPreviewFolder() }
@@ -405,7 +410,7 @@ class UserStage(launcherRootLayout: LauncherRootLayout) : BasePagerSnapStage(lau
             when {
                 selectedView is AppView && hoveredView is FolderView -> { addToFolder(hoveredView, selectedView); removeView(selectedView) }
                 selectedView is WidgetPreview && hoveredView is SnapLayout -> startAddWidget(selectedView, movePosition)
-                isElement(selectedView) && hoveredView is BaseSensor -> hoveredView.onPerformAction(selectedView)
+                isElement(selectedView) && hoveredView is BaseSensor -> hoveredView.onHoverEnd(selectedView)
                 isElement(selectedView) && hoveredView is SnapLayout -> moveOrAddView(selectedView, hoveredView, movePosition)
                 else -> cancelDrag()
             }

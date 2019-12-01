@@ -20,7 +20,7 @@ import com.secretingradient.ingradientlauncher.toPx
 import kotlin.math.min
 
 
-class AppView : TextView {
+open class AppView : TextView {
     var info: AppInfo? = null
         set(value) {
             field = value

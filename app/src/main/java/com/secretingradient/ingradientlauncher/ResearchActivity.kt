@@ -3,25 +3,19 @@
 package com.secretingradient.ingradientlauncher
 
 import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.get
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.secretingradient.ingradientlauncher.data.DataKeeper
-import com.secretingradient.ingradientlauncher.drag.DragContext
 import com.secretingradient.ingradientlauncher.drag.DragController
-import com.secretingradient.ingradientlauncher.drag.Draggable
-import com.secretingradient.ingradientlauncher.drag.Hoverable
 import com.secretingradient.ingradientlauncher.sensor.BaseSensor
 
 
@@ -55,7 +49,7 @@ class MyRoot : FrameLayout {
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-        if (!controller.dispatchTouchEvent(event))
+        if (!controller.onTouchEvent(event))
             return super.dispatchTouchEvent(event)
         else
             return true
@@ -65,24 +59,29 @@ class MyRoot : FrameLayout {
 
 
 class TestStage(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs) {
-    val dragContext = object : DragContext() {
-        override var canStartDrag: Boolean = true
+/*    val dragContext = object : DragContext() {
         override val contentView: ViewGroup
             get() = this@TestStage
-    }
+
+        override fun onDrag(event: MotionEvent) {
+        }
+
+        override fun onEndDrag() {
+        }
+    }*/
     lateinit var snapLayout: SnapLayout
     val sensors = mutableListOf<BaseSensor>()
 
     init {
-        setOnLongClickListener {
-            val controller = (context as ResearchActivity).controller
-            controller.dragContext = this.dragContext
-            controller.dragEnabled = true
-            true
-        }
+//        setOnLongClickListener {
+//            val controller = (context as ResearchActivity).controller
+//            controller.dragContext = this.dragContext
+//            controller.startDrag()
+//            true
+//        }
 //        addView(FolderWindow(context, dataset, 120))
     }
-
+/*
     override fun onFinishInflate() {
         super.onFinishInflate()
         snapLayout = getChildAt(0) as SnapLayout
@@ -101,7 +100,7 @@ class TestStage(context: Context, attrs: AttributeSet) : LinearLayout(context, a
         v.scaleX = 1.5f
         v.rotationX = 50f
         v.translationY = 150f
-    }
+    }*/
 
 }
 
@@ -130,6 +129,7 @@ class SnapHoverableHandler(override val v: SnapLayout) : HoverableHandler<SnapLa
     }
 }*/
 
+/*
 class AppDraggable(context: Context) : ImageView(context), Draggable, Hoverable {
     override fun onDragStarted() {
         setBackgroundColor(Color.RED)
@@ -169,6 +169,7 @@ class SnapLayoutHover(context: Context, attrs: AttributeSet) : SnapLayout(contex
     }
 
 }
+*/
 
 
 

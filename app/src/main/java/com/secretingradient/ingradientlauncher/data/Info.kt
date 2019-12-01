@@ -9,5 +9,5 @@ interface Info {
     val snapHeight
         get() = 2
     fun createData(index: Int): Data
-    fun createView(context: Context): View
+    fun createView(context: Context, draggable: Boolean = false): View
 }

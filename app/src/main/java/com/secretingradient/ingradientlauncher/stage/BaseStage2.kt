@@ -1,55 +1,32 @@
 package com.secretingradient.ingradientlauncher.stage
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Point
-import android.graphics.Rect
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.core.view.children
-import androidx.core.view.forEach
-import com.secretingradient.ingradientlauncher.*
+import android.util.AttributeSet
+import androidx.constraintlayout.widget.ConstraintLayout
+import com.secretingradient.ingradientlauncher.LauncherActivity
+import com.secretingradient.ingradientlauncher.WallpaperFlow
+import com.secretingradient.ingradientlauncher.drag.DragContext
 
-abstract class BaseStage(val launcherRootLayout: Launcher) {
-    val context: Context = launcherRootLayout.context
+abstract class BaseStage2(context: Context, attrs: AttributeSet?) : ConstraintLayout(context, attrs) {
+    abstract val dragContext: DragContext?
     val launcherActivity = context as LauncherActivity
-    val dataKeeper = launcherRootLayout.dataKeeper
-    protected abstract val stageLayoutId: Int
-    lateinit var stageRootLayout: StageRootLayout
-    val scroller = WallpaperFlow.RecyclerScroller(launcherRootLayout)
+    val dataKeeper = launcherActivity.dataKeeper
+    val scroller = WallpaperFlow.RecyclerScroller(launcherActivity.launcher)
     val gestureHelper = launcherActivity.gestureHelper
-
-    open fun initInflate(stageRootLayout: StageRootLayout) {
-        this.stageRootLayout = LayoutInflater.from(context).inflate(stageLayoutId, stageRootLayout, true) as StageRootLayout
-        this.stageRootLayout.stage = this
-    }
-
-    open fun onStageAttachedToWindow() {}
-
-    open fun onStageSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {}
-
-    open fun onDispatchDraw(canvas: Canvas?) {}
 
     open fun receiveTransferEvent(obj: Any?) {}
 
-    open fun disallowVScroll(disallow: Boolean = true) {
-        stageRootLayout.parent.requestDisallowInterceptTouchEvent(disallow)
+    fun disallowVScroll(disallow: Boolean = true) {
+        parent.requestDisallowInterceptTouchEvent(disallow)
     }
 
-    fun moveToDragLayer(v: View) {
-//        launcher.dragLayer.addToDrag(v)
+/*    companion object {
+        private val reusablePoint = Point()
+        private val hitRect = Rect()
     }
-
-    fun removeFromDragLayer(v: View?) {
-//        launcher.dragLayer.removeDrag(v)
-    }
-
-    private val hitRect = Rect()
-    private val reusablePoint = Point()
 
     private fun hitTest(p: Point, view: View, computeParentLocationGlobal: Boolean = true): Boolean {
-        if (view == stageRootLayout || view.parent == stageRootLayout)
+        if (view == contentView || view.parent == contentView)
             reusablePoint.set(0,0)
         else if (computeParentLocationGlobal)
             getLocationOfViewGlobal(view.parent as ViewGroup, reusablePoint)
@@ -59,7 +36,7 @@ abstract class BaseStage(val launcherRootLayout: Launcher) {
 
     fun findChildrenUnder(p: Point): MutableList<View> {
         val l = mutableListOf<View>()
-        stageRootLayout.forEach {
+        contentView.forEach {
             if (hitTest(p, it, false))
                 l.add(it)
         }
@@ -67,12 +44,12 @@ abstract class BaseStage(val launcherRootLayout: Launcher) {
     }
 
     fun findChildUnder(p: Point, lastHoveredView: View? = null): View? {
-        if (lastHoveredView?.parent == stageRootLayout) {
+        if (lastHoveredView?.parent == contentView) {
             if (hitTest(p, lastHoveredView, false))
                 return lastHoveredView
         }
 
-        stageRootLayout.forEach {
+        contentView.forEach {
             if (hitTest(p, it, false))
                 return it
         }
@@ -105,9 +82,9 @@ abstract class BaseStage(val launcherRootLayout: Launcher) {
         if (foundView != null)
             return foundView
 
-        foundView = findInnerViewUnderInternal(p, stageRootLayout)
+        foundView = findInnerViewUnderInternal(p, contentView)
 
-        return if (foundView != stageRootLayout) foundView else null
+        return if (foundView != contentView) foundView else null
     }
 
     private fun findInnerViewUnderInternal(p: Point, view: View): View? {
@@ -144,7 +121,7 @@ abstract class BaseStage(val launcherRootLayout: Launcher) {
         pointOut.set(0,0)
         var v = view as View?
         // get location on stage
-        while (v != stageRootLayout && v != null) {
+        while (v != contentView && v != null) {
             pointOut.set(pointOut.x + v.x.toInt(), pointOut.y + v.y.toInt())
             v = v.parent as View?
         }
@@ -155,5 +132,5 @@ abstract class BaseStage(val launcherRootLayout: Launcher) {
     fun toLocationInView(globalPoint: Point, view: View, pointOut: Point) {
         getLocationOfViewGlobal(view, reusablePoint)
         pointOut.set(globalPoint.x - reusablePoint.x, globalPoint.y - reusablePoint.y)
-    }
+    }*/
 }

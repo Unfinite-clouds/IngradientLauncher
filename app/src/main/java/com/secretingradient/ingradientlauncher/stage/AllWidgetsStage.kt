@@ -10,7 +10,7 @@ import androidx.core.view.doOnLayout
 import androidx.core.view.setPadding
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.secretingradient.ingradientlauncher.LauncherRootLayout
+import com.secretingradient.ingradientlauncher.Launcher
 import com.secretingradient.ingradientlauncher.R
 import com.secretingradient.ingradientlauncher.data.DataKeeper
 import com.secretingradient.ingradientlauncher.data.WidgetPreviewInfo
@@ -22,7 +22,7 @@ val PREVIEW_PADDING = toPx(12)
 val ICON_SIZE = toPx(28)
 val CARD_MARGIN = toPx(8)
 
-class AllWidgetsStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launcherRootLayout) {
+class AllWidgetsStage(launcher: Launcher) : BaseStage(launcher) {
     override val stageLayoutId = R.layout.stage_3_all_widgets
     lateinit var recyclerView: RecyclerView
 
@@ -101,7 +101,7 @@ class AllWidgetsStage(launcherRootLayout: LauncherRootLayout) : BaseStage(launch
     }
 
     fun transferWidget(previewInfo: WidgetPreviewInfo) {
-        launcherRootLayout.transferEvent(1, previewInfo)
+//        launcherRootLayout.transferEvent(1, previewInfo)
     }
 
 

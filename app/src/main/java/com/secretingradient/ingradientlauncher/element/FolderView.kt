@@ -8,13 +8,11 @@ import android.widget.ImageView
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.secretingradient.ingradientlauncher.R
-import com.secretingradient.ingradientlauncher.SnapLayout
-import com.secretingradient.ingradientlauncher.data.*
+import com.secretingradient.ingradientlauncher.data.AppInfo
+import com.secretingradient.ingradientlauncher.data.FolderInfo
 
-class FolderView : RecyclerView {
+open class FolderView : RecyclerView {
     var info: FolderInfo = FolderInfo(mutableListOf())
-    val folderSize
-        get() = info.apps.size
     val apps: MutableList<AppInfo>
         get() = info.apps
 
@@ -38,6 +36,7 @@ class FolderView : RecyclerView {
 
     fun addApps(newApps: Collection<AppInfo>) {
         info.apps.addAll(newApps)
+//        dataset?  // todo: save
         update()
     }
 
@@ -53,15 +52,6 @@ class FolderView : RecyclerView {
 
     fun update() {
         adapter?.notifyDataSetChanged()
-    }
-
-    fun revert(dataset: Dataset<Data, Info>) {
-        val pos = (this.layoutParams as SnapLayout.SnapLayoutParams).position
-        val p = parent as? SnapLayout ?: return
-        p.removeView(this)
-        val app = apps[0].createView(context)
-        p.addNewView(app, pos, 2, 2)
-        dataset.put(pos, app.info!!, true)
     }
 
     class IconHolder(item: View) : ViewHolder(item)
