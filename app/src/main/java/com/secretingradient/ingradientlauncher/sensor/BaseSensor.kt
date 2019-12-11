@@ -3,8 +3,8 @@ package com.secretingradient.ingradientlauncher.sensor
 import android.content.Context
 import android.graphics.drawable.BitmapDrawable
 import android.util.AttributeSet
-import android.view.View
 import android.widget.ImageView
+import com.secretingradient.ingradientlauncher.drag.DragTouchEvent
 import com.secretingradient.ingradientlauncher.drag.Hoverable
 
 abstract class BaseSensor : ImageView, Hoverable {
@@ -16,24 +16,24 @@ abstract class BaseSensor : ImageView, Hoverable {
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
 
-    override fun onHoverIn(draggedView: View) {
+    override fun onHoverIn(event: DragTouchEvent) {
         if (!disabled) {
             highlight()
-            sensorListener?.onHoverIn(draggedView)
+            sensorListener?.onHoverIn(event)
         }
     }
-    override fun onHoverOut(draggedView: View) {
+    override fun onHoverOut(event: DragTouchEvent) {
         if (!disabled) {
             unhighlight()
-            sensorListener?.onHoverOut(draggedView)
+            sensorListener?.onHoverOut(event)
         }
     }
 
-    override fun onHoverMoved(draggedView: View, pointLocal: IntArray) {}
+    override fun onHoverMoved(event: DragTouchEvent) {}
 
-    override fun onHoverEnd(draggedView: View) {
+    override fun onHoverEnd(event: DragTouchEvent) {
         if (!disabled) {
-            sensorListener?.onHoverEnd(draggedView)
+            sensorListener?.onHoverEnd(event)
         }
     }
 

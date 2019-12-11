@@ -1,30 +1,31 @@
 package com.secretingradient.ingradientlauncher.element
 
 import android.content.Context
-import android.view.View
 import com.secretingradient.ingradientlauncher.data.WidgetInfo
+import com.secretingradient.ingradientlauncher.drag.DragTouchEvent
 import com.secretingradient.ingradientlauncher.drag.Draggable
 import com.secretingradient.ingradientlauncher.drag.Hoverable
 
 class WidgetViewDraggable(context: Context, widgetInfo: WidgetInfo) : WidgetView(context, widgetInfo), Draggable, Hoverable {
-    override fun onDragStarted() {
+    override fun onDragStarted(event: DragTouchEvent) {
     }
 
-    override fun onDragEnded() {
+    override fun onDragEnded(event: DragTouchEvent) {
     }
 
-    override fun onDragMoved() {
+    override fun onDragMoved(event: DragTouchEvent) {
     }
 
-    override fun onHoverIn(draggedView: View) {
+    override fun onHoverIn(event: DragTouchEvent) {
     }
 
-    override fun onHoverOut(draggedView: View) {
+    override fun onHoverOut(event: DragTouchEvent) {
     }
 
-    override fun onHoverMoved(draggedView: View, pointLocal: IntArray) {
+    override fun onHoverMoved(event: DragTouchEvent) {
     }
 
-    override fun onHoverEnd(draggedView: View) {
+    override fun onHoverEnd(event: DragTouchEvent) {
     }
+
 }

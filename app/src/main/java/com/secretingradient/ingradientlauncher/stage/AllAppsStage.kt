@@ -239,19 +239,19 @@ class AllAppsStage(launcher: Launcher) : BasePagerSnapStage(launcher), GestureHe
 
         fun onExitHover(view: View?) {
             when (view) {
-                is BaseSensor -> view.onHoverOut(view)
+//                is BaseSensor -> view.onHoverOut(view)
             }
         }
 
         fun onHover(selectedView: View, hoveredView: View?) {
             when {
-                selectedView is AppView && hoveredView is BaseSensor -> hoveredView.onHoverIn(selectedView)
+//                selectedView is AppView && hoveredView is BaseSensor -> hoveredView.onHoverIn(selectedView)
             }
         }
 
         fun onPerformAction(selectedView: View, hoveredView: View) {
             when {
-                selectedView is AppView && hoveredView is BaseSensor -> hoveredView.onHoverEnd(selectedView)
+//                selectedView is AppView && hoveredView is BaseSensor -> hoveredView.onHoverEnd(selectedView)
             }
         }
 

@@ -12,7 +12,7 @@ import com.secretingradient.ingradientlauncher.data.Data
 import com.secretingradient.ingradientlauncher.data.Dataset
 import com.secretingradient.ingradientlauncher.data.Info
 import com.secretingradient.ingradientlauncher.drag.DragContext
-import com.secretingradient.ingradientlauncher.drag.Draggable
+import com.secretingradient.ingradientlauncher.drag.DragTouchEvent
 import com.secretingradient.ingradientlauncher.drag.Hoverable
 import com.secretingradient.ingradientlauncher.element.FolderViewDraggable
 import com.secretingradient.ingradientlauncher.sensor.BaseSensor
@@ -34,23 +34,14 @@ class UserStage2(context: Context, attrs: AttributeSet?) : PagedStage2(context, 
         override val contentView: ViewGroup
             get() = this@UserStage2
 
-        override fun onDrag(event: MotionEvent) {
-            if (gestureHelper.gesture == Gesture.TAP_UP && dragController.draggable !is FolderViewDraggable)
+        override fun onDrag(event: DragTouchEvent) {
+            if (gestureHelper.gesture == Gesture.TAP_UP && event.draggableView !is FolderViewDraggable)
                 endEditMode()
         }
 
-        override fun onEndDrag() {
-            pendingActions.forEach { it() }
-            pendingActions.clear()
-//            dataset.dumpData()
-        }
 
-        override fun breakConditionDraggable(v: Draggable): Boolean {
-            // start drag on first draggable (top most view)
-            return true
-        }
 
-        override fun breakConditionHoverable(v: Hoverable): Boolean {
+        override fun returnThisHoverable(v: Hoverable): Boolean {
             return v !is SnapLayoutHoverable
         }
     }
@@ -107,9 +98,9 @@ class UserStage2(context: Context, attrs: AttributeSet?) : PagedStage2(context, 
     }
 
     fun startEditMode() {
-        launcherActivity.dragController.forceStartDrag()
+        launcherActivity.dragController.startDragRequest()
         disallowVScroll()
-        stageVP.animate().scaleX(0.85f).scaleY(0.8f).start()
+        stageVP.animate().scaleX(0.85f).scaleY(0.85f).start()
     }
 
     fun endEditMode() {

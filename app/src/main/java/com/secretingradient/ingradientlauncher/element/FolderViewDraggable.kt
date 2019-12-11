@@ -1,16 +1,17 @@
 package com.secretingradient.ingradientlauncher.element
 
 import android.content.Context
-import android.view.View
 import com.secretingradient.ingradientlauncher.SnapLayout
+import com.secretingradient.ingradientlauncher.className
 import com.secretingradient.ingradientlauncher.data.AppInfo
+import com.secretingradient.ingradientlauncher.drag.DragTouchEvent
 import com.secretingradient.ingradientlauncher.drag.DraggableElement
-import com.secretingradient.ingradientlauncher.drag.DraggableElementI
+import com.secretingradient.ingradientlauncher.drag.DraggableElementImpl
 import com.secretingradient.ingradientlauncher.drag.Hoverable
 import java.lang.ref.WeakReference
 
-class FolderViewDraggable(context: Context, vararg apps: AppInfo, delegate: DraggableElement = DraggableElement())
-    : FolderView(context, *apps), Hoverable, DraggableElementI by delegate {
+class FolderViewDraggable(context: Context, vararg apps: AppInfo, delegate: DraggableElementImpl = DraggableElementImpl())
+    : FolderView(context, *apps), Hoverable, DraggableElement by delegate {
 
     init {
         delegate.ref = WeakReference(this)
@@ -20,38 +21,44 @@ class FolderViewDraggable(context: Context, vararg apps: AppInfo, delegate: Drag
         addApps(apps)
     }
 
-    override fun onDragEnded() {
+    override fun onDragEnded(event: DragTouchEvent) {
     }
 
-    override fun onDragMoved() {
+    override fun onDragMoved(event: DragTouchEvent) {
     }
 
-    override fun onHoverIn(draggedView: View) {
-        if (draggedView !is AppView) return
-        addApps(draggedView.info!!)
-        val pos = getPagedPosition()
-        if (apps.size > 2)
-            addAction { dataset.put(pos, this.info, true, false) }
+    override fun onHoverIn(event: DragTouchEvent) {
+        println("onHoverIn ${this.className()} ${event.transformMatrix}")
+        val draggedView = event.draggableView
+        if (draggedView is AppView) {
+            addApps(draggedView.info!!)
+            val pos = getPagedPosition()
+            if (apps.size > 2)
+                addAction2 { dataset.put(pos, this.info, true, false) }
+        }
     }
 
-    override fun onHoverOut(draggedView: View) {
-        if (draggedView !is AppView) return
-        if (draggedView.info == apps[apps.size - 1]) {
+    override fun onHoverOut(event: DragTouchEvent) {
+        println("onHoverOut ${this.className()} ${event.transformMatrix}")
+        val draggedView = event.draggableView
+        if (draggedView is AppView && draggedView.info == apps[apps.size - 1]) {
             removeApp(apps.size - 1)
             val pos = getPagedPosition()
             if (apps.size < 2) {
                 val app = transformToApp()
-                addAction { dataset.put(pos, app.info!!, true, false) }
+                addAction2 { dataset.put(pos, app.info!!, true, false) }
             } else {
-                addAction { dataset.put(pos, this.info, true, false) }
+                addAction2 { dataset.put(pos, this.info, true, false) }
             }
         }
     }
 
-    override fun onHoverMoved(draggedView: View, pointLocal: IntArray) {
+    override fun onHoverMoved(event: DragTouchEvent) {
+        println("onHoverMoved ${this.className()} ${event.transformMatrix}")
     }
 
-    override fun onHoverEnd(draggedView: View) {
+    override fun onHoverEnd(event: DragTouchEvent) {
+        println("onHoverEnd ${this.className()} ${event.transformMatrix}")
     }
 
     fun transformToApp(): AppViewDraggable {

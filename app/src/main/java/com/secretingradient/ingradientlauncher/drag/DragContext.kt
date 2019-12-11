@@ -1,88 +1,108 @@
 package com.secretingradient.ingradientlauncher.drag
 
-import android.graphics.Rect
-import android.view.MotionEvent
+import android.graphics.Matrix
+import android.graphics.RectF
 import android.view.View
 import android.view.ViewGroup
-import com.secretingradient.ingradientlauncher.LauncherActivity
-import com.secretingradient.ingradientlauncher.LauncherException
-import com.secretingradient.ingradientlauncher.className
+import com.secretingradient.ingradientlauncher.*
 
 abstract class DragContext {
     var isDragEnabled: Boolean = false
     abstract val contentView: ViewGroup
-    abstract fun onDrag(event: MotionEvent)
-    abstract fun onEndDrag()
     val dragController
         get() = (contentView.context as LauncherActivity).dragController
-    val pendingActions = mutableListOf<()->Unit>()
-    fun toPointLocal(pointGlobal: IntArray) {
-        contentView.getLocationOnScreen(_reusablePoint)
-        pointGlobal[0] -= _reusablePoint[0]
-        pointGlobal[1] -= _reusablePoint[1]
+    val pendingActions = MutableList<()->Unit>(2) {{}}
+
+    abstract fun onDrag(event: DragTouchEvent)
+
+    open fun onDragEnded(event: DragTouchEvent) {
+        if (pendingActions.size > 2)
+            throw LauncherException("pendingActions.size > 2")
+        pendingActions[0]()
+        pendingActions[1]()
+        pendingActions[0] = {}
+        pendingActions[1] = {}
+//            dataset.dumpData()
     }
-    fun getDraggableUnder(pointLocal: IntArray): Draggable? {
+
+    open fun returnThisDraggable(v: Draggable) = false
+
+    open fun returnThisHoverable(v: Hoverable) = false
+
+    fun getDraggableUnder(dragEvent: DragTouchEvent): Draggable? {
         if (!isDragEnabled) return null
-        return hitTraversal(pointLocal) {
+        val d = hitTraversal<Draggable>(dragEvent.touchPointRaw, reusableMatrix) {
             if (it is Draggable)
-                breakConditionDraggable(it)
-            else false
+                returnThisDraggable(it as Draggable)
+            else
+                false
         } as? Draggable
+        dragEvent.transform(reusableMatrix)
+        return d
     }
-    fun getHoverableUnder(pointLocal: IntArray): Hoverable? {
-        return hitTraversal(pointLocal) { if (it is Hoverable) breakConditionHoverable(it) else false } as? Hoverable
+    fun getHoverableUnder(dragEvent: DragTouchEvent): Hoverable? {
+        val h = hitTraversal<Hoverable>(dragEvent.touchPointRaw, reusableMatrix) {
+            if (it is Hoverable)
+                returnThisHoverable(it as Hoverable)
+            else
+                false
+        } as? Hoverable
+        dragEvent.transform(reusableMatrix)
+        return h
     }
-    fun getLocationIn(viewGroup: ViewGroup, v: View, pointOut: IntArray) {
-        if (!v.isAttachedToWindow) throw LauncherException("${v.className()} isn't attached")
-        pointOut[0] = 0
-        pointOut[1] = 0
-        var parent: View = v
-        while (parent != viewGroup) {
-            pointOut[0] = (pointOut[0] * parent.scaleX).toInt()
-            pointOut[0] += (parent.x + (1f-parent.scaleX)*parent.pivotX).toInt()
-            pointOut[1] = (pointOut[1] * parent.scaleY).toInt()
-            pointOut[1] += (parent.y + (1f-parent.scaleY)*parent.pivotY).toInt()
 
-            parent = parent.parent as? ViewGroup ?: throw LauncherException("view ${v.className()} must be a subchild of viewGroup ${viewGroup.className()}")
-        }
+    private fun hitView(v: View, touchPointRaw: PointF, parentMatrix: Matrix): Boolean {
+        reusableRectF.set(0f, 0f, v.width.toFloat(), v.height.toFloat())
+        parentMatrix.mapRect(reusableRectF)
+        return reusableRectF.contains(touchPointRaw.x, touchPointRaw.y)
     }
-    private fun hitView(v: View, pointLocal: IntArray): Boolean {
-        getLocationIn(contentView, v, _reusablePoint)
-        _reusableRect.set(_reusablePoint[0], _reusablePoint[1], _reusablePoint[0] + v.width, _reusablePoint[1] + v.height)
-        return _reusableRect.contains(pointLocal[0], pointLocal[1])
-    }
-    open fun breakConditionDraggable(v: Draggable) : Boolean {
-        return false
-    }
-    open fun breakConditionHoverable(v: Hoverable) : Boolean {
-        return false
-    }
-    private fun hitTraversal(pointLocal: IntArray, breakCondition: (v: View) -> Boolean = {false}) : View? {
-        var view: View = if (hitView(contentView, pointLocal)) contentView else return null
-            .also { println("hitTraversal result: $it") }
+
+    private inline fun <reified T> hitTraversal(touchPointRaw: PointF, transformMatrixOut: Matrix, returnThis: (v: View) -> Boolean = {false}) : View? {
+        // Attention! all scales of contentView's parents will be not applied to the matrix
+        var nextParent: ViewGroup? =  contentView.parent as? ViewGroup
+        transformMatrixOut.reset()  // it will be a parent matrix of view that was hitted
+        nextParent?.getLocationOnScreen(reusablePoint.asArray())  //  takes scales into account
+        transformMatrixOut.postTranslate(reusablePoint.x.toFloat(), reusablePoint.y.toFloat())
+
         var hittedView: View?
-        var nextParent: ViewGroup? = contentView
+        var view: View? = null
 
-        while (nextParent is ViewGroup) {
+        traversal@ while (nextParent is ViewGroup) {
             hittedView = null
             for (i in nextParent.childCount - 1 downTo 0) {
                 val child = nextParent.getChildAt(i)
-                // It can be optimized (not use hitView)
-                if (hitView(child, pointLocal)) {
+                tmpMatrix.set(transformMatrixOut)
+                transformMatrixToChild(child, tmpMatrix)
+                if (child.visibility == View.VISIBLE && hitView(child, touchPointRaw, tmpMatrix)) {
                     hittedView = child
-                    view = child
-                    if (breakCondition(child)) return view
-                    break
+                    if (returnThis(child)) {
+                        view = child
+                        transformMatrixToChild(child, transformMatrixOut)
+                        break@traversal  // returns exactly this view
+                    }
+                    if (child is T) {
+                        view = child
+                        break  // we are looking for the topmost view under the touch point to return
+                    }
                 }
             }
-            nextParent = hittedView as? ViewGroup
+            nextParent = hittedView as? ViewGroup ?: break
+            transformMatrixToChild(hittedView, transformMatrixOut)
         }
 
+        println("hitted = ${view.className()}")
         return view
-//            .also { println("hitTraversal result: $it") }
     }
+
+    private fun transformMatrixToChild(child: View, matrix: Matrix) {
+        matrix.preTranslate(child.x, child.y)
+        matrix.preScale(child.scaleX, child.scaleY, child.pivotX, child.pivotY)
+    }
+
     companion object {
-        private val _reusableRect = Rect()
-        private val _reusablePoint = IntArray(2)
+        private val reusablePoint = Point()
+        private val reusableRectF = RectF()
+        private val reusableMatrix = Matrix()
+        private val tmpMatrix = Matrix()
     }
 }

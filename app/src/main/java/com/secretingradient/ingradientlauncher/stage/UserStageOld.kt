@@ -387,7 +387,7 @@ class UserStageOld(launcher: Launcher) : BasePagerSnapStage(launcher), GestureHe
 
         fun onExitHover(view: View?) {
             when (view) {
-                is BaseSensor -> view.onHoverOut(view)
+//                is BaseSensor -> view.onHoverOut(view)
                 is FolderView -> cancelPreviewFolder()
                 is SnapLayout -> view.removeView(ghostHolder.view)
             }
@@ -398,7 +398,7 @@ class UserStageOld(launcher: Launcher) : BasePagerSnapStage(launcher), GestureHe
                 upSensor.disabled = false
             when {
                 selectedView is AppView && hoveredView is AppView -> createPreviewFolder(hoveredView)
-                isElement(selectedView) && hoveredView is BaseSensor -> hoveredView.onHoverIn(selectedView)
+//                isElement(selectedView) && hoveredView is BaseSensor -> hoveredView.onHoverIn(selectedView)
                 isElement(selectedView) && hoveredView is SnapLayout -> moveGhostView(hoveredView, movePosition)
                 else -> println("no space")
 //                hoveredView == null -> { cancelPreviewFolder() }
@@ -410,7 +410,7 @@ class UserStageOld(launcher: Launcher) : BasePagerSnapStage(launcher), GestureHe
             when {
                 selectedView is AppView && hoveredView is FolderView -> { addToFolder(hoveredView, selectedView); removeView(selectedView) }
                 selectedView is WidgetPreview && hoveredView is SnapLayout -> startAddWidget(selectedView, movePosition)
-                isElement(selectedView) && hoveredView is BaseSensor -> hoveredView.onHoverEnd(selectedView)
+//                isElement(selectedView) && hoveredView is BaseSensor -> hoveredView.onHoverEnd(selectedView)
                 isElement(selectedView) && hoveredView is SnapLayout -> moveOrAddView(selectedView, hoveredView, movePosition)
                 else -> cancelDrag()
             }

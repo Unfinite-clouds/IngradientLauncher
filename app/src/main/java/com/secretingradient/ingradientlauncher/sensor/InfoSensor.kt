@@ -2,8 +2,8 @@ package com.secretingradient.ingradientlauncher.sensor
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.View
 import com.secretingradient.ingradientlauncher.R
+import com.secretingradient.ingradientlauncher.drag.DragTouchEvent
 import com.secretingradient.ingradientlauncher.element.AppView
 
 class InfoSensor : BaseSensor {
@@ -13,15 +13,16 @@ class InfoSensor : BaseSensor {
         setImageResource(R.drawable.ic_info_outline_white_24dp)
     }
 
-    override fun onHoverIn(draggedView: View) {
-        if (draggedView is AppView)
-            super.onHoverIn(draggedView)
+    override fun onHoverIn(event: DragTouchEvent) {
+        if (event.draggableView is AppView)
+            super.onHoverIn(event)
     }
 
-    override fun onHoverEnd(v: View) {
+    override fun onHoverEnd(event: DragTouchEvent) {
+        val v = event.draggableView
         if (v is AppView) {
             v.intentToInfo()
-            super.onHoverEnd(v)
+            super.onHoverEnd(event)
         }
     }
 

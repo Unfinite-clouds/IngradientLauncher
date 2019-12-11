@@ -4,22 +4,24 @@ import android.view.View
 import com.secretingradient.ingradientlauncher.Launcher
 import com.secretingradient.ingradientlauncher.LauncherActivity
 import com.secretingradient.ingradientlauncher.SnapLayout
+import com.secretingradient.ingradientlauncher.className
 import com.secretingradient.ingradientlauncher.data.Data
 import com.secretingradient.ingradientlauncher.data.Dataset
 import com.secretingradient.ingradientlauncher.data.Info
 import com.secretingradient.ingradientlauncher.stage.PagedStage2
 import java.lang.ref.WeakReference
 
-interface DraggableElementI : Draggable {
+interface DraggableElement : Draggable {
     val launcher : Launcher
     val dataset: Dataset<Data, Info>
 
-    fun addAction(f: ()->Unit)
+    fun addAction1(f: ()->Unit)
+    fun addAction2(f: ()->Unit)
 
     fun getPagedPosition(): Int
 }
 
-class DraggableElement : DraggableElementI {
+class DraggableElementImpl : DraggableElement {
     lateinit var ref: WeakReference<View>
     val v: View?
         get() = ref.get()
@@ -33,20 +35,28 @@ class DraggableElement : DraggableElementI {
             return stage.dataset
         }
 
-    override fun onDragStarted() {
+    override fun onDragStarted(event: DragTouchEvent) {
+        println("onDragStarted ${this.className()} ${event.transformMatrix}")
+
         if (v != null && v!!.parent !is SnapLayout) return
         val pos = getPagedPosition()
-        addAction { dataset.remove(pos, false) }
+        addAction1 { dataset.remove(pos, false) }
     }
 
-    override fun onDragEnded() {
+    override fun onDragEnded(event: DragTouchEvent) {
+        println("onDragEnded ${this.className()} ${event.transformMatrix}")
     }
 
-    override fun onDragMoved() {
+    override fun onDragMoved(event: DragTouchEvent) {
+        println("onDragMoved ${this.className()} ${event.transformMatrix}")
     }
 
-    override fun addAction(f: ()->Unit) {
-        launcher.currentStage.dragContext?.pendingActions?.add(f)
+    override fun addAction1(f: ()->Unit) {
+        launcher.currentStage.dragContext?.pendingActions?.set(0, f)
+    }
+
+    override fun addAction2(f: () -> Unit) {
+        launcher.currentStage.dragContext?.pendingActions?.set(1, f)
     }
 
     override fun getPagedPosition(): Int {
