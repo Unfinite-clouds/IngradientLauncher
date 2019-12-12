@@ -18,11 +18,11 @@ class InfoSensor : BaseSensor {
             super.onHoverIn(event)
     }
 
-    override fun onHoverEnd(event: DragTouchEvent) {
+    override fun onHoverEnded(event: DragTouchEvent) {
         val v = event.draggableView
         if (v is AppView) {
             v.intentToInfo()
-            super.onHoverEnd(event)
+            super.onHoverEnded(event)
         }
     }
 

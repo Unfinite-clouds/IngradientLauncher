@@ -1,5 +1,6 @@
 package com.secretingradient.ingradientlauncher.drag
 
+import android.graphics.Matrix
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -23,28 +24,33 @@ class DragController(val dragLayer: DragLayer) {
     val dragEvent = DragTouchEvent()
     private var isStartDragRequested = false
     val realState = RealState()
+    private val newTransformMatrix = Matrix()
 
     fun onTouchEvent(event: MotionEvent): Boolean {
         dragContext = currentDragContext
         dragEvent.onTouchEvent(event, dragContext)
-        val dragContext = dragContext ?: return false
+        val dragContext = dragContext
+            ?: return false
 
         if (event.action == MotionEvent.ACTION_DOWN || isStartDragRequested) {
             isStartDragRequested = false
-            val draggable = dragContext.getDraggableUnder(dragEvent) ?: return false
-            startDrag(draggable)
+            val draggable = dragContext.getDraggableUnder(dragEvent.touchPointRaw, newTransformMatrix)
+                ?: return false
+            dragEvent.setDraggableView(draggable, newTransformMatrix)
+            dragLayer.draggableView = draggable as View?
         }
 
         if (!isDrag) return false
 
         dragContext.onDrag(dragEvent)
 
+        val hoverable = dragContext.getHoverableUnder(dragEvent.touchPointRaw, newTransformMatrix)
+        dragEvent.setHoverableView(hoverable, newTransformMatrix)
+
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {}
             MotionEvent.ACTION_MOVE -> {
-                dragEvent.hoverableView = dragContext.getHoverableUnder(dragEvent)
-                dragEvent.draggableView!!.onDragMoved(dragEvent)
-                dragEvent.hoverableView?.onHoverMoved(dragEvent)
+                dragEvent.onMoved()
             }
             else -> {
                 stopDrag()
@@ -52,11 +58,6 @@ class DragController(val dragLayer: DragLayer) {
         }
         dragLayer.onTouchEvent(event)
         return true
-    }
-
-    private fun startDrag(draggable: Draggable) {
-        dragEvent.draggableView = draggable
-        dragLayer.draggableView = draggable as View?
     }
 
     fun stopDrag() {

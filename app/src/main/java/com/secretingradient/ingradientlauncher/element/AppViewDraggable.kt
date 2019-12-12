@@ -18,9 +18,11 @@ class AppViewDraggable(context: Context, info: AppInfo? = null, delegate: Dragga
     }
 
     override fun onDragEnded(event: DragTouchEvent) {
+        println("onDragEnded ${this.className()} ${event.transformMatrix}")
     }
 
     override fun onDragMoved(event: DragTouchEvent) {
+//        println("onDragMoved ${this.className()} ${event.transformMatrix}")
     }
 
     override fun onHoverIn(event: DragTouchEvent) {
@@ -29,7 +31,7 @@ class AppViewDraggable(context: Context, info: AppInfo? = null, delegate: Dragga
         if (draggedView is AppView) {
             val pos = getPagedPosition()
             val folder = transformToFolder(draggedView)
-            event.hoverableView = folder
+            event.setHoverableView(folder, event.transformMatrix)
             addAction2 { dataset.put(pos, folder.info, true, false) }
         }
     }
@@ -39,10 +41,10 @@ class AppViewDraggable(context: Context, info: AppInfo? = null, delegate: Dragga
     }
 
     override fun onHoverMoved(event: DragTouchEvent) {
-        println("onHoverMoved ${this.className()} ${event.transformMatrix}")
+//        println("onHoverMoved ${this.className()} ${event.transformMatrix}")
     }
 
-    override fun onHoverEnd(event: DragTouchEvent) {
+    override fun onHoverEnded(event: DragTouchEvent) {
         println("onHoverEnd ${this.className()} ${event.transformMatrix}")
     }
 

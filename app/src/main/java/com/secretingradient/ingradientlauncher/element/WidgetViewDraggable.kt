@@ -25,7 +25,7 @@ class WidgetViewDraggable(context: Context, widgetInfo: WidgetInfo) : WidgetView
     override fun onHoverMoved(event: DragTouchEvent) {
     }
 
-    override fun onHoverEnd(event: DragTouchEvent) {
+    override fun onHoverEnded(event: DragTouchEvent) {
     }
 
 }

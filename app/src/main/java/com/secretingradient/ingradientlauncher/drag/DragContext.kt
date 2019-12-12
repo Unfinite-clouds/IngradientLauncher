@@ -4,7 +4,10 @@ import android.graphics.Matrix
 import android.graphics.RectF
 import android.view.View
 import android.view.ViewGroup
-import com.secretingradient.ingradientlauncher.*
+import com.secretingradient.ingradientlauncher.LauncherActivity
+import com.secretingradient.ingradientlauncher.LauncherException
+import com.secretingradient.ingradientlauncher.Point
+import com.secretingradient.ingradientlauncher.PointF
 
 abstract class DragContext {
     var isDragEnabled: Boolean = false
@@ -29,40 +32,34 @@ abstract class DragContext {
 
     open fun returnThisHoverable(v: Hoverable) = false
 
-    fun getDraggableUnder(dragEvent: DragTouchEvent): Draggable? {
+    fun getDraggableUnder(touchPointRaw: PointF, matrixOut: Matrix): Draggable? {
         if (!isDragEnabled) return null
-        val d = hitTraversal<Draggable>(dragEvent.touchPointRaw, reusableMatrix) {
+        val d = hitTraversal<Draggable>(touchPointRaw, matrixOut) {
             if (it is Draggable)
                 returnThisDraggable(it as Draggable)
             else
                 false
         } as? Draggable
-        dragEvent.transform(reusableMatrix)
         return d
     }
-    fun getHoverableUnder(dragEvent: DragTouchEvent): Hoverable? {
-        val h = hitTraversal<Hoverable>(dragEvent.touchPointRaw, reusableMatrix) {
+
+    fun getHoverableUnder(touchPointRaw: PointF, matrixOut: Matrix): Hoverable? {
+        val h = hitTraversal<Hoverable>(touchPointRaw, matrixOut) {
             if (it is Hoverable)
                 returnThisHoverable(it as Hoverable)
             else
                 false
         } as? Hoverable
-        dragEvent.transform(reusableMatrix)
         return h
-    }
-
-    private fun hitView(v: View, touchPointRaw: PointF, parentMatrix: Matrix): Boolean {
-        reusableRectF.set(0f, 0f, v.width.toFloat(), v.height.toFloat())
-        parentMatrix.mapRect(reusableRectF)
-        return reusableRectF.contains(touchPointRaw.x, touchPointRaw.y)
     }
 
     private inline fun <reified T> hitTraversal(touchPointRaw: PointF, transformMatrixOut: Matrix, returnThis: (v: View) -> Boolean = {false}) : View? {
         // Attention! all scales of contentView's parents will be not applied to the matrix
+        transformMatrixOut.reset()  // it will be a matrix of view that was hitted
+        tmpMatrixTraversal.reset()
         var nextParent: ViewGroup? =  contentView.parent as? ViewGroup
-        transformMatrixOut.reset()  // it will be a parent matrix of view that was hitted
         nextParent?.getLocationOnScreen(reusablePoint.asArray())  //  takes scales into account
-        transformMatrixOut.postTranslate(reusablePoint.x.toFloat(), reusablePoint.y.toFloat())
+        tmpMatrixTraversal.postTranslate(reusablePoint.x.toFloat(), reusablePoint.y.toFloat())
 
         var hittedView: View?
         var view: View? = null
@@ -71,26 +68,27 @@ abstract class DragContext {
             hittedView = null
             for (i in nextParent.childCount - 1 downTo 0) {
                 val child = nextParent.getChildAt(i)
-                tmpMatrix.set(transformMatrixOut)
+                tmpMatrix.set(tmpMatrixTraversal)
                 transformMatrixToChild(child, tmpMatrix)
                 if (child.visibility == View.VISIBLE && hitView(child, touchPointRaw, tmpMatrix)) {
                     hittedView = child
                     if (returnThis(child)) {
                         view = child
-                        transformMatrixToChild(child, transformMatrixOut)
+                        transformMatrixOut.set(tmpMatrix)
                         break@traversal  // returns exactly this view
                     }
                     if (child is T) {
-                        view = child
-                        break  // we are looking for the topmost view under the touch point to return
+                        view = child // we are looking for the topmost inner view of type T under the touch point
+                        transformMatrixOut.set(tmpMatrix)
                     }
+                    break
                 }
             }
-            nextParent = hittedView as? ViewGroup ?: break
-            transformMatrixToChild(hittedView, transformMatrixOut)
+            tmpMatrixTraversal.set(tmpMatrix)
+            nextParent = hittedView as? ViewGroup
         }
 
-        println("hitted = ${view.className()}")
+//        println("hitted = ${view.className()}")
         return view
     }
 
@@ -99,10 +97,17 @@ abstract class DragContext {
         matrix.preScale(child.scaleX, child.scaleY, child.pivotX, child.pivotY)
     }
 
+    private fun hitView(v: View, touchPointRaw: PointF, parentMatrix: Matrix): Boolean {
+        reusableRectF.set(0f, 0f, v.width.toFloat(), v.height.toFloat())
+        parentMatrix.mapRect(reusableRectF)
+        return reusableRectF.contains(touchPointRaw.x, touchPointRaw.y)
+    }
+
     companion object {
         private val reusablePoint = Point()
         private val reusableRectF = RectF()
         private val reusableMatrix = Matrix()
         private val tmpMatrix = Matrix()
+        private val tmpMatrixTraversal = Matrix()
     }
 }

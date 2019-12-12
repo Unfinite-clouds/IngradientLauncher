@@ -22,9 +22,11 @@ class FolderViewDraggable(context: Context, vararg apps: AppInfo, delegate: Drag
     }
 
     override fun onDragEnded(event: DragTouchEvent) {
+        println("onDragEnded ${this.className()} ${event.transformMatrix}")
     }
 
     override fun onDragMoved(event: DragTouchEvent) {
+//        println("onDragMoved ${this.className()} ${event.transformMatrix}")
     }
 
     override fun onHoverIn(event: DragTouchEvent) {
@@ -57,7 +59,7 @@ class FolderViewDraggable(context: Context, vararg apps: AppInfo, delegate: Drag
         println("onHoverMoved ${this.className()} ${event.transformMatrix}")
     }
 
-    override fun onHoverEnd(event: DragTouchEvent) {
+    override fun onHoverEnded(event: DragTouchEvent) {
         println("onHoverEnd ${this.className()} ${event.transformMatrix}")
     }
 

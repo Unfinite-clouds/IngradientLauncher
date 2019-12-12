@@ -36,6 +36,7 @@ class SnapLayoutHoverable : SnapLayout, Hoverable {
 
     override fun onHoverIn(event: DragTouchEvent) {
         println("onHoverIn ${this.className()} ${event.transformMatrix}")
+        onHoverMoved(event)
         ghostView.visibility = View.VISIBLE
     }
 
@@ -49,7 +50,7 @@ class SnapLayoutHoverable : SnapLayout, Hoverable {
     }
 
     override fun onHoverMoved(event: DragTouchEvent) {
-        println("onHoverMoved ${this.className()} ${event.transformMatrix}")
+//        println("onHoverMoved ${this.className()} ${event.transformMatrix}")
         debugPointF.set(event.transformedPoint)
         _reusablePoint.set(debugPointF.x.toInt(), debugPointF.y.toInt())
         invalidate()
@@ -61,8 +62,8 @@ class SnapLayoutHoverable : SnapLayout, Hoverable {
         }
     }
 
-    override fun onHoverEnd(event: DragTouchEvent) {
-        println("onHoverEnd ${this.className()} ${event.transformMatrix}")
+    override fun onHoverEnded(event: DragTouchEvent) {
+        println("onHoverEnded ${this.className()} ${event.transformMatrix}")
         ghostView.visibility = View.GONE
     }
 

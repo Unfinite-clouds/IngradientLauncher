@@ -3,6 +3,7 @@ package com.secretingradient.ingradientlauncher.drag
 import android.graphics.Matrix
 import android.view.MotionEvent
 import com.secretingradient.ingradientlauncher.PointF
+import com.secretingradient.ingradientlauncher.className
 
 class DragTouchEvent {
     val touchPointRaw: PointF = PointF()
@@ -10,26 +11,13 @@ class DragTouchEvent {
     /*private*/ val transformMatrix: Matrix = Matrix()  // todo: uncomment "private"
     private val tmpArray = FloatArray(9)
     var draggableView: Draggable? = null
-        set(value) {
-            if (field != value) {
-                field?.onDragEnded(this)
-                value?.onDragStarted(this)
-                field = value
-            }
-        }
+        private set
     var hoverableView: Hoverable? = null
-        set(newHovered) {
-            if (field != newHovered) {
-                val oldHovered = field
-                field = newHovered
-                oldHovered?.onHoverOut(this)
-                newHovered?.onHoverIn(this)
-            }
-        }
+        private set
     var dragContext: DragContext? = null
-        set(value) {
+        private set(value) {
             if (field != value) {
-                hoverableView = null
+                setHoverableView(null, null)
             }
             field = value
         }
@@ -37,27 +25,63 @@ class DragTouchEvent {
     fun onTouchEvent(event: MotionEvent, dragContext: DragContext?) {
         this.dragContext = dragContext
         touchPointRaw.set(event.rawX, event.rawY)
-        transformMatrix.reset()
     }
 
     fun onStopDrag() {
-        draggableView = null
-        hoverableView = null
+        computeTransformedPoint()
+        setHoverableView(null, null, true)
+        setDraggableView(null, null)
     }
 
     private fun computeTransformedPoint() {
         transformMatrix.getValues(tmpArray)
         transformedPoint.set((touchPointRaw.x - tmpArray[2])/tmpArray[0], (touchPointRaw.y - tmpArray[5])/tmpArray[4])
-
-        // way 2:
-/*        if (!transformMatrix.invert(transformMatrix))
-            println("WARNING: matrix wasn't inverted at DragTouchEvent")
-        transformMatrix.mapPoints(transformedPoint.asArray(), touchPointRaw.asArray())
-        transformMatrix.invert(transformMatrix)*/
     }
 
-    fun transform(newTransform: Matrix) {
+    fun setDraggableView(newDraggable: Draggable?, newTransform: Matrix?) {
+        if (draggableView != newDraggable) {
+            draggableView?.onDragEnded(this)
+            if (newDraggable != null) {
+                transformMatrix(newTransform!!)
+                newDraggable.onDragStarted(this)
+            } else {
+                resetMatrix()
+            }
+            draggableView = newDraggable
+        }
+    }
+
+    fun setHoverableView(newHoverable: Hoverable?, newTransform: Matrix?, isEnd: Boolean = false) {
+            if (hoverableView != newHoverable) {
+                println("newHoverable = ${newHoverable.className()} - $newTransform")
+                val oldHovered = hoverableView
+                hoverableView = newHoverable
+                oldHovered?.onHoverOut(this)
+                if (isEnd)
+                    oldHovered?.onHoverEnded(this)
+                if (newHoverable != null) {
+                    transformMatrix(newTransform!!)
+                    newHoverable.onHoverIn(this)
+                } else {
+                    resetMatrix()
+                }
+            }
+    }
+
+    private fun transformMatrix(newTransform: Matrix) {
         transformMatrix.set(newTransform)
         computeTransformedPoint()
     }
+
+    private fun resetMatrix() {
+        transformMatrix.reset()
+        computeTransformedPoint()
+    }
+
+    fun onMoved() {
+        computeTransformedPoint()
+        draggableView!!.onDragMoved(this)
+        hoverableView?.onHoverMoved(this)
+    }
+
 }

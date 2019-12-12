@@ -31,9 +31,9 @@ abstract class BaseSensor : ImageView, Hoverable {
 
     override fun onHoverMoved(event: DragTouchEvent) {}
 
-    override fun onHoverEnd(event: DragTouchEvent) {
+    override fun onHoverEnded(event: DragTouchEvent) {
         if (!disabled) {
-            sensorListener?.onHoverEnd(event)
+            sensorListener?.onHoverEnded(event)
         }
     }
 
