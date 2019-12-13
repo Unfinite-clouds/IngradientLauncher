@@ -6,9 +6,10 @@ import com.secretingradient.ingradientlauncher.PointF
 import com.secretingradient.ingradientlauncher.className
 
 class DragTouchEvent {
+    lateinit var motionEvent: MotionEvent
     val touchPointRaw: PointF = PointF()
-    val transformedPoint: PointF = PointF()
-    /*private*/ val transformMatrix: Matrix = Matrix()  // onDragStarted - for dragableView, other - for hoverableView todo: uncomment "private"
+    /*private*/ val transformMatrixH: Matrix = Matrix()  // onDragStarted - for dragableView, other - for hoverableView todo: uncomment "private"
+    /*private*/ val transformMatrixD: Matrix = Matrix()  // onDragStarted - for dragableView, other - for hoverableView todo: uncomment "private"
     private val tmpArray = FloatArray(9)
     var draggableView: Draggable? = null
         private set
@@ -24,31 +25,46 @@ class DragTouchEvent {
     var realState: DragRealState? = null
 
     fun onTouchEvent(event: MotionEvent, dragContext: DragContext?) {
+        motionEvent = event
         this.dragContext = dragContext
         touchPointRaw.set(event.rawX, event.rawY)
     }
 
     fun onStopDrag() {
-        computeTransformedPoint()
         setHoverableView(null, null, true)
         setDraggableView(null, null, null)
-        resetMatrix()
     }
 
-    private fun computeTransformedPoint() {
-        transformMatrix.getValues(tmpArray)
-        transformedPoint.set((touchPointRaw.x - tmpArray[2])/tmpArray[0], (touchPointRaw.y - tmpArray[5])/tmpArray[4])
+    fun getTransformedPointH(pointOut: PointF) {
+        transformMatrixH.getValues(tmpArray)
+        pointOut.set((touchPointRaw.x - tmpArray[2])/tmpArray[0], (touchPointRaw.y - tmpArray[5])/tmpArray[4])
+    }
+
+    fun getTransformedPointD(pointOut: PointF) {
+        transformMatrixD.getValues(tmpArray)
+        pointOut.set((touchPointRaw.x - tmpArray[2])/tmpArray[0], (touchPointRaw.y - tmpArray[5])/tmpArray[4])
+    }
+
+    fun getMatrixHTranslation(pointOut: PointF) {
+        transformMatrixH.getValues(tmpArray)
+        pointOut.set(tmpArray[2], tmpArray[5])
+    }
+
+    fun getMatrixDTranslation(pointOut: PointF) {
+        transformMatrixD.getValues(tmpArray)
+        pointOut.set(tmpArray[2], tmpArray[5])
     }
 
     fun setDraggableView(newDraggable: Draggable?, newTransform: Matrix?, realState: DragRealState?) {
         if (draggableView != newDraggable) {
             this.realState = realState
+
             draggableView?.onDragEnded(this)
+
             if (newDraggable != null) {
-                transformMatrix(newTransform!!)
+                if (newTransform != null)
+                    transformMatrixD.set(newTransform)
                 newDraggable.onDragStarted(this)
-            } else {
-                resetMatrix()
             }
             draggableView = newDraggable
         }
@@ -67,24 +83,13 @@ class DragTouchEvent {
 
                 if (newHoverable != null) {
                     if (newTransform != null)
-                        transformMatrix(newTransform)
+                        transformMatrixH.set(newTransform)
                     newHoverable.onHoverIn(this)
                 }
             }
     }
 
-    private fun transformMatrix(newTransform: Matrix) {
-        transformMatrix.set(newTransform)
-        computeTransformedPoint()
-    }
-
-    private fun resetMatrix() {
-        transformMatrix.reset()
-        computeTransformedPoint()
-    }
-
     fun onMoved() {
-        computeTransformedPoint()
         draggableView!!.onDragMoved(this)
         hoverableView?.onHoverMoved(this)
     }

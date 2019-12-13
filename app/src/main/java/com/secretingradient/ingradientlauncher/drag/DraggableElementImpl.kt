@@ -36,7 +36,7 @@ class DraggableElementImpl : DraggableElement {
         }
 
     override fun onDragStarted(event: DragTouchEvent) {
-        println("onDragStarted ${this.className()} ${event.transformMatrix}")
+        println("onDragStarted ${this.className()} ${event.transformMatrixH}")
 
         if (v != null && v!!.parent !is SnapLayout) return
         val pos = getPagedPosition()
@@ -44,7 +44,7 @@ class DraggableElementImpl : DraggableElement {
     }
 
     override fun onDragEnded(event: DragTouchEvent) {
-        println("onDragEnded ${this.className()} ${event.transformMatrix}")
+        println("onDragEnded ${this.className()} ${event.transformMatrixH}")
     }
 
     override fun onDragMoved(event: DragTouchEvent) {

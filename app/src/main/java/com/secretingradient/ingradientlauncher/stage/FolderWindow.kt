@@ -99,7 +99,7 @@ class FolderWindow : RecyclerView {
     }
 
     override fun onTouchEvent(ev: MotionEvent): Boolean {
-        if (inEditMode && ev.action == MotionEvent.ACTION_DOWN) {
+        if ((parent as UserStage2).inEditMode && ev.action == MotionEvent.ACTION_DOWN) {
             startDrag(ev)
         }
         if (ev.action == MotionEvent.ACTION_UP || ev.action == MotionEvent.ACTION_CANCEL) {

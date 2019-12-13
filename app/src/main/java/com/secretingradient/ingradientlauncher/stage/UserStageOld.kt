@@ -114,7 +114,7 @@ class UserStageOld(launcher: Launcher) : BasePagerSnapStage(launcher), GestureHe
         widget.layoutParams = lp
         touchHandler.select(widget)
         currentSnapLayout.addView(widget)
-        dataset.put(lp.position, widget.widgetInfo)
+        dataset.put(lp.position, widget.info)
         transferringWidgetPreview = null
         startResizeWidget(widget)
     }

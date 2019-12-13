@@ -9,6 +9,7 @@ import com.secretingradient.ingradientlauncher.drag.DragTouchEvent
 import com.secretingradient.ingradientlauncher.drag.DraggableElement
 import com.secretingradient.ingradientlauncher.drag.DraggableElementImpl
 import com.secretingradient.ingradientlauncher.drag.Hoverable
+import com.secretingradient.ingradientlauncher.stage.UserStage2
 import java.lang.ref.WeakReference
 
 class FolderViewDraggable(context: Context, vararg apps: AppInfo, delegate: DraggableElementImpl = DraggableElementImpl())
@@ -16,6 +17,9 @@ class FolderViewDraggable(context: Context, vararg apps: AppInfo, delegate: Drag
 
     init {
         delegate.ref = WeakReference(this)
+        val stage = launcher.currentStage as? UserStage2
+        if (stage != null)
+            setOnTouchListener(stage)
     }
 
     constructor(context: Context, apps: Collection<AppInfo>) : this(context) {
@@ -23,7 +27,7 @@ class FolderViewDraggable(context: Context, vararg apps: AppInfo, delegate: Drag
     }
 
     override fun onHoverIn(event: DragTouchEvent) {
-        println("onHoverIn ${this.className()} ${event.transformMatrix}")
+        println("onHoverIn ${this.className()} ${event.transformMatrixH}")
         val draggedView = event.draggableView
         if (draggedView is AppView) {
             addApps(draggedView.info!!)
@@ -31,7 +35,7 @@ class FolderViewDraggable(context: Context, vararg apps: AppInfo, delegate: Drag
     }
 
     override fun onHoverOut(event: DragTouchEvent) {
-        println("onHoverOut ${this.className()} ${event.transformMatrix}")
+        println("onHoverOut ${this.className()} ${event.transformMatrixH}")
         val draggedView = event.draggableView
         if (draggedView is AppView && draggedView.info == apps[apps.size - 1]) {
             removeApp(apps.size - 1)
@@ -53,7 +57,7 @@ class FolderViewDraggable(context: Context, vararg apps: AppInfo, delegate: Drag
     }
 
     override fun onHoverEnded(event: DragTouchEvent) {
-        println("onHoverEnded ${this.className()} ${event.transformMatrix}")
+        println("onHoverEnded ${this.className()} ${event.transformMatrixH}")
         val draggedView = event.draggableView
         if (draggedView is AppView && draggedView.info == apps[apps.size - 1]) {
             if (apps.size >= 2) {

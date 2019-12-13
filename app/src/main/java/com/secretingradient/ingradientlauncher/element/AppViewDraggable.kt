@@ -18,16 +18,16 @@ class AppViewDraggable(context: Context, info: AppInfo? = null, delegate: Dragga
     }
 
     override fun onHoverIn(event: DragTouchEvent) {
-        println("onHoverIn ${this.className()} ${event.transformMatrix}")
+        println("onHoverIn ${this.className()} ${event.transformMatrixH}")
         val draggedView = event.draggableView
         if (draggedView is AppView) {
             val folder = transformToFolder(draggedView)
-            event.setHoverableView(folder, event.transformMatrix)
+            event.setHoverableView(folder, event.transformMatrixH)
         }
     }
 
     override fun onHoverOut(event: DragTouchEvent) {
-        println("onHoverOut ${this.className()} ${event.transformMatrix}")
+        println("onHoverOut ${this.className()} ${event.transformMatrixH}")
     }
 
     override fun onHoverMoved(event: DragTouchEvent) {
@@ -35,7 +35,7 @@ class AppViewDraggable(context: Context, info: AppInfo? = null, delegate: Dragga
     }
 
     override fun onHoverEnded(event: DragTouchEvent) {
-        println("onHoverEnd ${this.className()} ${event.transformMatrix}")
+        println("onHoverEnd ${this.className()} ${event.transformMatrixH}")
     }
 
     private fun transformToFolder(draggedAppView: AppView): FolderViewDraggable {
