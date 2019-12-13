@@ -10,7 +10,6 @@ import android.view.View
 import android.view.ViewGroup
 import com.secretingradient.ingradientlauncher.drag.DragTouchEvent
 import com.secretingradient.ingradientlauncher.drag.Hoverable
-import com.secretingradient.ingradientlauncher.element.AppView
 
 class SnapLayoutHoverable : SnapLayout, Hoverable {
     val ghostView = GhostView(context)
@@ -55,11 +54,8 @@ class SnapLayoutHoverable : SnapLayout, Hoverable {
         _reusablePoint.set(debugPointF.x.toInt(), debugPointF.y.toInt())
         invalidate()
 
-        val draggedView = event.draggableView
-        if (draggedView is AppView) {
-            val pos = snapToGrid(_reusablePoint, 2)
-            moveView(ghostView, pos)
-        }
+        val pos = snapToGrid(_reusablePoint, 2)
+        moveView(ghostView, pos)
     }
 
     override fun onHoverEnded(event: DragTouchEvent) {

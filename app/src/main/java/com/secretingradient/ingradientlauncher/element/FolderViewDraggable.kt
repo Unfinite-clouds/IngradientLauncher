@@ -1,6 +1,7 @@
 package com.secretingradient.ingradientlauncher.element
 
 import android.content.Context
+import com.secretingradient.ingradientlauncher.LauncherException
 import com.secretingradient.ingradientlauncher.SnapLayout
 import com.secretingradient.ingradientlauncher.className
 import com.secretingradient.ingradientlauncher.data.AppInfo
@@ -21,22 +22,11 @@ class FolderViewDraggable(context: Context, vararg apps: AppInfo, delegate: Drag
         addApps(apps)
     }
 
-    override fun onDragEnded(event: DragTouchEvent) {
-        println("onDragEnded ${this.className()} ${event.transformMatrix}")
-    }
-
-    override fun onDragMoved(event: DragTouchEvent) {
-//        println("onDragMoved ${this.className()} ${event.transformMatrix}")
-    }
-
     override fun onHoverIn(event: DragTouchEvent) {
         println("onHoverIn ${this.className()} ${event.transformMatrix}")
         val draggedView = event.draggableView
         if (draggedView is AppView) {
             addApps(draggedView.info!!)
-            val pos = getPagedPosition()
-            if (apps.size > 2)
-                addAction2 { dataset.put(pos, this.info, true, false) }
         }
     }
 
@@ -45,22 +35,34 @@ class FolderViewDraggable(context: Context, vararg apps: AppInfo, delegate: Drag
         val draggedView = event.draggableView
         if (draggedView is AppView && draggedView.info == apps[apps.size - 1]) {
             removeApp(apps.size - 1)
-            val pos = getPagedPosition()
-            if (apps.size < 2) {
-                val app = transformToApp()
-                addAction2 { dataset.put(pos, app.info!!, true, false) }
-            } else {
-                addAction2 { dataset.put(pos, this.info, true, false) }
-            }
+            if (apps.size < 2)
+                transformToApp()
+
+//            val pos = getPagedPosition()
+//            if (apps.size < 2) {
+//                val app = transformToApp()
+//                addAction2 { dataset.put(pos, app.info!!, true, false) }
+//            } else {
+//                addAction2 { dataset.put(pos, this.info, true, false) }
+//            }
         }
     }
 
     override fun onHoverMoved(event: DragTouchEvent) {
-        println("onHoverMoved ${this.className()} ${event.transformMatrix}")
+//        println("onHoverMoved ${this.className()} ${event.transformMatrix}")
     }
 
     override fun onHoverEnded(event: DragTouchEvent) {
-        println("onHoverEnd ${this.className()} ${event.transformMatrix}")
+        println("onHoverEnded ${this.className()} ${event.transformMatrix}")
+        val draggedView = event.draggableView
+        if (draggedView is AppView && draggedView.info == apps[apps.size - 1]) {
+            if (apps.size >= 2) {
+                val pos = getPagedPosition()
+                addAction2 { dataset.put(pos, this.info, true, false) }
+            } else {
+                throw LauncherException("unexpected case. folder must consist of 2+ apps")
+            }
+        }
     }
 
     fun transformToApp(): AppViewDraggable {

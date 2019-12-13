@@ -3,7 +3,6 @@ package com.secretingradient.ingradientlauncher.drag
 import android.graphics.Matrix
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
 import com.secretingradient.ingradientlauncher.LauncherActivity
 
 class DragController(val dragLayer: DragLayer) {
@@ -23,7 +22,7 @@ class DragController(val dragLayer: DragLayer) {
         get() = dragEvent.draggableView != null && currentDragContext != null
     val dragEvent = DragTouchEvent()
     private var isStartDragRequested = false
-    val realState = RealState()
+    val realState = DragRealState()
     private val newTransformMatrix = Matrix()
 
     fun onTouchEvent(event: MotionEvent): Boolean {
@@ -36,7 +35,7 @@ class DragController(val dragLayer: DragLayer) {
             isStartDragRequested = false
             val draggable = dragContext.getDraggableUnder(dragEvent.touchPointRaw, newTransformMatrix)
                 ?: return false
-            dragEvent.setDraggableView(draggable, newTransformMatrix)
+            dragEvent.setDraggableView(draggable, newTransformMatrix, realState)
             dragLayer.draggableView = draggable as View?
         }
 
@@ -61,32 +60,16 @@ class DragController(val dragLayer: DragLayer) {
     }
 
     fun stopDrag() {
+        dragEvent.onStopDrag()
         dragContext?.onDragEnded(dragEvent)
         dragLayer.draggableView = null
-        dragEvent.onStopDrag()
     }
 
     fun startDragRequest() {
-        isStartDragRequested = true
-        currentDragContext?.isDragEnabled = true
-    }
-
-    class RealState {
-        var parent: ViewGroup? = null
-        var translationX = 0f
-        var translationY = 0f
-
-        fun saveState(v: View?) {
-            parent = v?.parent as? ViewGroup
-            translationX = v?.translationX ?: 0f
-            translationY = v?.translationY ?: 0f
-        }
-
-        fun loadState(v: View?) {
-            if (v == null)
-                return
-            v.translationX = translationX
-            v.translationY = translationY
+        if (!isDrag) {
+            isStartDragRequested = true
+            currentDragContext?.isDragEnabled = true
         }
     }
+
 }

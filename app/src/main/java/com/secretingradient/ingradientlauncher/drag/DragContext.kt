@@ -5,7 +5,6 @@ import android.graphics.RectF
 import android.view.View
 import android.view.ViewGroup
 import com.secretingradient.ingradientlauncher.LauncherActivity
-import com.secretingradient.ingradientlauncher.LauncherException
 import com.secretingradient.ingradientlauncher.Point
 import com.secretingradient.ingradientlauncher.PointF
 
@@ -14,18 +13,21 @@ abstract class DragContext {
     abstract val contentView: ViewGroup
     val dragController
         get() = (contentView.context as LauncherActivity).dragController
-    val pendingActions = MutableList<()->Unit>(2) {{}}
+    val pendingActions = mutableListOf<()->Unit>()
 
     abstract fun onDrag(event: DragTouchEvent)
 
     open fun onDragEnded(event: DragTouchEvent) {
-        if (pendingActions.size > 2)
-            throw LauncherException("pendingActions.size > 2")
-        pendingActions[0]()
-        pendingActions[1]()
-        pendingActions[0] = {}
-        pendingActions[1] = {}
+        if (pendingActions.size == 2) {
+            pendingActions[0]()
+            pendingActions[1]()
+//        pendingActions[0] = {}
+//        pendingActions[1] = {}
 //            dataset.dumpData()
+        } else {
+            println("pendingActions canceled")
+        }
+        pendingActions.clear()
     }
 
     open fun returnThisDraggable(v: Draggable) = false

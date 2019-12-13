@@ -48,15 +48,15 @@ class DraggableElementImpl : DraggableElement {
     }
 
     override fun onDragMoved(event: DragTouchEvent) {
-        println("onDragMoved ${this.className()} ${event.transformMatrix}")
+//        println("onDragMoved ${this.className()} ${event.transformMatrix}")
     }
 
     override fun addAction1(f: ()->Unit) {
-        launcher.currentStage.dragContext?.pendingActions?.set(0, f)
+        launcher.currentStage.dragContext?.pendingActions?.add(0, f)
     }
 
     override fun addAction2(f: () -> Unit) {
-        launcher.currentStage.dragContext?.pendingActions?.set(1, f)
+        launcher.currentStage.dragContext?.pendingActions?.add(1, f)
     }
 
     override fun getPagedPosition(): Int {

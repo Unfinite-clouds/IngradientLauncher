@@ -35,11 +35,13 @@ class UserStage2(context: Context, attrs: AttributeSet?) : PagedStage2(context, 
             get() = this@UserStage2
 
         override fun onDrag(event: DragTouchEvent) {
-            if (gestureHelper.gesture == Gesture.TAP_UP && event.draggableView !is FolderViewDraggable)
-                endEditMode()
+            if (gestureHelper.gesture == Gesture.TAP_UP) {
+                if (event.draggableView is FolderViewDraggable)
+                    openFolder(event.draggableView as FolderViewDraggable, event.realState!!.x, event.realState!!.y)
+                else
+                    endEditMode()
+            }
         }
-
-
 
         override fun returnThisHoverable(v: Hoverable): Boolean {
             return v !is SnapLayoutHoverable
@@ -60,6 +62,7 @@ class UserStage2(context: Context, attrs: AttributeSet?) : PagedStage2(context, 
     override fun onFinishInflate() {
         super.onFinishInflate()
         folderWindow = findViewById(R.id.folder_window)
+        folderWindow.initData(dataset, defaultAppSize)  // todo: appSize?
         stageVP = findViewById(R.id.stage_1_pager)
         stageVP.adapter = adapter
         clipChildren = false
@@ -106,6 +109,20 @@ class UserStage2(context: Context, attrs: AttributeSet?) : PagedStage2(context, 
     fun endEditMode() {
         dragContext.isDragEnabled = false
         stageVP.animate().scaleX(1f).scaleY(1f).start()
+    }
+
+    fun openFolder(folder: FolderViewDraggable, x: Float, y: Float) {
+        isFolderOpen = true
+        folderWindow.setContent(folder, folder.getPagedPosition())
+        folderWindow.visibility = View.VISIBLE
+        folderWindow.translationX = x
+        folderWindow.translationY = y
+        println("anchor folder: x = ${folder.x}, y = ${folder.y}")
+    }
+
+    fun closeFolder() {
+        isFolderOpen = false
+        folderWindow.visibility = View.GONE
     }
 
 }
