@@ -64,7 +64,22 @@ class FolderWindow : RecyclerView {
         adapter!!.notifyDataSetChanged()
     }
 
-    inner class FolderAdapter() : RecyclerView.Adapter<AppHolder>() {
+    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        // positioning within parent's bounds
+        super.onLayout(changed, l, t, r, b)
+        val extraX = r - (parent as ViewGroup).width
+        val extraY = b - (parent as ViewGroup).height
+        if (extraX > 0) {
+            left -= extraX
+            right -= extraX
+        }
+        if (extraY > 0) {
+            top -= extraY
+            bottom -= extraY
+        }
+    }
+
+    inner class FolderAdapter : RecyclerView.Adapter<AppHolder>() {
         override fun getItemCount() = folderInfo.apps.size
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppHolder {
@@ -98,20 +113,11 @@ class FolderWindow : RecyclerView {
         }
     }
 
-    override fun onTouchEvent(ev: MotionEvent): Boolean {
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         if ((parent as UserStage2).inEditMode && ev.action == MotionEvent.ACTION_DOWN) {
             startDrag(ev)
         }
-        if (ev.action == MotionEvent.ACTION_UP || ev.action == MotionEvent.ACTION_CANCEL) {
-            val x = ev.x.toInt()
-            val y = ev.y.toInt()
-            if (x < 0 || x > width || y < 0 || y > height) {
-                removeSelectedApp()
-                return true
-            }
-            selectedAppHolder = null
-        }
-        return super.onTouchEvent(ev)
+        return super.dispatchTouchEvent(ev)
     }
 
     inner class ItemDragger : ItemTouchHelper.SimpleCallback(ItemTouchHelper.RIGHT or ItemTouchHelper.LEFT or ItemTouchHelper.DOWN or ItemTouchHelper.UP, 0) {

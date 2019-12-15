@@ -110,12 +110,12 @@ class SnapLayoutHoverable : SnapLayout, Hoverable {
         canvas.drawCircle(debugPointF.x, debugPointF.y, 10f, paint)
     }
 
-    fun getPagedPosition(pos: Int): Int {
+    private fun getPagedPosition(pos: Int): Int {
         val stage = launcher.currentStage as PagedStage2
         return stage.getPagedPosition(pos, this)
     }
 
-    fun addAction2(f: () -> Unit) {
+    private fun addAction2(f: () -> Unit) {
         launcher.currentStage.dragContext?.pendingActions?.add(1, f)
     }
 }

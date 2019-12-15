@@ -12,9 +12,7 @@ import com.secretingradient.ingradientlauncher.*
 import com.secretingradient.ingradientlauncher.data.Data
 import com.secretingradient.ingradientlauncher.data.Dataset
 import com.secretingradient.ingradientlauncher.data.Info
-import com.secretingradient.ingradientlauncher.drag.DragContext
-import com.secretingradient.ingradientlauncher.drag.DragTouchEvent
-import com.secretingradient.ingradientlauncher.drag.Hoverable
+import com.secretingradient.ingradientlauncher.drag.*
 import com.secretingradient.ingradientlauncher.element.FolderViewDraggable
 import com.secretingradient.ingradientlauncher.sensor.BaseSensor
 
@@ -39,10 +37,13 @@ class UserStage2(context: Context, attrs: AttributeSet?) : PagedStage2(context, 
     var isFolderOpen = false
     val resizeFrame = View.inflate(context, R.layout.resize_frame, null) as WidgetResizeFrame
     var inEditMode = false
+    var isDragStartedInFolder = false
 
     override val dragContext = object : DragContext() {
         override val contentView: ViewGroup
             get() = this@UserStage2
+        override val dataset: Dataset<Data, Info>
+            get() = this@UserStage2.dataset
 
         override fun returnThisHoverable(v: Hoverable): Boolean {
             return v !is SnapLayoutHoverable
@@ -67,21 +68,6 @@ class UserStage2(context: Context, attrs: AttributeSet?) : PagedStage2(context, 
 
     }
 
-    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        if (isTouchInFolder(ev.x.toInt(), ev.y.toInt())) {
-            reusablePoint.set(ev.x.toInt(), ev.y.toInt())
-            transformDownToChild(folderWindow, this@UserStage2, reusablePoint)
-            dispatchTransformedEvent(folderWindow, ev, reusablePoint)
-        } else {
-            if (ev.action == MotionEvent.ACTION_DOWN)
-                closeFolder()
-        }
-        if (gestureHelper.gesture == Gesture.TAP_UP) {
-            endEditMode()
-        }
-        return super.dispatchTouchEvent(ev)
-    }
-
     override fun onFinishInflate() {
         super.onFinishInflate()
         folderWindow = findViewById(R.id.folder_window)
@@ -90,6 +76,20 @@ class UserStage2(context: Context, attrs: AttributeSet?) : PagedStage2(context, 
         stageVP.adapter = adapter
         clipChildren = false
         hideSensors()
+        val rightSensor = findViewById<BaseSensor>(R.id.right_sensor)
+        rightSensor.sensorListener = object : HoverableImpl() {
+            override fun onHoverIn(event: DragTouchEvent) {
+                stageVP.currentItem += 1
+                closeFolder()
+            }
+        }
+        val leftSensor = findViewById<BaseSensor>(R.id.left_sensor)
+        leftSensor.sensorListener = object : HoverableImpl() {
+            override fun onHoverIn(event: DragTouchEvent) {
+                stageVP.currentItem -= 1
+                closeFolder()
+            }
+        }
         // stageVP.offscreenPageLimit = 2
     }
 
@@ -103,6 +103,69 @@ class UserStage2(context: Context, attrs: AttributeSet?) : PagedStage2(context, 
                 holder.snapLayout.addView(newElement)
             }
         }
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        // dispatching to FolderWindow when needed
+        // tap out of FolderWindow = endEditMode()
+
+        if (ev.action == MotionEvent.ACTION_DOWN || ev.action == MotionEvent.ACTION_UP) {
+            // reset
+            isDragStartedInFolder = false
+        }
+
+        if (isTouchInFolder(ev.x.toInt(), ev.y.toInt())) {
+            if (ev.action == MotionEvent.ACTION_DOWN ) {
+                isDragStartedInFolder = true
+            }
+//            reusablePoint.set(ev.x.toInt(), ev.y.toInt())
+//            transformDownToChild(folderWindow, this@UserStage2, reusablePoint)
+//            dispatchTransformedEvent(folderWindow, ev, reusablePoint)
+        } else {
+            if (gestureHelper.gesture == Gesture.TAP_UP) {
+                if (!isFolderOpen)
+                    endEditMode()
+                else
+                    closeFolder()
+            }
+
+            if (gestureHelper.gesture == Gesture.SCROLL_X_MOVE || gestureHelper.gesture == Gesture.SCROLL_Y_MOVE)
+                closeFolder()
+
+            if (isDragStartedInFolder && folderWindow.selectedApp != null) {
+                // we have to intercept the drag with a new app
+                closeFolder()
+                isDragStartedInFolder = false
+                val app = folderWindow.selectedApp!!.info!!.createView(context, true)
+                app.setSnapLayoutParams(-1)
+                app.layoutParams.width = defaultAppSize  // todo: deal with size
+                app.layoutParams.height = defaultAppSize
+                folderWindow.removeSelectedApp()
+                dragContext.pendingActions.add(0) {dataset.put(folderWindow.folderPosInDataset, folderWindow.folderInfo, true, false)}
+                dragContext.dragController.startDragRequest(app as Draggable)
+            }
+        }
+
+        super.dispatchTouchEvent(ev)
+        return true
+    }
+
+    override fun onTouch(v: View?, event: MotionEvent): Boolean {
+        if (v !is FolderViewDraggable)
+            return v?.onTouchEvent(event) ?: false
+
+        if (gestureHelper.gesture == Gesture.TAP_UP) {
+            val p = Point()
+            v.getLocationOnScreen(p.asArray())
+            openFolder(v, p.x.toFloat(), p.y.toFloat())
+        }
+        return v.onTouchEvent(event)
+    }
+
+    override fun onLongClick(downEvent: MotionEvent) {
+        startEditMode()
+        if (isTouchInFolder(downEvent.x.toInt(), downEvent.y.toInt()))
+            startDragInFolder(downEvent)
     }
 
     fun showSensors(opacity: Int) {
@@ -122,23 +185,22 @@ class UserStage2(context: Context, attrs: AttributeSet?) : PagedStage2(context, 
         }
     }
 
-    override fun onLongClick(downEvent: MotionEvent) {
-        startEditMode()
-        if (isTouchInFolder(downEvent.x.toInt(), downEvent.y.toInt()))
-            startDragInFolder(downEvent)
-    }
-
     fun startEditMode() {
-        inEditMode = true
-        launcherActivity.dragController.startDragRequest()
-        disallowVScroll()
-        stageVP.animate().scaleX(0.85f).scaleY(0.85f).start()
+        if (!inEditMode) {
+            inEditMode = true
+            closeFolder()
+            launcherActivity.dragController.startDragRequest()
+            disallowVScroll()
+            stageVP.animate().scaleX(0.85f).scaleY(0.85f).start()
+            showSensors(255)
+        }
     }
 
     fun endEditMode() {
         inEditMode = false
         dragContext.isDragEnabled = false
         stageVP.animate().scaleX(1f).scaleY(1f).start()
+        hideSensors()
     }
 
     private fun openFolder(event: DragTouchEvent) {
@@ -151,12 +213,14 @@ class UserStage2(context: Context, attrs: AttributeSet?) : PagedStage2(context, 
 
     fun openFolder(folder: FolderViewDraggable, globalX: Float, globalY: Float) {
         isFolderOpen = true
+        folderWindow.visibility = View.VISIBLE
         val offsets = Point()
         this.getLocationOnScreen(offsets.asArray())
         folderWindow.setContent(folder, folder.getPagedPosition())
-        folderWindow.visibility = View.VISIBLE
-        folderWindow.translationX = globalX - offsets.x
-        folderWindow.translationY = globalY - offsets.y
+        val clp = (folderWindow.layoutParams as LayoutParams)
+        clp.leftMargin = (globalX - offsets.x).toInt()
+        clp.topMargin = (globalY - offsets.y).toInt()
+        folderWindow.requestLayout()
     }
 
     fun closeFolder() {
@@ -168,24 +232,7 @@ class UserStage2(context: Context, attrs: AttributeSet?) : PagedStage2(context, 
         if (!isFolderOpen)
             return false
         folderWindow.getHitRect(reusableRect)
-//        if (isGlobal) {
-//            val p = Point()
-//            folderWindow.getLocationOnScreen(p.asArray())
-//            reusableRect.offsetTo(p.x, p.y)
-//        }
         return reusableRect.contains(x, y)
-    }
-
-    override fun onTouch(v: View?, event: MotionEvent): Boolean {
-        if (v !is FolderViewDraggable)
-            return v?.onTouchEvent(event) ?: false
-
-        if (gestureHelper.gesture == Gesture.TAP_UP) {
-            val p = Point()
-            v.getLocationOnScreen(p.asArray())
-            openFolder(v, p.x.toFloat(), p.y.toFloat())
-        }
-        return v.onTouchEvent(event)
     }
 
     fun transformToContentView(pointGlobal: Point) {

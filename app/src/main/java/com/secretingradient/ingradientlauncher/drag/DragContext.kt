@@ -7,10 +7,14 @@ import android.view.ViewGroup
 import com.secretingradient.ingradientlauncher.LauncherActivity
 import com.secretingradient.ingradientlauncher.Point
 import com.secretingradient.ingradientlauncher.PointF
+import com.secretingradient.ingradientlauncher.data.Data
+import com.secretingradient.ingradientlauncher.data.Dataset
+import com.secretingradient.ingradientlauncher.data.Info
 
 abstract class DragContext {
     var isDragEnabled: Boolean = false
     abstract val contentView: ViewGroup
+    abstract val dataset: Dataset<Data, Info>
     val dragController
         get() = (contentView.context as LauncherActivity).dragController
     val pendingActions = mutableListOf<()->Unit>()
@@ -21,9 +25,7 @@ abstract class DragContext {
         if (pendingActions.size == 2) {
             pendingActions[0]()
             pendingActions[1]()
-//        pendingActions[0] = {}
-//        pendingActions[1] = {}
-//            dataset.dumpData()
+            dataset.dumpData()
         } else {
             println("pendingActions canceled")
         }

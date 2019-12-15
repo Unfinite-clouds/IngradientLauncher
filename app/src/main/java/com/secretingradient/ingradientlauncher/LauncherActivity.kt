@@ -55,16 +55,18 @@ class LauncherActivity : AppCompatActivity() {
     }
 
     private fun fillData(dk: DataKeeper) {
-        dk.mainStageDataset.deleteFile()
+/*        dk.mainStageDataset.deleteFile()
         for (i in 0 until 12) {
             dk.mainStageDataset.add(i, dk.createAppInfo(i))
-        }
+        }*/
 
-//        dk.userStageDataset.deleteFile()
-//        for (i in 0 until 24) {
-//            val v = i / 2 * 2 + i/14*14
-//            dk.userStageDataset.put(v, dk.createAppInfo(i), true)
-//        }
+/*        dk.userStageDataset.deleteFile()
+        for (i in 0 until 24) {
+            val v = i / 2 * 2 + i/14*14
+            dk.userStageDataset.put(v, dk.createAppInfo(i), true, false)
+        }
+        dk.userStageDataset.put(6+4*14, FolderInfo(mutableListOf(dk.allAppsList[2], dk.allAppsList[5])), true, false)
+        dk.userStageDataset.dumpData()*/
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

@@ -193,9 +193,8 @@ class DataKeeper(val context: Context, val widgetHost: WidgetHost) {
         context.deleteFile("all_apps_cache_data")
         context.deleteFile("icon_cache")
         context.deleteFile("widget_preview_cache")
-//        allAppsCacheData.deleteFile()
-//        iconCache.deleteFile()
-//        widgetPreviewCache.deleteFile()
+        context.deleteFile("main_stage_data")
+        context.deleteFile("user_stage_data")
     }
 
     class AppCache(context: Context, resolveInfo: ResolveInfo) : Serializable {

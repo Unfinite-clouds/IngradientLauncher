@@ -60,9 +60,16 @@ class DraggableElementImpl : DraggableElement {
     }
 
     override fun getPagedPosition(): Int {
-        if (v != null && v!!.parent !is SnapLayout) return -1
-        val stage = launcher.currentStage as PagedStage2
-        return stage.getPagedPosition((v!!.layoutParams as SnapLayout.SnapLayoutParams).position, v!!.parent as SnapLayout)
+        return when (v?.parent) {
+            is SnapLayout -> {
+                val stage = launcher.currentStage as PagedStage2
+                stage.getPagedPosition((v!!.layoutParams as SnapLayout.SnapLayoutParams).position, v!!.parent as SnapLayout)
+            }
+            is DragLayer -> {
+                launcher.dragController.realState.snapPositionPaged
+            }
+            else -> -1
+        }
     }
 
 }

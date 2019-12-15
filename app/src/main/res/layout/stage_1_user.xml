@@ -48,6 +48,24 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/remove_sensor" />
 
+    <com.secretingradient.ingradientlauncher.sensor.LeftSensor
+        android:id="@+id/left_sensor"
+        android:layout_width="25dp"
+        android:layout_height="0dp"
+        android:background="@android:color/holo_blue_dark"
+        app:layout_constraintBottom_toBottomOf="@+id/stage_1_pager"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/stage_1_pager" />
+
+    <com.secretingradient.ingradientlauncher.sensor.RightSensor
+        android:id="@+id/right_sensor"
+        android:layout_width="25dp"
+        android:layout_height="0dp"
+        android:background="@android:color/holo_blue_dark"
+        app:layout_constraintBottom_toBottomOf="@+id/stage_1_pager"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/stage_1_pager" />
+
     <com.secretingradient.ingradientlauncher.stage.FolderWindow
         android:id="@+id/folder_window"
         android:layout_width="wrap_content"

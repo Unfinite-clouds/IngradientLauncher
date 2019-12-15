@@ -41,14 +41,6 @@ class FolderViewDraggable(context: Context, vararg apps: AppInfo, delegate: Drag
             removeApp(apps.size - 1)
             if (apps.size < 2)
                 transformToApp()
-
-//            val pos = getPagedPosition()
-//            if (apps.size < 2) {
-//                val app = transformToApp()
-//                addAction2 { dataset.put(pos, app.info!!, true, false) }
-//            } else {
-//                addAction2 { dataset.put(pos, this.info, true, false) }
-//            }
         }
     }
 
@@ -69,7 +61,7 @@ class FolderViewDraggable(context: Context, vararg apps: AppInfo, delegate: Drag
         }
     }
 
-    fun transformToApp(): AppViewDraggable {
+    private fun transformToApp(): AppViewDraggable {
         val parent = parent as SnapLayout
         val appView = AppViewDraggable(context, apps[0])
         parent.removeView(this)
